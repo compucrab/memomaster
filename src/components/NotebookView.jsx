@@ -30,6 +30,7 @@ export default function NotebookView({ notebook, fsrsSettings, onUpdate, onBack,
   const cards = notebook.flashcards ?? (notebook.markdown ? [{ id: "legacy-card", front: "What is this note about?", back: notebook.markdown }] : []);
   const chapters = Array.isArray(notebook.chapters) ? notebook.chapters : [];
   const [tab, setTab] = useState("browse");
+  const [previewSide, setPreviewSide] = useState("question");
   const [selectedCardId, setSelectedCardId] = useState(cards[0]?.id || null);
   const [search, setSearch] = useState("");
   const [chapterFilter, setChapterFilter] = useState("all");
@@ -240,11 +241,15 @@ export default function NotebookView({ notebook, fsrsSettings, onUpdate, onBack,
           <section class="browse-preview-panel">
             {selectedCard ? (
               <>
-                <header class="browse-preview-header"><span>CARD PREVIEW</span><button class="study-secondary" onClick={() => setEditingCardId(selectedCard.id)}><PencilLine size={13} /> Edit card</button></header>
+                <header class="browse-preview-header">
+                  <nav class="browse-preview-tabs" role="tablist" aria-label="Card preview">
+                    <button type="button" role="tab" aria-selected={previewSide === "question"} class={previewSide === "question" ? "active" : ""} onClick={() => setPreviewSide("question")}>Question</button>
+                    <button type="button" role="tab" aria-selected={previewSide === "answer"} class={previewSide === "answer" ? "active" : ""} onClick={() => setPreviewSide("answer")}>Answer</button>
+                  </nav>
+                  <button class="study-secondary" onClick={() => setEditingCardId(selectedCard.id)}><PencilLine size={13} /> Edit card</button>
+                </header>
                 <div class="browse-preview-content">
-                  <section><p>QUESTION</p><CardContent content={selectedCard.front} /></section>
-                  <div class="browse-preview-divider" />
-                  <section><p>ANSWER</p><CardContent content={selectedCard.back} /></section>
+                  <CardContent content={previewSide === "question" ? selectedCard.front : selectedCard.back} />
                 </div>
                 <footer class="browse-preview-meta">
                   <span>{chapters.find(item => item.id === selectedCard.chapterId)?.name || "Unassigned"}</span>
