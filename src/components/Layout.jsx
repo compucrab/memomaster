@@ -16,6 +16,14 @@ const savedTheme = () => {
   try { return localStorage.getItem("memomaster-theme") || "light"; }
   catch { return "light"; }
 };
+const savedProjectPath = () => {
+  try { return localStorage.getItem("memomaster-project-path") || null; }
+  catch { return null; }
+};
+const savedNotebookPaths = () => {
+  try { return JSON.parse(localStorage.getItem("memomaster-notebook-paths") || "{}"); }
+  catch { return {}; }
+};
 const notebookFilter = [{ name: "MemoMaster notebook", extensions: ["memn"] }];
 const projectFilter = [{ name: "MemoMaster project", extensions: ["memz"] }];
 const safeFilename = (name) => name.replace(/[<>:"/\\|?*]/g, "-").trim() || "Untitled";
@@ -31,8 +39,8 @@ export default function Layout() {
   const [prompt, setPrompt] = useState(null);
   const [notice, setNotice] = useState("");
   const [ready, setReady] = useState(false);
-  const [projectPath, setProjectPath] = useState(null);
-  const [notebookPaths, setNotebookPaths] = useState({});
+  const [projectPath, setProjectPath] = useState(savedProjectPath);
+  const [notebookPaths, setNotebookPaths] = useState(savedNotebookPaths);
   const notebooksRef = useRef(notebooks);
   notebooksRef.current = notebooks;
 
@@ -43,6 +51,8 @@ export default function Layout() {
   );
 
   useEffect(() => { try { localStorage.setItem("memomaster-theme", theme); } catch {} }, [theme]);
+  useEffect(() => { try { projectPath ? localStorage.setItem("memomaster-project-path", projectPath) : localStorage.removeItem("memomaster-project-path"); } catch {} }, [projectPath]);
+  useEffect(() => { try { localStorage.setItem("memomaster-notebook-paths", JSON.stringify(notebookPaths)); } catch {} }, [notebookPaths]);
 
   useEffect(() => {
     let mounted = true;
