@@ -50,7 +50,7 @@ function bigramDice(left, right) {
 export function findSimilarQuestion(question, cards = [], excludeId = null) {
   const normalized = normalizeQuestion(question);
   const words = meaningfulTokens(question);
-  if (!normalized || words.length < 4) return null;
+  if (!normalized) return null;
   let best = null;
   for (const card of cards) {
     if (card.id === excludeId) continue;
@@ -58,6 +58,7 @@ export function findSimilarQuestion(question, cards = [], excludeId = null) {
     if (!existing) continue;
     if (existing === normalized) return { card, score: 1, exact: true };
     const existingWords = meaningfulTokens(card.front);
+    if (words.length < 4) continue;
     if (Math.min(words.length, existingWords.length) < 4) continue;
     const shared = new Set(words.filter((word) => existingWords.includes(word)));
     if (shared.size < 4) continue;
