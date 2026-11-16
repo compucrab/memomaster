@@ -12,11 +12,16 @@ export default function Titlebar({ onNew, onOpen, onExport, onPreferences }) {
     setMaximized(await window.isMaximized());
   }
 
+  function startWindowDrag(event) {
+    // Only the unoccupied titlebar surface starts a native window drag.
+    if (event.button === 0) getCurrentWindow().startDragging();
+  }
+
   return (
     <header class="titlebar">
-      <div class="titlebar-brand" data-tauri-drag-region>
+      <div class="titlebar-brand" onMouseDown={startWindowDrag}>
         <span class="titlebar-mark">m</span>
-        <span data-tauri-drag-region>MemoMaster</span>
+        <span>MemoMaster</span>
       </div>
       <AppMenu
         onNew={onNew}
@@ -24,7 +29,7 @@ export default function Titlebar({ onNew, onOpen, onExport, onPreferences }) {
         onExport={onExport}
         onPreferences={onPreferences}
       />
-      <div class="titlebar-drag" data-tauri-drag-region />
+      <div class="titlebar-drag" onMouseDown={startWindowDrag} />
       <div class="window-controls">
         <button aria-label="Minimize" onClick={() => getCurrentWindow().minimize()}>
           <Minus size={14} />

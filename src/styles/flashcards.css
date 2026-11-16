@@ -1,30 +1,56 @@
 @reference "tailwindcss";
 
-.cards-heading { @apply flex items-end justify-between gap-4 border-b pb-4; border-color: var(--line); }
-.cards-heading .eyebrow { margin: 0 0 7px; }
-.cards-heading h2 { margin: 0; color: var(--ink); font: 700 22px var(--display); letter-spacing: -.05em; }
-.flashcard-list { @apply grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 390px), 1fr)); gap: 18px; padding-top: 18px; }
-.flashcard { min-width: 0; border: 1px solid var(--line); background: var(--surface); }
-.flashcard-toolbar { @apply flex h-[42px] items-center justify-between border-b px-3; border-color: var(--line); color: var(--muted); font: 8px var(--mono); letter-spacing: .1em; }
-.flashcard-toolbar > span { @apply flex items-center gap-2; }
-.flashcard-toolbar > span i { width: 5px; height: 5px; border-radius: 50%; background: var(--olive); }
-.flashcard-toolbar > div { @apply flex items-center gap-1; }
-.flashcard-toolbar button { @apply inline-flex items-center gap-1 border-0 bg-transparent px-2 py-1; color: var(--muted); cursor: pointer; font: 10px var(--sans); }
-.flashcard-toolbar button.is-selected { background: var(--hover); color: var(--ink); }
-.flashcard-toolbar .flashcard-delete { margin-left: 5px; }
-.flashcard-editor { @apply grid gap-3 p-4; }
-.flashcard-editor label { @apply grid gap-2; color: var(--muted); font: 8px var(--mono); letter-spacing: .1em; }
-.flashcard-editor textarea { width: 100%; min-height: 110px; resize: vertical; padding: 11px; border: 1px solid var(--line); outline: 0; background: var(--paper); color: var(--ink); font: 12px/1.7 var(--mono); }
-.flashcard-editor textarea:focus { border-color: var(--olive); }
-.flashcard-editor .button-primary { justify-self: end; }
-.flashcard-study { @apply flex min-h-[245px] flex-col items-center justify-center p-6; text-align: center; }
-.flashcard-side-label { color: var(--muted); font: 8px var(--mono); letter-spacing: .13em; }
-.flashcard-prose { width: 100%; max-width: 540px; min-height: 115px; display: grid; align-content: center; color: var(--ink); font: 15px/1.7 var(--sans); }
-.flashcard-prose h1, .flashcard-prose h2, .flashcard-prose h3 { margin: 0 0 12px; font: 700 22px/1.3 var(--display); letter-spacing: -.04em; }
-.flashcard-prose p { margin: 4px 0; }
-.flashcard-prose code { padding: 2px 4px; background: var(--hover); font: 12px var(--mono); }
-.flashcard-flip { @apply inline-flex items-center gap-2 border px-3 py-2; border-color: var(--line); background: transparent; color: var(--muted); cursor: pointer; font: 10px var(--sans); }
-.flashcard-flip:hover { border-color: var(--olive); color: var(--ink); }
-.empty-cards { @apply flex min-h-[250px] flex-col items-center justify-center border border-dashed; grid-column: 1 / -1; border-color: var(--line); color: var(--muted); text-align: center; }
-.empty-cards h3 { margin: 13px 0 5px; color: var(--ink); font: 700 17px var(--display); }
-.empty-cards p { margin: 0 0 18px; font-size: 11px; }
+.study-workspace { @apply flex min-h-0 flex-1 flex-col; padding: 20px clamp(22px, 4vw, 56px) 24px; overflow: hidden; }
+.study-header { @apply flex shrink-0 items-center justify-between border-b pb-4; border-color: var(--line); }
+.study-notebook-name { @apply flex items-center gap-3; color: var(--muted); font: 9px var(--mono); letter-spacing: .08em; }
+.study-notebook-name span:first-child { color: var(--ink); font: 600 12px var(--sans); letter-spacing: 0; }
+.study-notebook-name i { width: 4px; height: 4px; border-radius: 50%; background: var(--olive); }
+.study-add { @apply inline-flex items-center gap-2 border-0 bg-transparent; color: var(--muted); cursor: pointer; font: 10px var(--sans); }
+.study-add:hover { color: var(--ink); }
+.study-stage { @apply flex min-h-0 flex-1 flex-col items-center justify-center; width: 100%; max-width: 1000px; margin: 0 auto; }
+.study-stage-heading { margin: 12px 0 24px; text-align: center; }
+.study-stage-heading .eyebrow { margin: 0 0 9px; }
+.study-stage-heading h1 { margin: 0; color: var(--ink); font: 800 clamp(25px, 3vw, 37px)/1.15 var(--display); letter-spacing: -.065em; }
+.study-stage-heading h1 span { color: var(--olive); }
+.study-stage-heading > p:last-child { margin: 9px 0 0; color: var(--muted); font-size: 11px; }
+.study-card { @apply flex min-h-0 flex-1 flex-col border; width: min(100%, 790px); max-height: 520px; border-color: var(--line); background: var(--surface); box-shadow: 0 16px 50px #0000000a; }
+.study-card-topline { @apply flex shrink-0 items-center justify-between border-b px-6 py-4; border-color: var(--line); color: var(--muted); font: 8px var(--mono); letter-spacing: .13em; }
+.study-card-topline > span:first-child { @apply flex items-center gap-2; }
+.study-card-topline i { width: 5px; height: 5px; border-radius: 50%; background: var(--olive); }
+.study-card-content { @apply flex min-h-0 flex-1 flex-col items-center justify-center overflow-auto px-8 py-8; text-align: center; }
+.study-side-label { margin: 0 0 22px; color: var(--olive); font: 9px var(--mono); letter-spacing: .16em; }
+.study-card-prose { width: 100%; max-width: 610px; color: var(--ink); font: 16px/1.85 var(--sans); }
+.study-card-prose h1, .study-card-prose h2, .study-card-prose h3 { margin: 0 0 14px; color: var(--ink); font: 700 clamp(22px, 2.5vw, 30px)/1.3 var(--display); letter-spacing: -.045em; }
+.study-card-prose p { margin: 8px 0; }
+.study-card-prose code { padding: 2px 5px; background: var(--hover); font: 13px var(--mono); }
+.study-card-actions { @apply flex shrink-0 items-center justify-center gap-3 border-t px-5 py-4; border-color: var(--line); }
+.study-primary, .study-secondary { @apply inline-flex items-center justify-center gap-2 border px-5 py-3; cursor: pointer; font: 10px var(--sans); }
+.study-primary { border-color: var(--olive); background: var(--olive); color: #171914; }
+.study-primary:hover { filter: brightness(1.06); }
+.study-secondary { border-color: var(--line); background: transparent; color: var(--muted); }
+.study-secondary:hover { border-color: var(--olive); color: var(--ink); }
+.study-card-editor { @apply grid min-h-0 flex-1 gap-4 overflow-auto p-6; align-content: center; }
+.study-card-editor label { @apply grid gap-2; color: var(--muted); font: 8px var(--mono); letter-spacing: .13em; }
+.study-card-editor textarea { width: 100%; min-height: 105px; resize: vertical; padding: 13px; border: 1px solid var(--line); outline: none; background: var(--paper); color: var(--ink); font: 12px/1.7 var(--mono); }
+.study-card-editor textarea:focus { border-color: var(--olive); }
+.study-card-editor .study-primary { justify-self: end; }
+.study-navigation { @apply flex w-full items-center justify-between; width: min(100%, 790px); margin: 20px auto 0; }
+.study-nav-button { @apply inline-flex items-center gap-1 border-0 bg-transparent px-2 py-2; color: var(--ink); cursor: pointer; font: 10px var(--sans); }
+.study-nav-button:disabled { color: var(--muted); opacity: .35; cursor: default; }
+.study-progress { @apply flex items-center gap-3; width: min(240px, 35%); }
+.study-progress > div { height: 3px; flex: 1; overflow: hidden; background: var(--line); }
+.study-progress > div span { display: block; height: 100%; background: var(--olive); transition: width .2s; }
+.study-progress small { color: var(--muted); white-space: nowrap; font: 8px var(--mono); letter-spacing: .1em; }
+.study-empty { @apply flex min-h-0 flex-1 flex-col items-center justify-center; color: var(--muted); text-align: center; }
+.study-empty h1 { margin: 16px 0 6px; color: var(--ink); font: 800 30px var(--display); letter-spacing: -.06em; }
+.study-empty p { margin: 0 0 20px; font-size: 11px; }
+@media (max-height: 720px) {
+  .study-stage-heading { margin: 6px 0 14px; }
+  .study-card { max-height: 440px; }
+}
+@media (max-width: 650px) {
+  .study-notebook-name { display: none; }
+  .study-card-topline { padding-inline: 14px; }
+  .study-card-content { padding-inline: 18px; }
+  .study-navigation { margin-top: 12px; }
+}
