@@ -7,7 +7,9 @@ MemoMaster is a desktop-first, local learning workspace built with Tauri 2, Prea
 - Empty library on first launch, with no prebuilt notebooks.
 - Create a new empty project at any time.
 - Notebook hierarchy: chapters and topics, with cards assignable to both.
-- Focused flashcard view with question/answer reveal and a live WYSIWYG editor.
+- Notebook workspace with separate Browse and Study tabs.
+- Two-column card browsing with question/answer search, chapter/topic filters, and a selected-card preview.
+- Scheduled FSRS reviews and unscheduled practice for a whole notebook, chapter, or topic. Unscheduled practice never changes due dates.
 - FSRS-6 spaced repetition with Forgot, Difficult, and Easy review choices and visible next-review intervals.
 - Study status dashboard with a GitHub-style yearly consistency graph, streaks, recall rate, review outcomes, upcoming reviews, and notebook progress.
 - Rich-text formatting with keyboard shortcuts; card content remains stored as Markdown.
@@ -22,7 +24,7 @@ MemoMaster is a desktop-first, local learning workspace built with Tauri 2, Prea
 MemoMaster separates automatic local persistence from portable project files:
 
 - **SQLite — working copy:** The active library is saved automatically in the operating system's application-data directory. Changes are restored when MemoMaster is reopened. No manual save is needed for ordinary editing.
-- **.memz — portable snapshot:** Export or save the complete project to a .memz file. It contains all notebooks, chapters, topics, flashcards, and related content. Keep this file separately to back up your work or move it to another computer.
+- **.memz — portable snapshot:** Export or save the complete project to a .memz file. It contains all notebooks, chapters, topics, flashcards, FSRS state, and study history. Keep this file separately to back up your work or move it to another computer.
 
 The two formats contain the same project data and work together:
 

@@ -36,3 +36,79 @@
 .study-empty p { margin: 0 0 20px; font-size: 11px; }
 @media (max-height: 720px) { .study-card { height: min(72vh, 640px); } }
 @media (max-width: 650px) { .study-notebook-name { display: none; } .study-card-content { padding-inline: 18px; } .study-navigation { margin-top: 12px; } }
+
+
+/* Notebook Browse / Study workspace */
+.notebook-workspace { @apply flex min-h-0 flex-1 flex-col overflow-hidden; padding: 18px clamp(22px, 4vw, 56px) 22px; }
+.notebook-workspace-header { @apply flex shrink-0 items-center gap-5; min-height: 42px; }
+.notebook-workspace-title { @apply flex min-w-0 flex-1 items-center gap-3; }
+.notebook-workspace-title h1 { overflow: hidden; margin: 0; color: var(--ink); font: 700 20px var(--display); letter-spacing: -.045em; text-overflow: ellipsis; white-space: nowrap; }
+.notebook-workspace-title span { flex-shrink: 0; color: var(--muted); font: 9px var(--mono); }
+.notebook-tabs { @apply flex shrink-0 items-center gap-6 border-b; height: 48px; margin-top: 12px; border-color: var(--line); }
+.notebook-tabs button { @apply inline-flex h-full items-center gap-2 border-b-2 border-transparent bg-transparent px-1; color: var(--muted); cursor: pointer; font: 11px var(--sans); }
+.notebook-tabs button:hover { color: var(--ink); }
+.notebook-tabs button.active { border-color: var(--accent); color: var(--ink); font-weight: 650; }
+.browse-workspace { @apply grid min-h-0 flex-1; grid-template-columns: minmax(280px, 0.82fr) minmax(0, 1.5fr); gap: 22px; padding-top: 18px; }
+.browse-list-panel { @apply flex min-h-0 flex-col overflow-hidden; border: 1px solid var(--line); background: var(--surface); }
+.browse-tools { @apply shrink-0; padding: 13px; border-bottom: 1px solid var(--line); }
+.browse-search { @apply flex h-9 items-center gap-2 border px-3; border-color: var(--line); background: var(--paper); color: var(--muted); }
+.browse-search input { @apply min-w-0 flex-1 border-0 bg-transparent outline-none; color: var(--ink); font: 10px var(--sans); }
+.browse-search input::placeholder { color: var(--muted); }
+.browse-filters { @apply grid grid-cols-2 gap-2; margin-top: 9px; }
+.browse-filters select, .study-scope-controls select { @apply h-8 min-w-0 border px-2; border-color: var(--line); background: var(--paper); color: var(--ink); font: 10px var(--sans); outline: none; }
+.browse-filters select:focus, .study-scope-controls select:focus { border-color: var(--accent); }
+.browse-filters select:disabled { opacity: .4; }
+.browse-list-count { margin-top: 12px; color: var(--muted); font: 8px var(--mono); letter-spacing: .08em; }
+.browse-card-list { @apply min-h-0 flex-1 overflow-y-auto; }
+.browse-card-row { @apply flex w-full items-start gap-3 border-0 border-b bg-transparent px-3 py-3 text-left; border-color: var(--line); color: var(--ink); cursor: pointer; }
+.browse-card-row:hover { background: var(--hover); }
+.browse-card-row.selected { background: var(--hover); box-shadow: inset 2px 0 var(--accent); }
+.browse-card-index { padding-top: 1px; color: var(--muted); font: 9px var(--mono); }
+.browse-card-copy { @apply flex min-w-0 flex-1 flex-col gap-1; }
+.browse-card-copy strong { overflow: hidden; color: var(--ink); font: 550 11px/1.45 var(--sans); text-overflow: ellipsis; white-space: nowrap; }
+.browse-card-copy small { overflow: hidden; color: var(--muted); font: 9px var(--sans); text-overflow: ellipsis; white-space: nowrap; }
+.browse-list-empty { padding: 24px 14px; color: var(--muted); font-size: 10px; text-align: center; }
+.browse-preview-panel { @apply flex min-h-0 min-w-0 flex-col overflow-hidden; border: 1px solid var(--line); background: var(--surface); }
+.browse-preview-header { @apply flex shrink-0 items-center justify-between border-b px-5 py-3; border-color: var(--line); color: var(--muted); font: 9px var(--mono); letter-spacing: .08em; }
+.browse-preview-header .study-secondary { padding: 7px 10px; font-size: 9px; }
+.browse-preview-content { @apply min-h-0 flex-1 overflow-y-auto px-6 py-5; }
+.browse-preview-content > section > p { margin: 0 0 13px; color: var(--muted); font: 8px var(--mono); letter-spacing: .1em; }
+.browse-preview-content .study-card-prose { max-width: none; font-size: 14px; line-height: 1.75; }
+.browse-preview-divider { height: 1px; margin: 24px 0; background: var(--line); }
+.browse-preview-meta { @apply flex shrink-0 items-center gap-2 border-t px-5 py-3; border-color: var(--line); color: var(--muted); font: 9px var(--sans); }
+.browse-preview-empty { @apply flex min-h-0 flex-1 flex-col items-center justify-center gap-3; color: var(--muted); font-size: 10px; }
+.browse-preview-empty p { margin: 0; }
+.study-setup { @apply min-h-0 flex-1 overflow-y-auto; width: min(100%, 850px); margin: 0 auto; padding: 32px 10px 40px; }
+.study-setup-intro { @apply flex flex-col items-center; color: var(--muted); text-align: center; }
+.study-setup-intro h2 { margin: 12px 0 5px; color: var(--ink); font: 750 23px var(--display); letter-spacing: -.045em; }
+.study-setup-intro p { max-width: 480px; margin: 0; font-size: 10px; line-height: 1.7; }
+.study-mode-options { @apply grid grid-cols-2 gap-3; margin-top: 28px; }
+.study-mode-option { @apply relative flex min-h-[140px] flex-col items-start border p-4 text-left; border-color: var(--line); background: var(--surface); color: var(--ink); cursor: pointer; }
+.study-mode-option:hover { border-color: var(--muted); }
+.study-mode-option.selected { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.study-mode-radio { width: 13px; height: 13px; margin-bottom: 12px; border: 1px solid var(--muted); border-radius: 50%; }
+.study-mode-option.selected .study-mode-radio { border: 4px solid var(--accent); }
+.study-mode-option strong { font: 650 12px var(--sans); }
+.study-mode-option small { max-width: 260px; margin-top: 5px; color: var(--muted); font: 10px/1.55 var(--sans); }
+.study-mode-option b { margin-top: auto; padding-top: 12px; color: var(--muted); font: 9px var(--mono); }
+.study-scope-panel { margin-top: 18px; padding: 19px; border: 1px solid var(--line); background: var(--surface); }
+.study-scope-panel h3 { margin: 0 0 15px; color: var(--ink); font: 650 13px var(--display); }
+.study-scope-controls { @apply flex flex-wrap items-end gap-3; }
+.study-scope-controls label { @apply flex min-w-[160px] flex-1 flex-col gap-[6px]; color: var(--muted); font: 8px var(--mono); letter-spacing: .07em; }
+.study-scope-controls select { width: 100%; height: 36px; }
+.study-scope-summary { @apply flex items-center justify-between gap-3 border-t; margin-top: 18px; padding-top: 14px; border-color: var(--line); color: var(--muted); font: 9px var(--mono); }
+.study-start-button { @apply w-full; margin-top: 16px; }
+.study-start-button:disabled { opacity: .4; cursor: default; }
+@media (max-width: 800px) {
+  .browse-workspace { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(220px, .8fr) minmax(280px, 1.2fr); overflow-y: auto; }
+  .browse-list-panel { min-height: 220px; }
+  .browse-preview-panel { min-height: 280px; }
+}
+@media (max-width: 560px) {
+  .notebook-workspace-header { gap: 10px; }
+  .notebook-workspace-title h1 { font-size: 16px; }
+  .notebook-workspace-title span { display: none; }
+  .study-mode-options { @apply grid-cols-1; }
+  .study-scope-summary { @apply items-start flex-col; }
+  .browse-filters { @apply grid-cols-1; }
+}
