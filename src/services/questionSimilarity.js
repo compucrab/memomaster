@@ -7,15 +7,11 @@ const STOP_WORDS = new Set([
 export function normalizeQuestion(value = "") {
   return String(value)
     .replace(/<[^>]*>/g, " ")
-    .replace(/!\\[[^\\]]*\\]\\([^)]*\\)/g, " ")
-    .replace(/\\[([^\\]]+)\\]\\([^)]*\\)/g, "$1")
-    .replace(/[\x60*_>#~]/g, " ")
-    .toLocaleLowerCase()
-    .normalize("NFKD")
-    .replace(/[\\u0300-\\u036f]/g, "")
-    .replace(/[^\\p{L}\\p{N}]+/gu, " ")
+    .replace(/[!#*_>`~]/g, " ")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
     .trim()
-    .replace(/\\s+/g, " ");
+    .replace(/ +/g, " ");
 }
 
 function meaningfulTokens(value) {
