@@ -9,8 +9,7 @@ import NotebookView from "./NotebookView";
 import SettingsPanel from "./SettingsPanel";
 import ContextMenu from "./ContextMenu";
 import TextPrompt from "./TextPrompt";
-import { initialNotebooks } from "../data/notebooks";
-import { createMemn, createMemz, importMemn, importMemz } from "../services/projectArchive";
+import { createMemz, importMemz } from "../services/projectArchive";
 
 const savedTheme = () => {
   try { return localStorage.getItem("memomaster-theme") || "light"; }
@@ -20,17 +19,12 @@ const savedProjectPath = () => {
   try { return localStorage.getItem("memomaster-project-path") || null; }
   catch { return null; }
 };
-const savedNotebookPaths = () => {
-  try { return JSON.parse(localStorage.getItem("memomaster-notebook-paths") || "{}"); }
-  catch { return {}; }
-};
-const notebookFilter = [{ name: "MemoMaster notebook", extensions: ["memn"] }];
 const projectFilter = [{ name: "MemoMaster project", extensions: ["memz"] }];
 const safeFilename = (name) => name.replace(/[<>:"/\\|?*]/g, "-").trim() || "Untitled";
-const ensureExtension = (path, extension) => path.toLowerCase().endsWith(extension) ? path : path + extension;
+const ensureExtension = (path) => path.toLowerCase().endsWith(".memz") ? path : path + ".memz";
 
 export default function Layout() {
-  const [notebooks, setNotebooks] = useState(initialNotebooks);
+  const [notebooks, setNotebooks] = useState([]);
   const [view, setView] = useState("library");
   const [activeId, setActiveId] = useState(null);
   const [query, setQuery] = useState("");
@@ -40,7 +34,6 @@ export default function Layout() {
   const [notice, setNotice] = useState("");
   const [ready, setReady] = useState(false);
   const [projectPath, setProjectPath] = useState(savedProjectPath);
-  const [notebookPaths, setNotebookPaths] = useState(savedNotebookPaths);
   const notebooksRef = useRef(notebooks);
   notebooksRef.current = notebooks;
 
@@ -52,7 +45,6 @@ export default function Layout() {
 
   useEffect(() => { try { localStorage.setItem("memomaster-theme", theme); } catch {} }, [theme]);
   useEffect(() => { try { projectPath ? localStorage.setItem("memomaster-project-path", projectPath) : localStorage.removeItem("memomaster-project-path"); } catch {} }, [projectPath]);
-  useEffect(() => { try { localStorage.setItem("memomaster-notebook-paths", JSON.stringify(notebookPaths)); } catch {} }, [notebookPaths]);
 
   useEffect(() => {
     let mounted = true;
@@ -64,15 +56,15 @@ export default function Layout() {
           if (!Array.isArray(parsed)) throw new Error("Saved library data is invalid");
           setNotebooks(parsed);
         } else {
-          setNotebooks(initialNotebooks);
+          setNotebooks([]);
         }
         setReady(true);
       })
       .catch((error) => {
         if (!mounted) return;
         console.error("Unable to load local library:", error);
-        setNotebooks(initialNotebooks);
-        setNotice("Could not load the saved library. The sample library was loaded instead.");
+        setNotebooks([]);
+        setNotice("Could not load the saved library. Changes may not persist.");
         setReady(true);
       });
     return () => { mounted = false; };
@@ -147,56 +139,9 @@ export default function Layout() {
       setActiveId(null);
       setView("library");
       setProjectPath(path);
-      setNotebookPaths({});
       setNotice(`Opened project: ${path.split(/[\\\\/]/).pop()}`);
     } catch (error) {
       setNotice(`Could not open project: ${error.message || error}`);
-    }
-  }
-
-  async function openNotebookFile() {
-    try {
-      const path = await open({ multiple: false, directory: false, filters: notebookFilter });
-      if (!path) return;
-      const imported = importMemn(await readBytes(path));
-      const id = notebooks.some((item) => item.id === imported.id) ? crypto.randomUUID() : imported.id;
-      const notebook = { ...imported, id };
-      setNotebooks((items) => [notebook, ...items]);
-      setActiveId(id);
-      setView("notebook");
-      setNotebookPaths((items) => ({ ...items, [id]: path }));
-      setNotice(`Opened notebook: ${notebook.title}`);
-    } catch (error) {
-      setNotice(`Could not open notebook: ${error.message || error}`);
-    }
-  }
-
-  async function saveNotebookAs() {
-    if (!activeNotebook) return;
-    try {
-      const selected = await save({
-        defaultPath: `${safeFilename(activeNotebook.title)}.memn`,
-        filters: notebookFilter,
-      });
-      if (!selected) return;
-      const path = ensureExtension(selected, ".memn");
-      await writeBytes(path, createMemn(activeNotebook));
-      setNotebookPaths((items) => ({ ...items, [activeNotebook.id]: path }));
-      setNotice("Notebook saved.");
-    } catch (error) {
-      setNotice(`Could not save notebook: ${error.message || error}`);
-    }
-  }
-
-  async function saveNotebook() {
-    if (!activeNotebook) return;
-    const path = notebookPaths[activeNotebook.id];
-    if (!path) return saveNotebookAs();
-    try {
-      await writeBytes(path, createMemn(activeNotebook));
-      setNotice("Notebook saved.");
-    } catch (error) {
-      setNotice(`Could not save notebook: ${error.message || error}`);
     }
   }
 
@@ -204,10 +149,10 @@ export default function Layout() {
     try {
       const selected = await save({ defaultPath: "MemoMaster project.memz", filters: projectFilter });
       if (!selected) return;
-      const path = ensureExtension(selected, ".memz");
+      const path = ensureExtension(selected);
       await writeBytes(path, await createMemz(notebooks));
       setProjectPath(path);
-      setNotice("Project saved.");
+      setNotice("Project backup saved.");
     } catch (error) {
       setNotice(`Could not save project: ${error.message || error}`);
     }
@@ -217,7 +162,7 @@ export default function Layout() {
     if (!projectPath) return saveProjectAs();
     try {
       await writeBytes(projectPath, await createMemz(notebooks));
-      setNotice("Project saved.");
+      setNotice("Project backup saved.");
     } catch (error) {
       setNotice(`Could not save project: ${error.message || error}`);
     }
@@ -228,27 +173,22 @@ export default function Layout() {
       if (!(event.ctrlKey || event.metaKey)) return;
       const key = event.key.toLowerCase();
       if (key === "n" && !event.shiftKey) { event.preventDefault(); createNotebook(); }
-      else if (key === "o" && event.shiftKey) { event.preventDefault(); openNotebookFile(); }
-      else if (key === "o") { event.preventDefault(); openProjectFile(); }
+      else if (key === "o" && !event.shiftKey) { event.preventDefault(); openProjectFile(); }
       else if (key === "s" && event.shiftKey) { event.preventDefault(); saveProjectAs(); }
-      else if (key === "s") { event.preventDefault(); activeNotebook ? saveNotebook() : saveProject(); }
+      else if (key === "s") { event.preventDefault(); saveProject(); }
     };
     window.addEventListener("keydown", shortcuts);
     return () => window.removeEventListener("keydown", shortcuts);
-  }, [notebooks, activeNotebook, projectPath, notebookPaths]);
+  }, [notebooks, projectPath]);
 
   return (
     <div class="app-layout" data-theme={theme} onClick={() => menu && setMenu(null)}>
       <div class="app-frame">
         <Titlebar
           onNew={createNotebook}
-          onOpenNotebook={openNotebookFile}
-          onSaveNotebook={saveNotebook}
-          onSaveNotebookAs={saveNotebookAs}
           onOpenProject={openProjectFile}
           onSaveProject={saveProject}
           onSaveProjectAs={saveProjectAs}
-          hasNotebook={Boolean(activeNotebook)}
           onPreferences={() => { setView("settings"); setActiveId(null); }}
         />
         {view === "library" && (
