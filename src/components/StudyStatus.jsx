@@ -36,10 +36,12 @@ export default function StudyStatus({ notebooks, settings, onBack }) {
     });
     const rollover = settings?.rolloverHour ?? 4;
     const todayKey = studyDayKey(now, rollover);
+    const firstStudyDay = new Date(now);
+    firstStudyDay.setHours(rollover, 0, 0, 0);
+    if (now < firstStudyDay) firstStudyDay.setDate(firstStudyDay.getDate() - 1);
     const workload = Array.from({ length: 30 }, (_, index) => {
-      const date = new Date(now);
-      date.setHours(rollover, 0, 0, 0);
-      date.setDate(date.getDate() + index);
+      const date = new Date(firstStudyDay);
+      date.setDate(firstStudyDay.getDate() + index);
       const key = studyDayKey(date, rollover);
       return { key, label: index === 0 ? "Today" : date.toLocaleDateString(undefined, { month: "short", day: "numeric" }), count: 0 };
     });
