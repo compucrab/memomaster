@@ -114,3 +114,29 @@
 @media (max-width: 700px) {
   .review-rating-options { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
+
+
+/* Shared card content layout for Browse and both study modes. */
+.review-card-content { align-items: stretch; }
+.review-card-content > .study-side-label { flex: 0 0 auto; text-align: center; }
+.review-card-content > .study-card-prose {
+  align-self: center;
+  width: 100%;
+  min-width: 0;
+  max-width: 900px;
+  text-align: left;
+}
+.review-card-content .study-card-prose img,
+.browse-preview-content .study-card-prose img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+.review-card-content .study-card-prose .katex-display,
+.browse-preview-content .study-card-prose .katex-display,
+.review-card-content .study-card-prose .study-math-block,
+.browse-preview-content .study-card-prose .study-math-block {
+  max-width: 100%;
+  overflow-x: auto;
+}

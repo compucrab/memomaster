@@ -1,6 +1,6 @@
 import { useMemo, useState } from "preact/hooks";
 import { Check, Clock3, RotateCw } from "lucide-preact";
-import { renderMarkdown } from "../services/markdown";
+import CardContent from "./CardContent";
 import { getReviewOptions, scheduleReview } from "../services/fsrs";
 
 function isDue(card, now) {
@@ -99,7 +99,7 @@ export default function ReviewSession({ cards, mode = "scheduled", onReview, onE
       <div class="review-card">
         <div class="review-card-content">
           <p class="study-side-label">{revealed ? "ANSWER" : "QUESTION"}</p>
-          <div class="study-card-prose" dangerouslySetInnerHTML={{ __html: renderMarkdown(revealed ? activeCard.back : activeCard.front) }} />
+          <CardContent content={revealed ? activeCard.back : activeCard.front} />
         </div>
         {!revealed ? (
           <div class="study-card-actions">
