@@ -37,7 +37,7 @@ SQLite is the automatic local working copy. Notebook, chapter, topic, and card e
 
 A ZIP archive containing:
 - manifest.json: format identifier, archive version, and notebook IDs.
-- notebooks/{notebookId}/notebook.json: notebook metadata, hierarchy, and review history.
+- notebooks/{notebookId}/notebook.json: notebook metadata, hierarchy, scheduled review history, and unscheduled practice history.
 - notebooks/{notebookId}/cards/{cardId}.json: individual card records, including FSRS scheduling state.
 
 The importer validates the manifest, IDs, ZIP directory entries, decompressed sizes, and CRC checksums. Version 1 archives remain supported through a legacy Markdown-card migration path; version 2 stores JSON card records.
@@ -73,7 +73,6 @@ A notebook contains id, title, color, chapters, flashcards, reviewHistory, and a
 
 ## Planned boundaries (not implemented)
 
-- Media attachments and richer card templates.
 - Media attachments and richer card templates.
 - Anki import/export and optional synchronization.
 - Normalized SQLite tables and schema migrations as the domain model stabilizes.
