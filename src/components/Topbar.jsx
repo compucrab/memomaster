@@ -1,4 +1,4 @@
-import { Search, Plus, Command, BarChart3 } from "lucide-preact";
+import { Search, Plus, BarChart3 } from "lucide-preact";
 
 export default function Topbar({ title, query, onQueryChange, onCreate, onStudyStatus }) {
   return (
@@ -17,7 +17,6 @@ export default function Topbar({ title, query, onQueryChange, onCreate, onStudyS
             onInput={(event) => onQueryChange(event.currentTarget.value)}
             placeholder="Find a notebook..."
           />
-          <kbd><Command size={10} /> K</kbd>
         </label>
 
         <button class="topbar-status-button" onClick={onStudyStatus}><BarChart3 size={15} /> Study status</button>

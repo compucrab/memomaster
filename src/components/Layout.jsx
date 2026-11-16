@@ -209,7 +209,6 @@ export default function Layout() {
     <div class="app-layout" data-theme={theme} onClick={() => menu && setMenu(null)}>
       <div class="app-frame">
         <Titlebar
-          onNew={createNotebook}
           onNewProject={() => setConfirmNewProject(true)}
           onOpenProject={openProjectFile}
           onSaveProject={saveProject}

@@ -20,9 +20,6 @@
 .review-complete { @apply flex min-h-0 flex-1 flex-col items-center justify-center; color: var(--muted); text-align: center; }
 .review-complete h1 { margin: 16px 0 5px; color: var(--ink); font: 750 26px var(--display); }
 .review-complete p { margin: 0 0 20px; font-size: 11px; }
-.study-header-actions { @apply flex items-center gap-4; }
-.study-add:disabled { opacity: .35; cursor: default; }
-.study-add b { @apply grid h-5 min-w-5 place-items-center rounded-full px-1; background: var(--hover); color: var(--ink); font: 9px var(--mono); }
 
 .status-workspace { display: block; }
 .status-heading { @apply flex items-start gap-8; margin-bottom: 28px; }
@@ -58,6 +55,7 @@
 .outcome-row { @apply grid items-center gap-3; grid-template-columns: 75px minmax(0,1fr) 30px; color: var(--muted); font-size: 10px; }
 .outcome-row > div { height: 7px; overflow: hidden; background: var(--hover); }
 .outcome-row > div i { display: block; height: 100%; }
+.outcome-row > div i.good { background: var(--accent); }
 .outcome-row > div i.easy { background: var(--success); }
 .outcome-row > div i.difficult { background: var(--warning); }
 .outcome-row > div i.forgot { background: var(--danger); }

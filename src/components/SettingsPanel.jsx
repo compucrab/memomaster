@@ -16,7 +16,7 @@ export default function SettingsPanel({ theme, onThemeChange, onBack }) {
         </section>
         <section class="settings-row"><i><Type size={18} /></i><div><h2>Typography</h2><p>Manrope headings, DM Sans interface text and DM Mono metadata.</p></div><span>EDITORIAL</span></section>
         <section class="settings-row"><i><FolderArchive size={18} /></i><div><h2>Project files</h2><p>Import and export the library as a portable .memz ZIP archive from the File menu.</p></div><span>READY</span></section>
-        <section class="settings-row"><i><Keyboard size={18} /></i><div><h2>Keyboard shortcuts</h2><p>New notebook, open project and export project.</p></div><span>DESKTOP</span></section>
+        <section class="settings-row"><i><Keyboard size={18} /></i><div><h2>Keyboard shortcuts</h2><p>Ctrl+N: New notebook · Ctrl+Shift+N: New project · Ctrl+O: Open project · Ctrl+S: Save project.</p></div><span>DESKTOP</span></section>
       </div>
     </section>
   );
