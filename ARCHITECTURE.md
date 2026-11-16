@@ -72,7 +72,7 @@ Default scheduling preferences:
 | Maximum interval | 180 days |
 | Study-day rollover | 04:00 local time |
 
-The scheduler uses deterministic intervals (`enable_fuzz: false`) so the interval shown before a rating matches the due date saved after that rating. Existing due dates are not rescheduled when preferences change; the new preferences apply on subsequent reviews.
+The scheduler uses deterministic intervals (`enable_fuzz: false`) so the interval shown before a rating matches the due date saved after that rating. Existing due dates are not rescheduled when preferences change; the new preferences apply on subsequent reviews. Each scheduled review log also stores the exact pre-review and post-review FSRS snapshots, state, stability, and difficulty. This supports a safe undo of the latest scheduled review across the library. Legacy review logs without snapshots are preserved but are not eligible for destructive undo.
 
 Scheduled ratings map to FSRS as follows:
 
@@ -102,7 +102,7 @@ FSRS v5 measures elapsed time in fixed 24-hour blocks. MemoMaster normalizes sch
 - New, Learning/Relearning, Young, and Mature card breakdown. Mature uses a 21-day-or-longer review interval.
 - Frequently forgotten cards ranked by FSRS lapse count.
 
-FSRS parameter optimization from review history is not implemented yet.
+FSRS parameter optimization from review history is not implemented yet. The review log now retains reversible card-state snapshots, but an optimizer still needs a supported WASI/native binding integration and an explicit minimum-history/readiness policy. Do not substitute hand-written parameter fitting for the official FSRS optimizer.
 
 ## Card editor and content formats
 
@@ -145,7 +145,7 @@ npm run build
 npm test
 ```
 
-The test suite covers Again/relearning, Hard semantics, Good/Easy graduation, preview-versus-saved intervals, retention and maximum-interval configuration, memory-curve output, and study-day rollover.
+The test suite covers Again/relearning, Hard semantics, Good/Easy graduation, preview-versus-saved intervals, retention and maximum-interval configuration, memory-curve output, study-day rollover, review snapshots, and undo. `fsrsCompatibility.test.js` adds a scheduler-contract matrix for all ratings, late reviews, counters, maximum interval enforcement, and minute-level learning steps. These tests do not yet establish exact Anki parity; shared golden fixtures must still be executed against Anki’s own scheduler.
 
 ## Data flow
 
