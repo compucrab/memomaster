@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "preact/hooks";
+import { State } from "ts-fsrs";
 import { Check, Clock3, RotateCw } from "lucide-preact";
 import CardContent from "./CardContent";
 import { formatInterval, getReviewOptions, scheduleReview } from "../services/fsrs";
@@ -62,7 +63,8 @@ export default function ReviewSession({ cards, mode = "scheduled", settings, onR
         onReview(activeCard.id, result.fsrs, result.log, mode);
         setSessionCards((items) => items.map((card) => card.id === activeCard.id ? { ...card, fsrs: result.fsrs } : card));
         setReviewed((count) => count + 1);
-        if (choice === "forgot" && new Date(result.fsrs.due) > reviewedAt) {
+        const inLearningStep = result.fsrs.state === State.Learning || result.fsrs.state === State.Relearning;
+        if (inLearningStep && new Date(result.fsrs.due) > reviewedAt) {
           setPending((items) => items.includes(activeCard.id) ? items : [...items, activeCard.id]);
           removeActiveCard();
           return;
