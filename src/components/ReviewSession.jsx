@@ -52,7 +52,7 @@ export default function ReviewSession({ cards, onReview, onExit }) {
     <section class="review-session">
       <header class="review-session-header">
         <button class="back-link" onClick={onExit}>← EXIT REVIEW</button>
-        <span>{reviewed + 1} REVIEWED · {queue.length} LEFT</span>
+        <span>{reviewed} DONE · {queue.length} LEFT</span>
       </header>
       <div class="review-progress"><i style={{ width: `${(reviewed / (reviewed + queue.length)) * 100}%` }} /></div>
       <div class="review-card">
