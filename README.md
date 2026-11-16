@@ -24,7 +24,7 @@ MemoMaster is a desktop-first, local learning workspace built with Tauri 2, Prea
 MemoMaster separates automatic local persistence from portable project files:
 
 - **SQLite — working copy:** The active library is saved automatically in the operating system's application-data directory. Changes are restored when MemoMaster is reopened. No manual save is needed for ordinary editing.
-- **.memz — portable snapshot:** Export or save the complete project to a .memz file. It contains all notebooks, chapters, topics, flashcards, and related content. Keep this file separately to back up your work or move it to another computer.
+- **.memz — portable snapshot:** Export or save the complete project to a .memz file. It contains all notebooks, chapters, topics, flashcards, FSRS state, and study history. Keep this file separately to back up your work or move it to another computer.
 
 The two formats contain the same project data and work together:
 
