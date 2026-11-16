@@ -1,4 +1,4 @@
-import { useMemo, useState } from "preact/hooks";
+import { useEffect, useMemo, useState } from "preact/hooks";
 import { Check, Clock3, RotateCw } from "lucide-preact";
 import { renderMarkdown } from "../services/markdown";
 import { getReviewOptions, scheduleReview } from "../services/fsrs";
@@ -16,10 +16,10 @@ export default function ReviewSession({ cards, mode = "scheduled", onReview, onE
       .sort((a, b) => new Date(a.fsrs?.due || 0) - new Date(b.fsrs?.due || 0))
       .map((card) => card.id);
   });
+  const [pendingCards, setPendingCards] = useState([]);
   const [revealed, setRevealed] = useState(false);
   const [reviewed, setReviewed] = useState(0);
   const [repeatDelay, setRepeatDelay] = useState("3");
-  const [pendingRepeats, setPendingRepeats] = useState(0);
   const activeCard = cards.find((card) => card.id === queue[0]);
   const now = new Date();
   const options = useMemo(
@@ -27,11 +27,38 @@ export default function ReviewSession({ cards, mode = "scheduled", onReview, onE
     [activeCard?.id, activeCard?.fsrs, queue.length],
   );
 
+  // Delays are preferences, not blockers: release waiting cards whenever the
+  // active queue becomes empty, or when their individual timer expires.
+  useEffect(() => {
+    if (!pendingCards.length) return;
+    if (!queue.length) {
+      setQueue((items) => [...items, ...pendingCards.map((item) => item.id)]);
+      setPendingCards([]);
+      return;
+    }
+    const timers = pendingCards.map((item) => setTimeout(() => {
+      setQueue((items) => [...items, item.id]);
+      setPendingCards((items) => items.filter((pending) => pending.id !== item.id));
+    }, Math.max(0, item.dueAt - Date.now())));
+    return () => timers.forEach(clearTimeout);
+  }, [pendingCards, queue.length]);
+
+  function removeActiveCard() {
+    setQueue((items) => items.slice(1));
+    setRevealed(false);
+  }
+
   function finishCard(choice) {
     if (!activeCard) return;
     if (mode === "scheduled") {
       const result = scheduleReview(activeCard, choice, new Date());
       onReview(activeCard.id, result.fsrs, result.log, mode);
+      if (choice === "forgot") {
+        setPendingCards((items) => [...items, {
+          id: activeCard.id,
+          dueAt: new Date(result.fsrs.due).getTime(),
+        }]);
+      }
     } else {
       onReview(activeCard.id, null, {
         cardId: activeCard.id,
@@ -40,31 +67,26 @@ export default function ReviewSession({ cards, mode = "scheduled", onReview, onE
       }, mode);
     }
     setReviewed((count) => count + 1);
-    setQueue((items) => items.slice(1));
-    setRevealed(false);
+    removeActiveCard();
   }
 
   function repeatCard() {
     if (!activeCard) return;
-    const cardId = activeCard.id;
-    const delay = Number(repeatDelay) * 60 * 1000;
-    setQueue((items) => items.slice(1));
-    setPendingRepeats((count) => count + 1);
-    setRevealed(false);
-    setTimeout(() => {
-      setQueue((items) => [...items, cardId]);
-      setPendingRepeats((count) => Math.max(0, count - 1));
-    }, delay);
+    setPendingCards((items) => [...items, {
+      id: activeCard.id,
+      dueAt: Date.now() + Number(repeatDelay) * 60 * 1000,
+    }]);
+    removeActiveCard();
   }
 
-  if (!queue.length && pendingRepeats === 0) {
+  if (!queue.length && !pendingCards.length) {
     return (
       <section class="review-session">
         <header class="review-session-header"><button class="back-link" onClick={onExit}>← BACK TO NOTEBOOK</button></header>
         <div class="review-complete">
           <Check size={30} />
           <h1>{reviewed ? "Review complete" : "Nothing due right now"}</h1>
-          <p>{reviewed ? `You marked ${reviewed} ${reviewed === 1 ? "card" : "cards"} as done.` : "All caught up. New cards and due reviews will appear here."}</p>
+          <p>{reviewed ? `You reviewed ${reviewed} ${reviewed === 1 ? "card" : "cards"}.` : "All caught up. New cards and due reviews will appear here."}</p>
           <button class="study-primary" onClick={onExit}>Back to notebook</button>
         </div>
       </section>
@@ -74,11 +96,11 @@ export default function ReviewSession({ cards, mode = "scheduled", onReview, onE
   if (!activeCard) {
     return (
       <section class="review-session">
-        <header class="review-session-header"><button class="back-link" onClick={onExit}>← EXIT REVIEW</button><span>UNSCHEDULED · WAITING</span></header>
+        <header class="review-session-header"><button class="back-link" onClick={onExit}>← EXIT REVIEW</button><span>{mode === "scheduled" ? "SCHEDULED" : "UNSCHEDULED"} · WAITING</span></header>
         <div class="review-complete">
           <Clock3 size={30} />
-          <h1>Repeat queued</h1>
-          <p>{pendingRepeats} {pendingRepeats === 1 ? "card will" : "cards will"} return when the repeat timer {pendingRepeats === 1 ? "ends" : "ends"}.</p>
+          <h1>Reviewing again shortly</h1>
+          <p>{pendingCards.length} {pendingCards.length === 1 ? "card is" : "cards are"} queued to repeat. You won't have to wait if there are no other cards to review.</p>
           <button class="study-secondary" onClick={onExit}>Exit review</button>
         </div>
       </section>
@@ -89,9 +111,9 @@ export default function ReviewSession({ cards, mode = "scheduled", onReview, onE
     <section class="review-session">
       <header class="review-session-header">
         <button class="back-link" onClick={onExit}>← EXIT REVIEW</button>
-        <span>{mode === "scheduled" ? "SCHEDULED" : "UNSCHEDULED"} · {reviewed} DONE · {queue.length + pendingRepeats} LEFT</span>
+        <span>{mode === "scheduled" ? "SCHEDULED" : "UNSCHEDULED"} · {reviewed} DONE · {queue.length + pendingCards.length} LEFT</span>
       </header>
-      <div class="review-progress"><i style={{ width: `${(reviewed / (reviewed + queue.length + pendingRepeats)) * 100}%` }} /></div>
+      <div class="review-progress"><i style={{ width: `${(reviewed / (reviewed + queue.length + pendingCards.length)) * 100}%` }} /></div>
       <div class="review-card">
         <div class="review-card-content">
           <p class="study-side-label">{revealed ? "ANSWER" : "QUESTION"}</p>
@@ -126,7 +148,7 @@ export default function ReviewSession({ cards, mode = "scheduled", onReview, onE
           </div>
         )}
       </div>
-      <footer class="review-session-footer"><Clock3 size={13} /> {mode === "scheduled" ? "Your answers update the FSRS schedule" : "Practice only · scheduled due dates remain unchanged"}</footer>
+      <footer class="review-session-footer"><Clock3 size={13} /> {mode === "scheduled" ? "FSRS updates your schedule · repeat delays won't block the session" : "Practice only · scheduled due dates remain unchanged"}</footer>
     </section>
   );
 }
