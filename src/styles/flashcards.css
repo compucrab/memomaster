@@ -7,8 +7,6 @@
 .study-add { @apply inline-flex items-center gap-2 border-0 bg-transparent; color: var(--muted); cursor: pointer; font: 10px var(--sans); }
 .study-add:hover { color: var(--ink); }
 .study-stage { @apply flex min-h-0 flex-1 flex-col items-center justify-center; width: 100%; max-width: 1320px; margin: 0 auto; }
-.study-card { @apply flex min-h-0 flex-col; width: min(100%, 1120px); height: min(76vh, 760px); background: var(--surface); }
-.study-card-content { @apply flex min-h-0 flex-1 flex-col items-center justify-center overflow-auto px-12 py-10; text-align: center; }
 .study-side-label { margin: 0 0 22px; color: var(--muted); font: 9px var(--mono); letter-spacing: .12em; }
 .study-card-prose { width: 100%; max-width: 900px; color: var(--ink); font: 17px/1.9 var(--sans); text-align: left; }
 .study-card-prose h1, .study-card-prose h2, .study-card-prose h3 { margin: 0 0 18px; color: var(--ink); font: 700 clamp(24px, 2.7vw, 34px)/1.3 var(--display); letter-spacing: -.045em; }
@@ -34,7 +32,6 @@
 .study-empty { @apply flex min-h-0 flex-1 flex-col items-center justify-center; color: var(--muted); text-align: center; }
 .study-empty h1 { margin: 16px 0 6px; color: var(--ink); font: 800 30px var(--display); letter-spacing: -.06em; }
 .study-empty p { margin: 0 0 20px; font-size: 11px; }
-@media (max-height: 720px) { .study-card { height: min(72vh, 640px); } }
 @media (max-width: 650px) { .study-notebook-name { display: none; } .study-card-content { padding-inline: 18px; } .study-navigation { margin-top: 12px; } }
 
 
