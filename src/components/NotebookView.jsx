@@ -26,7 +26,6 @@ export default function NotebookView({ notebook, onUpdate, onBack, onRequestText
   const [scopeTopicId, setScopeTopicId] = useState("");
   const [reviewing, setReviewing] = useState(false);
 
-  const selectedCard = cards.find(card => card.id === selectedCardId) || null;
   const editingCard = cards.find(card => card.id === editingCardId) || null;
   const filterTopics = chapters.find(chapter => chapter.id === chapterFilter)?.topics || [];
   const scopeTopics = chapters.find(chapter => chapter.id === scopeChapterId)?.topics || [];
@@ -43,6 +42,8 @@ export default function NotebookView({ notebook, onUpdate, onBack, onRequestText
       return matchesSearch && matchesChapter && matchesTopic;
     });
   }, [cards, chapters, search, chapterFilter, topicFilter]);
+
+  const selectedCard = visibleCards.find(card => card.id === selectedCardId) || visibleCards[0] || null;
 
   const scopedCards = useMemo(() => cards.filter(card => {
     if (scopeType === "chapter") return card.chapterId === scopeChapterId;
@@ -149,9 +150,9 @@ export default function NotebookView({ notebook, onUpdate, onBack, onRequestText
               {visibleCards.length ? visibleCards.map((card, index) => {
                 const chapter = chapters.find(item => item.id === card.chapterId);
                 const topic = chapter?.topics?.find(item => item.id === card.topicId);
-                return <button key={card.id} class={`browse-card-row ${selectedCardId === card.id ? "selected" : ""}`} onClick={() => setSelectedCardId(card.id)}>
+                return <button key={card.id} class={`browse-card-row ${selectedCard?.id === card.id ? "selected" : ""}`} onClick={() => setSelectedCardId(card.id)}>
                   <span class="browse-card-index">{String(index + 1).padStart(2, "0")}</span>
-                  <span class="browse-card-copy"><strong>{card.front.replace(/[#>*_\x60]/g, "").trim().split("\n")[0] || "Untitled question"}</strong><small>{topic?.name || chapter?.name || "Unassigned"}</small></span>
+                  <span class="browse-card-copy"><strong>{String(card.front || "").replace(/[#>*_\x60]/g, "").trim().split("\n")[0] || "Untitled question"}</strong><small>{topic?.name || chapter?.name || "Unassigned"}</small></span>
                 </button>;
               }) : <div class="browse-list-empty">{cards.length ? "No cards match your search." : "No cards in this notebook yet."}</div>}
             </div>
