@@ -53,3 +53,33 @@
 @media (max-width: 700px) {
   .card-editor-header-actions { grid-column: 1 / -1; justify-self: end; }
 }
+
+
+/* Compact single-panel card editor with a fixed action footer */
+.card-editor-page { padding: 14px clamp(18px, 3vw, 42px) 0; }
+.card-editor-compact-header { @apply flex shrink-0 items-center gap-4 border-b pb-3; border-color: var(--line); }
+.card-editor-compact-header .back-link { @apply inline-flex items-center gap-2 border-0 bg-transparent p-0; color: var(--muted); cursor: pointer; font: 10px var(--sans); }
+.card-editor-compact-header .back-link:hover { color: var(--ink); }
+.card-editor-compact-header .card-editor-heading { margin-left: auto; }
+.card-editor-compact-header .card-editor-heading span { color: var(--muted); font: 8px var(--mono); letter-spacing: .1em; }
+.card-editor-body { width: min(100%, 1440px); margin: 12px auto 0; }
+.card-editor-writing { min-height: 0; padding: 0 0 12px; }
+.card-editor-content-panel { @apply flex min-h-0 flex-1 flex-col gap-3; }
+.card-editor-content-panel > .rich-editor { min-height: 0; flex: 1 1 0; grid-template-rows: auto auto minmax(120px, 1fr); }
+.card-editor-content-panel .rich-editor-surface { min-height: 120px; max-height: none; height: 100%; }
+.card-editor-content-panel .rich-editor-content { min-height: 120px; height: 100%; padding: 14px 16px; font-size: 14px; line-height: 1.75; }
+.card-editor-content-divider { height: 1px; flex: 0 0 auto; background: var(--line); }
+.card-editor-organization { @apply flex shrink-0 items-end gap-2 border-t pt-3; max-width: 520px; border-color: var(--line); }
+.card-editor-organization label { min-width: 220px; gap: 5px; font-size: 8px; }
+.card-editor-organization select, .card-add-structure { height: 33px; }
+.card-editor-footer { @apply flex shrink-0 items-center justify-between gap-3 border-t; min-height: 58px; margin-top: auto; padding: 10px 0; border-color: var(--line); }
+.card-editor-footer-left, .card-editor-footer-right { @apply flex items-center gap-2; }
+.card-editor-footer .study-primary, .card-editor-footer .study-secondary { min-height: 36px; padding: 0 15px; font-size: 10px; }
+.card-editor-footer .card-delete-button { height: 34px; }
+@media (max-height: 760px) {
+  .card-editor-page { padding-top: 8px; }
+  .card-editor-compact-header { padding-bottom: 8px; }
+  .card-editor-body { margin-top: 8px; }
+  .card-editor-content-panel { gap: 8px; }
+  .card-editor-content-panel .rich-editor-content { padding: 10px 14px; }
+}
