@@ -33,9 +33,9 @@ function videoTarget(value) {
   }
   if (host === "instagram.com" || host.endsWith(".instagram.com")) {
     const match = url.pathname.match(/^\/(reel|p|tv)\/([\w-]+)/i);
-    return match ? { url: `https://www.instagram.com/${match[1]}/${match[2]}/embed`, provider: "instagram" } : { error: "This Instagram link is not a supported post or reel. Copy the link to a public reel or post." };
+    return match ? { url: value.trim(), provider: "instagram" } : { error: "This Instagram link is not a supported post or reel. Copy the link to a public reel or post." };
   }
-  if (host === "facebook.com" || host.endsWith(".facebook.com") || host === "fb.watch") return { url: `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(value.trim())}&show_text=0`, provider: "facebook" };
+  if (host === "facebook.com" || host.endsWith(".facebook.com") || host === "fb.watch") return { url: value.trim(), provider: "facebook" };
   if (/\.(mp4|webm|ogg)$/i.test(url.pathname)) return { url: value.trim(), provider: "direct" };
   return { error: "This video host does not provide a supported embed. Try YouTube, Instagram, Facebook, Vimeo, or a direct MP4/WebM/OGG link. Some providers block playback outside their own website." };
 }
