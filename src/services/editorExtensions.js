@@ -51,7 +51,7 @@ export const CardVideo = Node.create({
     name: "cardVideo",
     level: "block",
     start: (source) => source.indexOf("@[video]("),
-    tokenizer(source) {
+    tokenize(source) {
       const match = /^@\[video\]\((https?:\/\/[^\s)]+)\)/.exec(source);
       if (!match) return undefined;
       return { type: "cardVideo", raw: match[0], href: match[1] };
