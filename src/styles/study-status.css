@@ -73,3 +73,44 @@
 @media (max-width: 850px) { .status-stats-grid { @apply grid-cols-2; } .status-two-column { @apply grid-cols-1; } }
 @media (max-width: 600px) { .status-heading { @apply flex-col gap-4; } .status-stat { padding: 13px; } .status-panel { padding: 14px; } .notebook-progress-title { @apply items-start flex-col gap-1; } }
 @media (max-height: 720px) { .review-card { height: min(70vh,640px); } }
+
+
+/* Keep review ratings in one row; this stylesheet loads after flashcards.css. */
+.review-ratings {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  padding: 14px 20px 18px;
+}
+.review-ratings > p { margin: 0 0 11px; }
+.review-rating-options {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  width: min(100%, 560px);
+  gap: 8px;
+}
+.review-rating-options .review-rating {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  min-height: 54px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 8px 5px;
+  white-space: normal;
+}
+.review-rating-options .review-rating strong { font-size: 10px; line-height: 1.2; }
+.review-rating-options .review-rating span {
+  max-width: 100%;
+  font-size: 8px;
+  line-height: 1.25;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 700px) {
+  .review-rating-options { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
