@@ -2,7 +2,7 @@
 
 ## Product shape
 
-MemoMaster is a desktop-first learning and revision application. Its content hierarchy is Library → Notebook → Chapter → Topic → Flashcard. Each flashcard has Markdown front and back content. Cards belong to a notebook and can optionally reference a chapter and topic. The study UI presents one card at a time. A new installation starts with an empty library.
+MemoMaster is a desktop-first learning and revision application. Its content hierarchy is Library → Notebook → Chapter → Topic → Flashcard. Each flashcard has Markdown front and back content. Cards belong to a notebook and can optionally reference a chapter and topic. The study UI presents one card at a time. A new installation starts with an empty library; no sample notebooks are seeded.
 
 ## Technology and runtime
 
@@ -19,17 +19,21 @@ The app is local-first. Google Fonts are currently imported from the network in 
 
 ## State and persistence
 
-Layout.jsx owns the active Preact state: notebook collection, active view, active notebook ID, library query, dialogs/notices, and theme.
+Layout.jsx owns the active Preact state: notebook collection, active view, active notebook ID, library query, dialogs/notices, theme, and remembered project path.
 
 On startup, Rust opens the SQLite database in Tauri's application-data directory. load_library returns the saved library JSON if one exists. If the database is empty, the frontend starts with an empty library. The frontend debounces state changes and calls save_library. When the native window is closed, the latest state is saved before the window is destroyed.
 
 The database contains an app_state table with one row for the current library. The library is serialized as JSON to keep the initial persistence layer small while the notebook schema is still evolving. This is a deliberate first persistence step, not the final normalized relational model for future FSRS scheduling and review history.
 
-Theme selection and the last-used project path remain in localStorage.
+Theme selection and the last-used .memz save path remain in localStorage. The path only supports the Save project convenience action; the SQLite library is what restores the active project on relaunch.
 
-## Portable backup format
+## Project lifecycle and portable backup
 
-### Project: .memz
+### SQLite working copy
+
+SQLite is the automatic local working copy. Notebook, chapter, topic, and card edits are debounced to save_library and are restored on the next launch. Creating a new project writes an empty library to this same storage, replacing the previous working copy.
+
+### Project archive: .memz
 
 A ZIP archive containing:
 - manifest.json: format identifier, archive version, and notebook IDs.
@@ -38,7 +42,13 @@ A ZIP archive containing:
 
 The importer validates the manifest, IDs, ZIP directory entries, decompressed sizes, and CRC checksums. Version 1 archives remain supported through a legacy Markdown-card migration path; version 2 stores JSON card records.
 
-Opening a project replaces the active library. Saving a project writes a portable snapshot of the complete library. SQLite remains the active working copy and is autosaved independently. This is the only supported manual backup and restore workflow; individual notebook files are not supported.
+The File menu exposes these project actions:
+- **New project:** asks for confirmation, replaces the active library with an empty one, clears the remembered .memz path, and lets SQLite autosave the empty state. It does not delete an existing .memz backup.
+- **Open project:** reads a selected .memz archive and replaces the active library. The imported project is then saved to SQLite.
+- **Save project:** writes a snapshot to the remembered .memz path. If there is no remembered path, it opens Save As.
+- **Save project as:** asks for a destination and writes a .memz snapshot there.
+
+A .memz archive is a portable snapshot, not a live link to the SQLite database. Later edits do not change an earlier archive; save/export again to refresh it. Opening a .memz and loading SQLite are compatible because both represent the same library data. The .memz format is the only supported manual backup/restore format; individual notebook files are not supported.
 
 ## Native commands
 
