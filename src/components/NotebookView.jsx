@@ -7,7 +7,7 @@ import CardEditor from "./CardEditor";
 import ReviewSession from "./ReviewSession";
 
 function makeCard() {
-  return { id: crypto.randomUUID(), front: "## Your question\n\nWrite a prompt here.", back: "Write the answer here.", chapterId: "", topicId: "" };
+  return { id: crypto.randomUUID(), front: "## Your question\n\nWrite a prompt here.", back: "Write the answer here.", chapterId: "" };
 }
 const makeId = () => crypto.randomUUID();
 const normalizeName = (value) => String(value || "").trim().toLocaleLowerCase();
@@ -116,7 +116,7 @@ export default function NotebookView({ notebook, onUpdate, onBack, onRequestText
         const title = name.trim();
         if (!title) return "Please enter a chapter name.";
         if (chapters.some((item) => normalizeName(item.name) === normalizeName(title))) return "This notebook already has a chapter with that name.";
-        const chapter = { id: makeId(), name: title, topics: [] };
+        const chapter = { id: makeId(), name: title };
         onUpdate({ chapters: [...chapters, chapter] });
         setScopeChapterId(chapter.id);
       },
@@ -126,7 +126,7 @@ export default function NotebookView({ notebook, onUpdate, onBack, onRequestText
   if (editingCard) {
     return <CardEditor key={editingCard.id} card={editingCard} chapters={chapters}
       onSave={saveCard} existingCards={cards} onCancel={() => { setEditingCardId(null); setNewCard(null); }}
-      onAddChapter={addChapter} onDelete={() => askDelete("Delete card?", "This card and its review history will be permanently deleted.", () => { deleteCards([editingCard.id]); setEditingCardId(null); })} />;
+      onAddChapter={addChapter} onDelete={() => { deleteCards([editingCard.id]); setEditingCardId(null); }} />;
   }
 
   if (reviewing) {
@@ -158,7 +158,6 @@ export default function NotebookView({ notebook, onUpdate, onBack, onRequestText
                   <option value="all">All chapters</option>
                   {chapters.map(chapter => <option value={chapter.id}>{chapter.name}</option>)}
                 </select>
-                </select>
               </div>
               <div class="browse-list-count">{visibleCards.length} OF {cards.length} CARDS</div>
               <div class="browse-structure-actions">
@@ -173,7 +172,7 @@ export default function NotebookView({ notebook, onUpdate, onBack, onRequestText
                 </select>
                 <button type="button" disabled={!targetChapterId} onClick={() => {
                   const next = cards.map((card) => selectedCardIds.includes(card.id)
-                    ? { ...card, chapterId: targetChapterId === "__unassigned" ? "" : targetChapterId, topicId: "" }
+                    ? (() => { const { topicId, ...cleanCard } = card; return { ...cleanCard, chapterId: targetChapterId === "__unassigned" ? "" : targetChapterId }; })()
                     : card);
                   onUpdate({ flashcards: next, cards: next.length });
                   setSelectedCardIds([]);
