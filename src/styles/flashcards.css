@@ -119,3 +119,17 @@
 @media (max-width: 560px) {
   .unscheduled-review-options { display: grid; grid-template-columns: 1fr 1fr; }
 }
+
+.browse-card-row { @apply flex items-center gap-2; min-height: 56px; padding: 0 9px; border-bottom: 1px solid var(--line); }
+.browse-card-row.selected { background: var(--hover); box-shadow: inset 2px 0 var(--accent); }
+.browse-card-row.checked { background: color-mix(in srgb, var(--accent) 7%, var(--surface)); }
+.browse-card-checkbox { width: 13px; height: 13px; flex: 0 0 auto; accent-color: var(--accent); cursor: pointer; }
+.browse-card-select { @apply flex min-w-0 flex-1 items-start gap-3 border-0 bg-transparent py-3 text-left; color: var(--ink); cursor: pointer; }
+.browse-card-select .browse-card-copy { @apply flex min-w-0 flex-1 flex-col gap-1; }
+.browse-structure-actions, .browse-selection-bar { @apply flex flex-wrap items-center gap-2; margin-top: 9px; }
+.browse-structure-actions button, .browse-selection-bar button { @apply inline-flex items-center gap-1 border px-2 py-1; border-color: var(--line); background: transparent; color: var(--muted); cursor: pointer; font: 9px var(--sans); }
+.browse-structure-actions button:hover, .browse-selection-bar button:hover { color: var(--ink); border-color: var(--muted); }
+.browse-selection-bar { padding-top: 8px; border-top: 1px solid var(--line); }
+.browse-selection-bar span { margin-right: auto; color: var(--ink); font: 9px var(--mono); }
+.browse-selection-bar button.delete-selected { color: #d45f5f; border-color: color-mix(in srgb, #d45f5f 45%, var(--line)); }
+.browse-card-context { z-index: 120; }
