@@ -122,6 +122,8 @@ export default function RichTextEditor({ label, value = "", placeholder, onChang
       <button type="button" class="rich-editor-tool" title="Align left" aria-label="Align left" disabled={!editor} onMouseDown={e=>e.preventDefault()} onClick={()=>align("left")}><AlignLeft size={15}/></button>
       <button type="button" class="rich-editor-tool" title="Align centre" aria-label="Align centre" disabled={!editor} onMouseDown={e=>e.preventDefault()} onClick={()=>align("center")}><AlignCenter size={15}/></button>
       <button type="button" class="rich-editor-tool" title="Align right" aria-label="Align right" disabled={!editor} onMouseDown={e=>e.preventDefault()} onClick={()=>align("right")}><AlignRight size={15}/></button>
+      <label class="rich-editor-color" title="Text colour"><input aria-label="Text colour" type="color" disabled={!editor} value={editor?.getAttributes("textStyle").color || "#386fae"} onInput={e=>editor?.chain().focus().setColor(e.currentTarget.value).run()}/></label>
+      <button type="button" class="rich-editor-tool" title="Insert link" aria-label="Insert link" disabled={!editor} onMouseDown={e=>e.preventDefault()} onClick={()=>openInsert("link")}><LinkIcon size={15}/></button>
       <span class="rich-editor-divider"/>
       <button type="button" class="rich-editor-tool" title="Insert image" aria-label="Insert image" disabled={!editor} onMouseDown={e=>e.preventDefault()} onClick={()=>fileRef.current?.click()}><ImagePlus size={15}/></button>
       <button type="button" class="rich-editor-tool" title="Decrease image size" aria-label="Decrease image size" disabled={!editor || !imageSelected} onMouseDown={e=>e.preventDefault()} onClick={()=>resize(-60)}><Minus size={15}/></button>
