@@ -34,18 +34,18 @@ export default function ReviewSession({ cards, mode = "scheduled", settings, onR
     if (!pending.length) return undefined;
     const timer = window.setInterval(() => {
       const now = new Date();
-      setClockNow(now);
       const dueIds = pending.filter((id) => {
         const card = sessionCards.find((item) => item.id === id);
         return card && isDue(card, now);
       });
+      if (!queue.length || dueIds.length) setClockNow(now);
       if (dueIds.length) {
         setQueue((items) => [...items, ...dueIds.filter((id) => !items.includes(id))]);
         setPending((items) => items.filter((id) => !dueIds.includes(id)));
       }
     }, 1000);
     return () => window.clearInterval(timer);
-  }, [pending, sessionCards]);
+  }, [pending, sessionCards, queue.length]);
 
   function removeActiveCard() {
     setQueue((items) => items.slice(1));
