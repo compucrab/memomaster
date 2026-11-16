@@ -1,72 +1,124 @@
 import { useMemo } from "preact/hooks";
-import { ArrowLeft, BookOpen, CalendarDays, Clock3, Flame, Layers3, Target } from "lucide-preact";
+import { ArrowLeft, Target, Clock3, Brain, TrendingUp, AlertCircle } from "lucide-preact";
+import { State } from "ts-fsrs";
 
 const DAY = 86400000;
-const dateKey = (value) => { const d = new Date(value); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; };
-const dayStart = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
-const formatDay = (d) => new Intl.DateTimeFormat(undefined,{month:"short",day:"numeric"}).format(d);
+const dateKey = (date) => `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,"0")}-${String(date.getDate()).padStart(2,"0")}`;
+const dayStart = (date) => new Date(date.getFullYear(), date.getMonth(), date.getDate());
+const studyDayKey = (value, rolloverHour) => {
+  const date = new Date(value);
+  date.setHours(date.getHours() - rolloverHour);
+  return dateKey(date);
+};
+const monthKey = (value) => { const d = new Date(value); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`; };
 
-function streaks(activity, today) {
-  let current = 0, cursor = new Date(today);
-  if (!activity.has(dateKey(cursor))) cursor.setDate(cursor.getDate()-1);
-  while (activity.has(dateKey(cursor))) { current++; cursor.setDate(cursor.getDate()-1); }
-  let longest = 0, run = 0, previous = null;
-  for (const key of [...activity.keys()].sort()) {
-    const date = new Date(`${key}T00:00:00`);
-    run = previous && date.getTime()-previous.getTime()===DAY ? run+1 : 1;
-    longest = Math.max(longest,run); previous = date;
-  }
-  return {current,longest};
+function classify(card) {
+  if (!card.fsrs || card.fsrs.state === State.New || !(card.fsrs.reps > 0)) return "new";
+  if (card.fsrs.state === State.Learning || card.fsrs.state === State.Relearning) return "learning";
+  return (card.fsrs.scheduled_days || 0) >= 21 ? "mature" : "young";
 }
 
-export default function StudyStatus({ notebooks, onBack }) {
+export default function StudyStatus({ notebooks, settings, onBack }) {
   const data = useMemo(() => {
-    const history = notebooks.flatMap(n => (n.reviewHistory||[]).map(log=>({...log,notebookId:n.id})));
-    const practice = notebooks.flatMap(n => (n.practiceHistory||[]).map(log=>({...log,notebookId:n.id})));
-    const activity = new Map();
-    [...history, ...practice].forEach(log => { if(log.review){const key=dateKey(log.review);activity.set(key,(activity.get(key)||0)+1);} });
-    const today = dayStart(new Date()), cards = notebooks.flatMap(n=>n.flashcards||[]);
-    const streak = streaks(activity,today);
-    const ratings = history.reduce((a,l)=>{a[l.rating]=(a[l.rating]||0)+1;return a;},{});
-    const daysStart = new Date(today); daysStart.setDate(daysStart.getDate()-363); daysStart.setDate(daysStart.getDate()-daysStart.getDay());
-    const days = Array.from({length:371},(_,i)=>{const date=new Date(daysStart);date.setDate(daysStart.getDate()+i);return {date,count:activity.get(dateKey(date))||0};});
-    const maxCount=Math.max(1,...days.map(d=>d.count));
-    const endOfToday = new Date(today); endOfToday.setDate(endOfToday.getDate() + 1);
-    const upcoming=Array.from({length:7},(_,i)=>{const date=new Date(today);date.setDate(date.getDate()+i);return {date,count:cards.filter(c=>{if(!c.fsrs?.due)return i===0;const dueDate=new Date(c.fsrs.due);return i===0?dueDate<endOfToday:dateKey(dueDate)===dateKey(date);}).length};});
-    const remembered=(ratings.good||0)+(ratings.easy||0)+(ratings.difficult||0);
-    return {history,practice,activity,ratings,days,maxCount,upcoming,cards,streak,remembered,activeDays:activity.size,
-      recall:history.length?Math.round(remembered/history.length*100):0,
-      due:cards.filter(c=>!c.fsrs?.due||new Date(c.fsrs.due)<=new Date()).length};
-  },[notebooks]);
-  const learned=data.cards.filter(c=>(c.fsrs?.reps||0)>0).length;
-  const months=data.days.filter(d=>d.date.getDate()===1).map(d=>({label:new Intl.DateTimeFormat(undefined,{month:"short"}).format(d.date),offset:Math.floor((d.date-data.days[0].date)/DAY/7)}));
+    const history = notebooks.flatMap(n => (n.reviewHistory || []).map(log => ({ ...log, notebookTitle: n.title })));
+    const cards = notebooks.flatMap(n => (n.flashcards || []).map(card => ({ ...card, notebookTitle: n.title })));
+    const validHistory = history.filter(log => log.review && ["forgot","difficult","good","easy"].includes(log.rating));
+    const ratings = validHistory.reduce((result, log) => { result[log.rating] = (result[log.rating] || 0) + 1; return result; }, {});
+    const remembered = (ratings.difficult || 0) + (ratings.good || 0) + (ratings.easy || 0);
+    const now = new Date();
+    const retention = validHistory.length ? remembered / validHistory.length : null;
+    const monthCursor = new Date(now.getFullYear(), now.getMonth() - 11, 1);
+    const monthly = Array.from({ length: 12 }, (_, index) => {
+      const date = new Date(monthCursor.getFullYear(), monthCursor.getMonth() + index, 1);
+      const logs = validHistory.filter(log => monthKey(log.review) === monthKey(date));
+      const passes = logs.filter(log => log.rating !== "forgot").length;
+      return { label: date.toLocaleDateString(undefined, { month: "short" }), count: logs.length, retention: logs.length ? passes / logs.length : null };
+    });
+    const rollover = settings?.rolloverHour ?? 4;
+    const todayKey = studyDayKey(now, rollover);
+    const workload = Array.from({ length: 30 }, (_, index) => {
+      const date = new Date(now);
+      date.setHours(rollover, 0, 0, 0);
+      date.setDate(date.getDate() + index);
+      const key = studyDayKey(date, rollover);
+      return { key, label: index === 0 ? "Today" : date.toLocaleDateString(undefined, { month: "short", day: "numeric" }), count: 0 };
+    });
+    const workloadIndex = new Map(workload.map((item, index) => [item.key, index]));
+    cards.forEach(card => {
+      const due = card.fsrs?.due ? new Date(card.fsrs.due) : now;
+      if (Number.isNaN(due.getTime())) return;
+      const dueKey = studyDayKey(due < now ? now : due, rollover);
+      const index = workloadIndex.get(dueKey);
+      if (index !== undefined) workload[index].count++;
+    });
+    const breakdown = { new: 0, learning: 0, young: 0, mature: 0 };
+    cards.forEach(card => breakdown[classify(card)]++);
+    const forgotten = cards.filter(card => (card.fsrs?.lapses || 0) > 0)
+      .sort((a,b) => (b.fsrs?.lapses || 0) - (a.fsrs?.lapses || 0))
+      .slice(0, 8);
+    const dueNow = workload[0]?.count || 0;
+    return { validHistory, ratings, remembered, retention, monthly, workload, breakdown, forgotten, cards, dueNow, todayKey };
+  }, [notebooks, settings]);
 
-  return <section class="workspace status-workspace">
-    <header class="status-heading"><button class="back-link" onClick={onBack}><ArrowLeft size={14}/> LIBRARY</button><div><h1>Study status</h1><p>Your learning activity and retention at a glance.</p></div></header>
-    <div class="status-stats-grid">
-      <article class="status-stat"><span><Flame size={15}/> CURRENT STREAK</span><strong>{data.streak.current} <small>days</small></strong><p>Longest: {data.streak.longest} days</p></article>
-      <article class="status-stat"><span><CalendarDays size={15}/> REVIEWS</span><strong>{data.history.length.toLocaleString()}</strong><p>{data.activeDays} active days</p></article>
-      <article class="status-stat"><span><Target size={15}/> RECALL RATE</span><strong>{data.recall}<small>%</small></strong><p>Difficult, Good or Easy responses</p></article>
-      <article class="status-stat"><span><Layers3 size={15}/> CARDS REVIEWED</span><strong>{learned}<small> / {data.cards.length}</small></strong><p>{data.due} due now</p></article>
-    </div>
-    <section class="status-panel consistency-panel">
-      <div class="status-panel-heading"><div><h2>Consistency</h2><p>Scheduled reviews and unscheduled practice over the last year</p></div><span>{data.activeDays} active days</span></div>
-      <div class="heatmap-scroll"><div class="heatmap-months">{months.map(m=><span style={{gridColumn:m.offset+1}}>{m.label}</span>)}</div><div class="heatmap">
-        {data.days.map(day=>{const level=day.count?Math.min(4,Math.ceil(day.count/data.maxCount*4)):0;return <i key={dateKey(day.date)} class={`heatmap-cell level-${level}`} title={`${day.count} reviews · ${formatDay(day.date)}`}/>;})}
-      </div></div>
-      <div class="heatmap-legend"><span>Less</span>{[0,1,2,3,4].map(level=><i class={`heatmap-cell level-${level}`}/>)}<span>More</span></div>
-    </section>
-    <div class="status-two-column">
-      <section class="status-panel"><div class="status-panel-heading"><div><h2>Review outcomes</h2><p>How each review felt</p></div></div>
-        <div class="outcome-list">{[["Good",data.ratings.good||0,"good"],["Easy",data.ratings.easy||0,"easy"],["Difficult",data.ratings.difficult||0,"difficult"],["Forgot",data.ratings.forgot||0,"forgot"]].map(([label,count,kind])=><div class="outcome-row"><span>{label}</span><div><i class={kind} style={{width:`${data.history.length?count/data.history.length*100:0}%`}}/></div><strong>{count}</strong></div>)}</div>
-        <p class="status-footnote">Recall rate counts Difficult, Good and Easy responses as remembered.</p>
+  const maxWorkload = Math.max(1, ...data.workload.map(item => item.count));
+  const maxRetention = 1;
+  const monthlyPoints = data.monthly.map((item,index) => item.retention === null ? null : `${(index / 11) * 500},${90 - item.retention * 70}`).filter(Boolean).join(" ");
+  const target = settings?.desiredRetention ?? 0.9;
+  const retentionDelta = data.retention === null ? null : Math.round((data.retention - target) * 100);
+
+  return (
+    <section class="workspace status-workspace">
+      <header class="status-heading"><button class="back-link" onClick={onBack}><ArrowLeft size={14}/> LIBRARY</button><div><h1>Retention & memory</h1><p>How well your cards are retained, and what needs attention.</p></div></header>
+      <div class="status-stats-grid">
+        <article class="status-stat"><span><Target size={15}/> ACTUAL RETENTION</span><strong>{data.retention === null ? "—" : `${Math.round(data.retention * 100)}%`}</strong><p>{data.retention === null ? "Complete reviews to measure retention" : `${retentionDelta >= 0 ? "+" : ""}${retentionDelta} points vs ${Math.round(target * 100)}% target`}</p></article>
+        <article class="status-stat"><span><Brain size={15}/> CARDS TRACKED</span><strong>{data.cards.length.toLocaleString()}</strong><p>{data.dueNow} due in the current study day</p></article>
+        <article class="status-stat"><span><Clock3 size={15}/> REVIEW HISTORY</span><strong>{data.validHistory.length.toLocaleString()}</strong><p>Scheduled reviews only</p></article>
+        <article class="status-stat"><span><TrendingUp size={15}/> DESIRED RETENTION</span><strong>{Math.round(target * 100)}%</strong><p>Current FSRS target</p></article>
+      </div>
+
+      <div class="status-two-column">
+        <section class="status-panel">
+          <div class="status-panel-heading"><div><h2>Monthly retention</h2><p>Successful recall: Hard, Good and Easy</p></div><span>12 MONTHS</span></div>
+          <div class="retention-chart">
+            <div class="retention-chart-y"><span>100%</span><span>50%</span><span>0%</span></div>
+            <svg viewBox="0 0 500 90" preserveAspectRatio="none" role="img" aria-label="Monthly retention trend">
+              <line x1="0" x2="500" y1="20" y2="20"/><line x1="0" x2="500" y1="55" y2="55"/>
+              <line class="retention-target-line" x1="0" x2="500" y1={90 - target * 70} y2={90 - target * 70}/>
+              {data.monthly.map((item,index) => item.retention === null ? null : <circle cx={(index / 11) * 500} cy={90 - item.retention * 70} r="3.5"/> )}
+              {data.monthly.length && <polyline points={monthlyPoints} fill="none" stroke="var(--accent)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>}
+            </svg>
+          </div>
+          <div class="retention-month-labels">{data.monthly.map(item=><span>{item.label}</span>)}</div>
+          <p class="status-footnote">The dashed line represents your desired retention. Months without reviews have no data point.</p>
+        </section>
+        <section class="status-panel">
+          <div class="status-panel-heading"><div><h2>Rating distribution</h2><p>How your recall felt during reviews</p></div></div>
+          <div class="outcome-list">{[["Again",data.ratings.forgot || 0,"forgot"],["Hard",data.ratings.difficult || 0,"difficult"],["Good",data.ratings.good || 0,"good"],["Easy",data.ratings.easy || 0,"easy"]].map(([label,count,kind])=><div class="outcome-row"><span>{label}</span><div><i class={kind} style={{width:`${data.validHistory.length ? count / data.validHistory.length * 100 : 0}%`}}/></div><strong>{count}</strong></div>)}</div>
+          <p class="status-footnote">Again is a failed recall. Hard, Good and Easy count as successful recall.</p>
+        </section>
+      </div>
+
+      <section class="status-panel">
+        <div class="status-panel-heading"><div><h2>Upcoming workload</h2><p>Scheduled cards grouped by study day · rollover {String(settings?.rolloverHour ?? 4).padStart(2,"0")}:00</p></div><span>NEXT 30 DAYS</span></div>
+        <div class="workload-chart">{data.workload.map((item,index)=><div class="workload-column" title={`${item.label}: ${item.count} cards`}><strong>{item.count || ""}</strong><i style={{height:`${Math.max(2,item.count / maxWorkload * 100)}%`}}/><small>{index % 5 === 0 || index === 29 ? item.label : ""}</small></div>)}</div>
       </section>
-      <section class="status-panel"><div class="status-panel-heading"><div><h2>Upcoming reviews</h2><p>Cards scheduled by day</p></div><Clock3 size={16}/></div>
-        <div class="upcoming-list">{data.upcoming.map((item,i)=><div class="upcoming-row"><span>{i===0?"Today":i===1?"Tomorrow":formatDay(item.date)}</span><strong>{item.count}</strong></div>)}</div>
+
+      <section class="status-panel">
+        <div class="status-panel-heading"><div><h2>Card maturity</h2><p>Learning state and review interval classification</p></div></div>
+        <div class="maturity-grid">
+          {[
+            ["New",data.breakdown.new,"Cards not yet reviewed","new"],
+            ["Learning",data.breakdown.learning,"In learning or relearning steps","learning"],
+            ["Young",data.breakdown.young,"Graduated, interval under 21 days","young"],
+            ["Mature",data.breakdown.mature,"Review interval of 21 days or longer","mature"],
+          ].map(([label,count,description,kind])=><article class={`maturity-card ${kind}`}><span>{label.toUpperCase()}</span><strong>{count}</strong><small>{description}</small></article>)}
+        </div>
       </section>
-    </div>
-    <section class="status-panel notebook-progress-panel"><div class="status-panel-heading"><div><h2>Notebook progress</h2><p>Cards reviewed and waiting in each notebook</p></div><BookOpen size={16}/></div>
-      {notebooks.length?<div class="notebook-progress-list">{notebooks.map(n=>{const cards=n.flashcards||[],done=cards.filter(c=>(c.fsrs?.reps||0)>0).length,due=cards.filter(c=>!c.fsrs?.due||new Date(c.fsrs.due)<=new Date()).length,pct=cards.length?Math.round(done/cards.length*100):0;return <div class="notebook-progress-row"><div class="notebook-progress-title"><strong>{n.title}</strong><span>{done}/{cards.length} reviewed · {due} due</span></div><div class="notebook-progress-track"><i style={{width:`${pct}%`}}/></div></div>;})}</div>:<p class="status-empty">Create a notebook and add cards to start tracking progress.</p>}
+
+      <section class="status-panel">
+        <div class="status-panel-heading"><div><h2>Frequently forgotten</h2><p>Cards with the highest recorded lapse count</p></div><AlertCircle size={16}/></div>
+        {data.forgotten.length ? <div class="forgotten-list">{data.forgotten.map(card=><div class="forgotten-row"><div><strong>{String(card.front || "Untitled card").replace(/[#>*_\x60]/g,"").trim().split("\n")[0]}</strong><small>{card.notebookTitle}</small></div><span>{card.fsrs.lapses} lapses</span></div>)}</div> : <p class="status-empty">No forgotten cards recorded yet. Again responses will identify cards that need more attention.</p>}
+      </section>
     </section>
-  </section>;
+  );
 }
