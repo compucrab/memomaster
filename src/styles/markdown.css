@@ -1,1 +1,89 @@
-@reference "tailwindcss";.markdown-card{margin-top:13px;border:1px solid var(--line);background:#faf8f1}.markdown-card-toolbar{@apply flex items-center justify-between h-[42px] px-[15px] border-b border-[#e2ded1];color:#969487;font:8px var(--mono);letter-spacing:.1em}.markdown-card-toolbar>span{@apply flex items-center gap-2}.markdown-card-toolbar i{width:5px;height:5px;border-radius:50%;background:#a8b46a}.markdown-card-toolbar>div{@apply flex items-center gap-1}.markdown-card-toolbar button{@apply inline-flex items-center gap-1 px-2 py-[6px] border-0 bg-transparent text-[#89887c] cursor-pointer;font:9px var(--sans)}.markdown-card-toolbar button.is-selected{background:#ebe7d9;color:#414332}.markdown-prose{min-height:300px;padding:25px clamp(20px,4vw,42px) 38px;color:#4f5048;font:14px/1.85 var(--sans)}.markdown-prose h1,.markdown-prose h2,.markdown-prose h3{color:var(--ink);font-family:var(--display);letter-spacing:-.05em;line-height:1.2}.markdown-prose h1{margin:0 0 20px;font-size:27px}.markdown-prose h2{margin:30px 0 12px;font-size:19px}.markdown-prose h3{margin:24px 0 10px;font-size:16px}.markdown-prose p{margin:0 0 15px}.markdown-prose ul,.markdown-prose ol{margin:0 0 18px;padding-left:23px}.markdown-prose li{padding-left:4px;margin:5px 0}.markdown-prose blockquote{margin:23px 0;padding:3px 0 3px 17px;border-left:2px solid #a6b15c;color:#77776d;font:15px var(--serif)}.markdown-prose code{padding:2px 5px;background:#ebe7d9;font:12px var(--mono)}.markdown-editor{display:block;width:100%;min-height:300px;resize:vertical;padding:25px 30px;border:0;outline:0;background:transparent;color:#4f5048;font:12px/1.8 var(--mono)}
+@reference "tailwindcss";
+
+.markdown-card {
+  margin-top: 13px;
+  border: 1px solid var(--line);
+  background: #faf8f1;
+}
+
+.markdown-card-toolbar {
+  @apply flex h-[42px] items-center justify-between border-b px-[15px];
+  border-color: #e2ded1;
+  color: #969487;
+  font: 8px var(--mono);
+  letter-spacing: .1em;
+}
+
+.markdown-card-toolbar > span { @apply flex items-center gap-2; }
+
+.markdown-card-toolbar i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #a8b46a;
+}
+
+.markdown-card-toolbar > div { @apply flex items-center gap-1; }
+
+.markdown-card-toolbar button {
+  @apply inline-flex items-center gap-1 border-0 bg-transparent px-2 py-[6px];
+  color: #89887c;
+  cursor: pointer;
+  font: 9px var(--sans);
+}
+
+.markdown-card-toolbar button.is-selected {
+  background: #ebe7d9;
+  color: #414332;
+}
+
+.markdown-prose {
+  min-height: 300px;
+  padding: 25px clamp(20px, 4vw, 42px) 38px;
+  color: #4f5048;
+  font: 14px/1.85 var(--sans);
+}
+
+.markdown-prose h1,
+.markdown-prose h2,
+.markdown-prose h3 {
+  color: var(--ink);
+  font-family: var(--display);
+  letter-spacing: -.05em;
+  line-height: 1.2;
+}
+
+.markdown-prose h1 { margin: 0 0 20px; font-size: 27px; }
+.markdown-prose h2 { margin: 30px 0 12px; font-size: 19px; }
+.markdown-prose h3 { margin: 24px 0 10px; font-size: 16px; }
+.markdown-prose p { margin: 0 0 15px; }
+.markdown-prose ul,
+.markdown-prose ol { margin: 0 0 18px; padding-left: 23px; }
+.markdown-prose li { margin: 5px 0; padding-left: 4px; }
+
+.markdown-prose blockquote {
+  margin: 23px 0;
+  padding: 3px 0 3px 17px;
+  border-left: 2px solid #a6b15c;
+  color: #77776d;
+  font: 15px var(--serif);
+}
+
+.markdown-prose code {
+  padding: 2px 5px;
+  background: #ebe7d9;
+  font: 12px var(--mono);
+}
+
+.markdown-editor {
+  display: block;
+  width: 100%;
+  min-height: 300px;
+  resize: vertical;
+  padding: 25px 30px;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #4f5048;
+  font: 12px/1.8 var(--mono);
+}
