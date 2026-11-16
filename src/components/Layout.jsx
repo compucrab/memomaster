@@ -88,9 +88,11 @@ export default function Layout() {
     getCurrentWindow().onCloseRequested(async (event) => {
       event.preventDefault();
       try {
-        if (ready) {
-          await invoke("save_library", { data: JSON.stringify(notebooksRef.current) });
+        if (!ready) {
+          setNotice("The library is still loading. Try closing again in a moment.");
+          return;
         }
+        await invoke("save_library", { data: JSON.stringify(notebooksRef.current) });
         await getCurrentWindow().destroy();
       } catch (error) {
         setNotice(`Could not save before closing: ${error.message || error}`);

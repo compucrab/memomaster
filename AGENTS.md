@@ -32,14 +32,15 @@ The intended hierarchy is:
 
 Do not claim or implement against assumptions that are not true:
 
-- Notebook state is currently in Preact memory, seeded by `src/data/notebooks.js`.
-- Theme selection is persisted in `localStorage`; notebook data is not.
-- The Rust side currently only builds the Tauri application and registers the opener plugin. It does not yet own notebook persistence or scheduling.
-- `.memz` import/export is implemented in `src/services/projectArchive.js`.
+- Notebook state is coordinated in Preact and automatically persisted to SQLite through Rust commands.
+- Theme selection is persisted in `localStorage`.
+- Rust owns SQLite access and native file read/write commands; the frontend owns the current notebook data model and serialization.
+- The Tauri dialog plugin provides native Open and Save dialogs.
+- `.memn` notebook files and `.memz` project archives are handled by `src/services/projectArchive.js`.
 - Card front/back editing uses Tiptap (`@tiptap/core`, `@tiptap/starter-kit`, `@tiptap/markdown`) through `src/components/RichTextEditor.jsx`; the editor serializes content to Markdown strings.
 - `src/services/markdown.js` renders saved Markdown for read-only study mode.
-- SQLite, FSRS, Anki import, cloud sync, and durable notebook persistence are not implemented.
-- Do not add placeholder Rust commands or pretend that an architectural target already exists.
+- FSRS, Anki import, cloud sync, and multi-device synchronization are not implemented.
+- The SQLite implementation currently stores the complete library JSON in one row; normalized domain tables and migrations remain future work.
 
 ## UI and interaction rules
 
