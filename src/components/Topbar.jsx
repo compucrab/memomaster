@@ -1,4 +1,4 @@
-import { Search, Plus, Command, ChartNoAxesColumn } from "lucide-preact";
+import { Search, Plus, Command, BarChart3 } from "lucide-preact";
 
 export default function Topbar({ title, query, onQueryChange, onCreate, onStudyStatus }) {
   return (
