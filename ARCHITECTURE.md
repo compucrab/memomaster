@@ -1,95 +1,113 @@
 # MemoMaster Architecture
 
-## Product shape
+## Product model
 
-MemoMaster is a desktop-first learning and revision application. Its content hierarchy is Library → Notebook → Chapter → Flashcard. Each flashcard has Markdown front and back content. Cards belong to a notebook and can optionally reference a chapter. Notebook view has two tabs: Browse and Study. The UI migrates older saved data by dropping legacy topic metadata while preserving notebooks, chapters, cards, FSRS state, and review history. Browse provides a searchable card list, chapter filters, a selected-card preview, multi-selection, bulk deletion, and bulk chapter reassignment. Existing cards can also be deleted from the card editor. Study supports Scheduled and Unscheduled sessions over a notebook or chapter. Scheduled reviews use FSRS-6; the review UI exposes three choices: Forgot (Again), Difficult (Hard), and Easy (Easy). Unscheduled practice records activity separately and must not mutate FSRS state or due dates. A new installation starts with an empty library; no sample notebooks are seeded.
+MemoMaster is a desktop-first, local-first learning and revision app. The content hierarchy is:
+
+**Library → Notebook → Chapter → Flashcard**
+
+A notebook contains chapters, flashcards, scheduled review history, and unscheduled practice history. A card contains Markdown front/back content, an optional chapterId, and optional FSRS state. Topics are no longer part of the product model; legacy topic metadata is stripped when old library or archive data is loaded.
+
+Notebook view has two tabs:
+
+- **Browse:** searchable card list, chapter filter, card preview, edit action, multi-selection, bulk deletion, chapter reassignment, and schedule reset.
+- **Study:** Scheduled or Unscheduled sessions scoped to a whole notebook or one chapter.
+
+A new installation starts with an empty library.
 
 ## Technology and runtime
 
-- Tauri 2 creates the native desktop window and exposes native commands.
-- Rust owns local persistence and native file access.
-- SQLite stores the active library as a JSON document in a single-row table. The Rust command validates JSON syntax and commits the serialized library.
-- Preact and JavaScript implement the UI and application state.
-- Vite builds and serves the frontend on port 1420.
-- Tailwind CSS v4 is integrated through the Vite plugin.
-- Tiptap provides the structured rich-text editor; its Markdown extension loads and serializes card content.
-- The Tauri dialog plugin provides native Open and Save dialogs.
+- Tauri 2 provides the native desktop window and IPC boundary.
+- Rust owns SQLite access, native file reads/writes, and automatic backup file creation.
+- Preact and JavaScript own the UI and in-memory application state.
+- Vite serves the frontend on port 1420 and builds the production assets.
+- Tailwind CSS v4 and project styles provide the UI.
+- Tiptap and its Markdown extension power the card editor.
+- KaTeX renders inline and display mathematics.
+- ts-fsrs implements FSRS-6 scheduling.
+- The Tauri dialog plugin provides native file selection.
 
-The app is local-first. Google Fonts are currently imported from the network in src/styles/index.css; bundle fonts locally if fully offline typography becomes a requirement.
+## State ownership and persistence
 
-## State and persistence
+Layout.jsx owns the notebook collection, active view, active notebook, library search, theme, prompts/notices, and remembered project path. Notebook-local browsing, editing, study scope, and review-session state live in their respective components.
 
-Layout.jsx owns the active Preact state: notebook collection, active view, active notebook ID, library query, dialogs/notices, theme, and remembered project path.
+On startup, Rust opens memomaster.sqlite3 in Tauri's application-data directory. The app_state table stores the complete library JSON in one row. The frontend loads this value with load_library, normalizes legacy topic fields, and debounces changes through save_library.
 
-On startup, Rust opens the SQLite database in Tauri's application-data directory. load_library returns the saved library JSON if one exists. If the database is empty, the frontend starts with an empty library. The frontend debounces state changes and calls save_library. When the native window is closed, the latest state is saved before the window is destroyed.
+The full library JSON approach is intentional for the current small local data model. Normalized SQLite domain tables and explicit database migrations are future work.
 
-The database contains an app_state table with one row for the current library. The library is serialized as JSON to keep the initial persistence layer small while the notebook schema is still evolving. This is a deliberate first persistence step. FSRS scheduling state is stored on each card; scheduled review history (`reviewHistory`) and unscheduled practice history (`practiceHistory`) are stored on the notebook as part of the same JSON library document.
+Theme and remembered .memz path are stored in localStorage. SQLite is the working copy restored on launch.
 
-Theme selection and the last-used .memz save path remain in localStorage. The path only supports the Save project convenience action; the SQLite library is what restores the active project on relaunch.
+## Project archives and backups
 
-## Project lifecycle and portable backup
+The portable .memz format is a ZIP archive generated and parsed by src/services/projectArchive.js.
 
-### SQLite working copy
+- manifest.json contains the format identifier, archive version, and notebook IDs.
+- notebooks/{notebookId}/notebook.json contains notebook metadata, chapters, and study histories.
+- notebooks/{notebookId}/cards/{cardId}.json contains individual cards, including FSRS state.
 
-SQLite is the automatic local working copy. Notebook, chapter, and card edits are debounced to save_library and are restored on the next launch. Creating a new project writes an empty library to this same storage, replacing the previous working copy.
+Version 2 stores JSON card records. Version 1 import remains supported through a legacy Markdown-card migration. The importer validates the manifest, identifiers, ZIP paths, decompressed size limits, compression methods, and CRC checksums. Keep these checks when changing archive handling.
 
-### Project archive: .memz
+The File menu provides:
 
-A ZIP archive containing:
-- manifest.json: format identifier, archive version, and notebook IDs.
-- notebooks/{notebookId}/notebook.json: notebook metadata, hierarchy, scheduled review history, and unscheduled practice history.
-- notebooks/{notebookId}/cards/{cardId}.json: individual card records, including FSRS scheduling state.
+- **New project:** replaces the active library with an empty one and clears the remembered project path. Existing archive files are not deleted.
+- **Open project:** imports a .memz archive and associates that path with Save project.
+- **Save project:** overwrites the associated archive. If no path is associated, it creates a timestamped backup in the application-data backups directory.
+- **Preferences:** changes the light/dark theme.
 
-The importer validates the manifest, IDs, ZIP directory entries, decompressed sizes, and CRC checksums. Version 1 archives remain supported through a legacy Markdown-card migration path; version 2 stores JSON card records.
+On a successful window close, Layout first saves the latest library to SQLite, creates a .memz snapshot, writes it to the application-data backups directory, and then destroys the window. Backups are timestamped; there is currently no automatic retention or pruning policy.
 
-The File menu exposes these project actions:
-- **New project:** asks for confirmation, replaces the active library with an empty one, clears the remembered .memz path, and lets SQLite autosave the empty state. It does not delete an existing .memz backup.
-- **Open project:** reads a selected .memz archive and replaces the active library. The imported project is then saved to SQLite.
-- **Save project:** writes a snapshot to the remembered .memz path. If there is no remembered path, it opens Save As.
-- **Save project as:** asks for a destination and writes a .memz snapshot there.
+A .memz archive is a snapshot. It does not stay synchronized with subsequent SQLite edits.
 
-A .memz archive is a portable snapshot, not a live link to the SQLite database. Later edits do not change an earlier archive; save/export again to refresh it. Opening a .memz and loading SQLite are compatible because both represent the same library data. The .memz format is the only supported manual backup/restore format; individual notebook files are not supported.
+## Scheduled and unscheduled study
 
-## Native commands
+src/services/fsrs.js wraps ts-fsrs, converts persisted ISO date strings to Date objects, calculates the four rating intervals, and serializes updated scheduler dates.
 
-- load_library: read the saved library JSON from SQLite.
-- save_library: validate JSON and upsert the library row.
-- read_project_file: read bytes from a path selected by the native dialog.
-- write_project_file: write bytes to a path selected by the native dialog.
+Scheduled ratings map to FSRS as follows:
 
-The dialog plugin is enabled in the default desktop capability. Native file operations are kept behind Rust commands rather than using browser file inputs or browser downloads.
+| UI choice | FSRS rating | Session behaviour |
+| --- | --- | --- |
+| Forgot | Again | Requeue the card |
+| Difficult | Hard | Requeue the card |
+| Good | Good | Complete the card |
+| Easy | Easy | Complete the card |
 
-## Markdown rendering
+The review session keeps a local snapshot of its cards so a card remains available after its due date changes during the session. Scheduled reviews update the card's fsrs record and append a log to notebook reviewHistory.
 
-RichTextEditor.jsx uses Tiptap StarterKit and its Markdown extension. Front and back content remain Markdown strings. markdown.js renders saved Markdown in read-only study mode and escapes HTML-sensitive source text.
+Unscheduled practice can include any cards in scope. Repeat moves a card to the end of the current queue; Done records an entry in practiceHistory. Unscheduled practice must not mutate FSRS state or due dates.
 
-The Tiptap Markdown extension is currently documented as beta. Keep Markdown as the persisted interchange format and test parse/serialize round trips before enabling additional node types.
+The Study Status dashboard derives activity, streaks, scheduled review outcomes, recall rate, upcoming due counts, and notebook progress from persisted card state and history. Its activity heatmap includes scheduled reviews and unscheduled practice; FSRS outcome and recall calculations use scheduled review history only.
 
-## Current data model
+## Card editor and content formats
 
-A notebook contains id, title, color, chapters, flashcards, reviewHistory, practiceHistory, and a cached cards count. Each card contains id, front, back, an optional chapterId, and an optional fsrs record. The fsrs record follows ts-fsrs Card fields (due, stability, difficulty, elapsed_days, scheduled_days, reps, lapses, state, and last_review). Review history records each review's rating, card ID, and FSRS log fields. Keep cards synchronized when the card collection changes.
+src/components/CardEditor.jsx provides separate Question and Answer tabs. Each tab mounts its own RichTextEditor instance, so undo/redo history is isolated per side.
 
-`src/services/fsrs.js` wraps `ts-fsrs` and converts persisted ISO date strings to/from Date objects. `NotebookView.jsx` owns Browse filters/preview and Study mode/scope selection. `ReviewSession.jsx` builds a queue for the selected scope; scheduled sessions preview intervals and update FSRS state, while unscheduled sessions only append to `practiceHistory`. `StudyStatus.jsx` derives the yearly activity heatmap, streaks, review outcomes, upcoming due counts, recall rate, and notebook progress from saved review history and card state. These reports are local calculations; no analytics are sent externally.
+Card content remains Markdown for SQLite and .memz portability. Supported content includes:
 
-## Planned boundaries (not implemented)
+- Standard Markdown formatting and links.
+- Inline images embedded as data URLs. Image title metadata stores width and alignment.
+- Inline and display LaTeX mathematics, rendered with KaTeX.
+- Video blocks stored as @[video](URL) and converted to provider-specific embeds at render time.
+- Text alignment serialized through paragraph/heading HTML attributes.
 
-- Media attachments and richer card templates.
-- Anki import/export and optional synchronization.
-- Normalized SQLite tables and schema migrations as the domain model stabilizes.
+Image insertion supports file selection and clipboard paste. Inserted images are limited to 12 MB. Video playback is subject to provider restrictions; the app cannot force third-party sites to allow embedding in the desktop webview.
+
+src/services/markdown.js renders saved Markdown for card previews and review sessions. It escapes user-authored text and validates media URL schemes before generating media HTML. Keep renderer changes security-reviewed and cover hostile input.
+
+## Important modules
+
+| Module | Responsibility |
+| --- | --- |
+| Layout.jsx | Application state, SQLite persistence, project lifecycle, automatic backups |
+| NotebookView.jsx | Browse, card selection, chapter operations, study setup |
+| CardEditor.jsx | Card metadata, Question/Answer tabs, duplicate warning, schedule reset |
+| RichTextEditor.jsx | Tiptap setup, formatting toolbar, media/math insertion, editor history |
+| ReviewSession.jsx | Scheduled and unscheduled review queues |
+| StudyStatus.jsx | Derived learning activity and review statistics |
+| projectArchive.js | .memz ZIP export/import and legacy migration |
+| fsrs.js | FSRS scheduling and interval calculation |
+| markdown.js | Safe read-only Markdown/media rendering |
+| lib.rs | SQLite commands, native file I/O, automatic backup writing |
 
 ## Data flow
 
-Preact components → Layout state and serialization services → Tauri IPC commands → Rust native commands → SQLite and user-selected .memz files.
-
-## Rich card content
-
-- Card front/back remain Markdown strings so the existing SQLite and .memz formats continue to carry the content without a separate media migration.
-- Local images are embedded as data URLs in the card Markdown. This keeps images self-contained and portable across automatic SQLite persistence and .memz export/import; editor insertion is limited to 12 MB per image.
-- LaTeX is edited as Tiptap mathematics nodes and rendered with KaTeX. Alignment is preserved in Markdown as HTML paragraph/heading attributes.
-- Video cards use the `@[video](URL)` Markdown convention. Read-only rendering creates provider-specific embeds for YouTube, Vimeo, Facebook, or direct MP4/WebM/OGG playback. Providers can refuse third-party embedding; arbitrary sites cannot be forced to play inside MemoMaster.
-
-## Editor interaction details
-
-- Question and answer use separate Tiptap editor instances, each with its own bounded undo/redo history. History actions never operate on notebook/library state.
-- Images are inline Tiptap nodes with width and alignment metadata encoded in Markdown image titles, preserving layout through SQLite and `.memz` persistence. Clipboard image paste and file insertion share the same embedded data-URL representation.
-- Video cards store source URLs and are converted to provider embed URLs only when rendering. Instagram, Facebook, YouTube and Vimeo may restrict playback in embedded desktop webviews.
+Preact components → Layout state → frontend services/serialization → Tauri IPC → Rust commands → SQLite or user-data files.
