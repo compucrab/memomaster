@@ -145,3 +145,9 @@
 .study-embed-unavailable { padding: 14px; border: 1px solid var(--line); color: var(--muted); font-size: 11px; text-align: center; }
 .study-card-prose p[style*="text-align:center"], .study-card-prose h1[style*="text-align:center"], .study-card-prose h2[style*="text-align:center"], .study-card-prose h3[style*="text-align:center"] { text-align: center; }
 .study-card-prose p[style*="text-align:right"], .study-card-prose h1[style*="text-align:right"], .study-card-prose h2[style*="text-align:right"], .study-card-prose h3[style*="text-align:right"] { text-align: right; }
+
+
+.study-card-prose .katex { font-size: 1.35em; }
+.study-card-prose .katex-display { font-size: 1.45em; }
+.study-card-prose .study-math-block .katex { font-size: 1.5em; }
+.study-card-prose .study-card-image { max-width: 100%; max-height: 560px; height: auto; }
