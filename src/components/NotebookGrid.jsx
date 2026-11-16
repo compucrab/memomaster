@@ -1,40 +1,13 @@
-import { useEffect, useState } from "preact/hooks";
 import { BookOpen, Plus } from "lucide-preact";
 
-function validColor(value) { return /^#[0-9a-fA-F]{6}$/.test(value); }
-
 function StripColorPicker({ notebook, onUpdate }) {
-  const [value, setValue] = useState(notebook.color || "#477dbb");
-
-  useEffect(() => setValue(notebook.color || "#477dbb"), [notebook.color]);
-
-  function applyColor() {
-    if (validColor(value)) onUpdate(notebook.id, { color: value });
-    else setValue(notebook.color || "#477dbb");
-  }
-
   return (
-    <label class="strip-picker" title="Set cover strip colour using a hex value">
-      <span>STRIP COLOUR</span>
+    <label class="strip-picker" title="Change notebook strip colour">
       <input
-        type="text"
-        value={value}
-        maxLength={7}
-        spellCheck={false}
+        type="color"
+        value={notebook.color || "#477dbb"}
         aria-label={`Strip colour for ${notebook.title}`}
-        onInput={(event) => setValue(event.currentTarget.value)}
-        onBlur={applyColor}
-        onKeyDown={(event) => {
-          if (event.key === "Enter") {
-            event.preventDefault();
-            applyColor();
-            event.currentTarget.blur();
-          }
-          if (event.key === "Escape") {
-            setValue(notebook.color || "#477dbb");
-            event.currentTarget.blur();
-          }
-        }}
+        onInput={(event) => onUpdate(notebook.id, { color: event.currentTarget.value })}
       />
     </label>
   );
