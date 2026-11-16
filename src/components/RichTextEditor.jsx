@@ -56,7 +56,7 @@ export default function RichTextEditor({ label, value = "", placeholder, onChang
     };
     const instance = new Editor({
       element: hostRef.current,
-      extensions: [StarterKit.configure({ paragraph: false, heading: false }), AlignedParagraph, AlignedHeading, Markdown, Placeholder.configure({ placeholder: placeholder || "" }), CardImage.configure({ inline: true, allowBase64: true }), TextAlign.configure({ types: ["heading", "paragraph"], alignments: ["left", "center", "right"] }), CardMath, CardVideo],
+      extensions: [StarterKit.configure({ paragraph: false, heading: false, undoRedo: { depth: 100 } }), AlignedParagraph, AlignedHeading, Markdown, Placeholder.configure({ placeholder: placeholder || "" }), CardImage.configure({ inline: true, allowBase64: true }), TextAlign.configure({ types: ["heading", "paragraph"], alignments: ["left", "center", "right"] }), CardMath, CardVideo],
       content: value, contentType: "markdown",
       editorProps: {
         attributes: { class: "rich-editor-content", role: "textbox", "aria-label": label, "aria-multiline": "true", "data-placeholder": placeholder || "", spellcheck: "true" },
