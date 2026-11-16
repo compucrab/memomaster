@@ -33,11 +33,15 @@ The intended hierarchy is:
 
 Do not claim or implement against assumptions that are not true:
 
-- Notebook state is coordinated in Preact and automatically persisted to SQLite through Rust commands.
+- Notebook state is coordinated in Preact and automatically persisted to SQLite through Rust commands. SQLite is the active local working copy and is restored on application launch.
+- Creating a new project replaces the current library with an empty one, clears the remembered .memz save path, and is automatically persisted. It must not delete existing .memz files.
+- Opening a .memz archive replaces the active library and then updates the SQLite working copy.
+- Saving/exporting a .memz archive creates a portable snapshot of the current library. Later edits do not update that archive unless the user saves/exports again.
+- SQLite and .memz represent the same library data. SQLite is automatic local persistence; .memz is the only manual backup/restore format.
 - Theme selection is persisted in `localStorage`.
 - Rust owns SQLite access and native file read/write commands; the frontend owns the current notebook data model and serialization.
 - The Tauri dialog plugin provides native Open and Save dialogs.
-- The `.memz` project archive is the only portable backup/restore format, handled by `src/services/projectArchive.js`.
+- The `.memz` project archive is handled by `src/services/projectArchive.js`.
 - Card front/back editing uses Tiptap (`@tiptap/core`, `@tiptap/starter-kit`, `@tiptap/markdown`) through `src/components/RichTextEditor.jsx`; the editor serializes content to Markdown strings.
 - `src/services/markdown.js` renders saved Markdown for read-only study mode.
 - FSRS, Anki import, cloud sync, and multi-device synchronization are not implemented.
@@ -62,7 +66,6 @@ Do not claim or implement against assumptions that are not true:
 - `Layout.jsx` currently coordinates top-level state and view switching. Keep ownership clear; avoid duplicating the same state in multiple components.
 - Pass user actions through props/callbacks. Avoid direct mutation of notebook/card objects.
 - Use immutable updates for arrays and nested records.
-- Keep components focused: UI components render and emit intent; service modules handle reusable non-UI operations.
 - Use stable record IDs. Do not use array indexes as persisted IDs.
 - When changing cards, keep the notebook's cached `cards` count in sync with `flashcards.length`.
 - When changing chapter/topic assignments, prevent a card from retaining a topic that belongs to another chapter.
