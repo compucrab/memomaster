@@ -54,7 +54,7 @@ export default function CardEditor({ card, chapters = [], existingCards = [], on
 
         <div class="card-editor-organization">
           <label>CHAPTER
-            <select value={draft.chapterId || ""} onChange={(event) => update({ chapterId: event.currentTarget.value, topicId: "" })}>
+            <select value={draft.chapterId || ""} onChange={(event) => update({ chapterId: event.currentTarget.value })}>
               <option value="">Unassigned</option>
               {chapters.map((chapter) => <option value={chapter.id}>{chapter.name}</option>)}
             </select>
