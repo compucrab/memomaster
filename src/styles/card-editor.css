@@ -173,3 +173,6 @@
 .card-editor-footer .card-delete-button:hover {
   background: color-mix(in srgb, var(--danger) 9%, transparent);
 }
+
+.card-editor-footer .card-reset-schedule { display: inline-flex; height: 38px; min-height: 38px; align-items: center; justify-content: center; gap: 7px; padding: 0 12px; border: 1px solid var(--line); background: transparent; color: var(--muted); cursor: pointer; font: 10px var(--sans); }
+.card-editor-footer .card-reset-schedule:hover { border-color: var(--accent); color: var(--ink); }
