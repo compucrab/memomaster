@@ -102,7 +102,7 @@ FSRS v5 measures elapsed time in fixed 24-hour blocks. MemoMaster normalizes sch
 - New, Learning/Relearning, Young, and Mature card breakdown. Mature uses a 21-day-or-longer review interval.
 - Frequently forgotten cards ranked by FSRS lapse count.
 
-FSRS parameter optimization from review history is not implemented yet. The review log now retains reversible card-state snapshots, but an optimizer still needs a supported WASI/native binding integration and an explicit minimum-history/readiness policy. Do not substitute hand-written parameter fitting for the official FSRS optimizer.
+FSRS parameter optimization from review history is not yet executable in the app. `fsrsOptimizerData.js` prepares the official FSRS-6 optimizer CSV schema from complete review logs, including study-day rollover and timezone metadata; legacy logs without a recorded pre-review state are skipped rather than guessed. The remaining step is integrating the official optimizer binding in a Tauri-compatible worker/runtime. Do not substitute hand-written parameter fitting for the official FSRS optimizer. Modern Anki does not impose a fixed 1,000-review minimum, so readiness should be based on data quality and the optimizer evaluation rather than an arbitrary hard threshold.
 
 ## Card editor and content formats
 
@@ -131,7 +131,8 @@ Image insertion supports file selection and clipboard paste. Inserted images are
 | ReviewSession.jsx | Timed scheduled learning/relearning queue and unscheduled practice queue |
 | StudyStatus.jsx | Retention, rating, workload, maturity, and lapse analytics |
 | projectArchive.js | .memz ZIP export/import and legacy migration |
-| fsrs.js | FSRS scheduling, study-day rollover, memory estimates, interval calculation |
+| fsrs.js | FSRS scheduling, study-day rollover, memory estimates, interval calculation, review undo |
+| fsrsOptimizerData.js | Converts complete FSRS-6 review history into the official optimizer CSV input format |
 | fsrsSettings.js | Default and validated app-wide FSRS preferences |
 | markdown.js | Safe read-only Markdown/media rendering |
 | lib.rs | SQLite commands, native file I/O, automatic backup writing |
