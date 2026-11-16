@@ -60,11 +60,13 @@ export default function NotebookView({ notebook, onUpdate, onBack, onRequestText
   }
 
   function saveCard(draft) {
-    const { topicId, ...cleanDraft } = draft;
+    const cleanDraft = { ...draft };
+    delete cleanDraft.topicId;
     const next = cards.some(card => card.id === draft.id)
       ? cards.map(card => {
         if (card.id !== draft.id) return card;
-        const { topicId: oldTopicId, ...cleanCard } = card;
+        const cleanCard = { ...card };
+        delete cleanCard.topicId;
         return { ...cleanCard, ...cleanDraft };
       })
       : [...cards, cleanDraft];
@@ -177,7 +179,7 @@ export default function NotebookView({ notebook, onUpdate, onBack, onRequestText
                 </select>
                 <button type="button" disabled={!targetChapterId} onClick={() => {
                   const next = cards.map((card) => selectedCardIds.includes(card.id)
-                    ? (() => { const { topicId, ...cleanCard } = card; return { ...cleanCard, chapterId: targetChapterId === "__unassigned" ? "" : targetChapterId }; })()
+                    ? (() => { const cleanCard = { ...card }; delete cleanCard.topicId; return { ...cleanCard, chapterId: targetChapterId === "__unassigned" ? "" : targetChapterId }; })()
                     : card);
                   onUpdate({ flashcards: next, cards: next.length });
                   setSelectedCardIds([]);
