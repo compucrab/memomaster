@@ -10,7 +10,7 @@ A notebook contains chapters, flashcards, scheduled review history, and unschedu
 
 Notebook view has two tabs:
 
-- **Browse:** searchable card list, chapter filter, card preview, edit action, multi-selection, bulk deletion, chapter reassignment, and schedule reset.
+- **Browse:** searchable card list with each card's next due date/time, chapter filter, card preview with next-review information, edit action, multi-selection, bulk deletion, chapter reassignment, and schedule reset.
 - **Study:** Scheduled or Unscheduled sessions scoped to a whole notebook or one chapter.
 
 A new installation starts with an empty library.
