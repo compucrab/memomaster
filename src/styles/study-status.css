@@ -62,3 +62,5 @@
 .memory-curve line.memory-current-marker { stroke:var(--warning); stroke-width:1.5; stroke-dasharray:4 3; }
 .memory-curve > div { gap:8px; }
 .memory-curve > div span:nth-child(2) { color:var(--warning); }
+
+.memory-curve-legend { display:block; margin-top:5px; color:var(--warning); font:8px var(--mono); }
