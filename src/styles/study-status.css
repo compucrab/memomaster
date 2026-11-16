@@ -206,3 +206,7 @@
 .memory-curve > div span:nth-child(2) { color:var(--warning); }
 
 .memory-curve-legend { display:block; margin-top:5px; color:var(--warning); font:8px var(--mono); }
+
+.status-undo-review { @apply inline-flex items-center gap-2; flex: 0 0 auto; padding: 8px 11px; border: 1px solid var(--line); color: var(--muted); background: var(--surface); font-size: 10px; transition: color .15s, border-color .15s; }
+.status-undo-review:hover { color: var(--ink); border-color: var(--muted); }
+@media (max-width: 600px) { .status-undo-review { margin-left: 0; } }
