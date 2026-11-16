@@ -15,8 +15,8 @@
 .prompt-confirm:disabled { opacity: .4; cursor: default; }
 .app-notice { @apply fixed bottom-5 left-1/2 z-[110] -translate-x-1/2; max-width: min(90vw, 560px); padding: 11px 16px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); box-shadow: 0 8px 30px #0002; font: 11px var(--sans); }
 
-.prompt-error { margin: 10px 0 0; color: var(--danger, #d76a6a); font: 11px/1.5 var(--sans); }
+.prompt-error { margin: 10px 0 0; color: var(--danger, var(--danger)); font: 11px/1.5 var(--sans); }
 
-.prompt-danger { border-color: #c65b5b !important; background: #c65b5b !important; color: #fff !important; }
-.prompt-danger:hover { background: #ad4848 !important; }
+.prompt-danger { border-color: var(--danger) !important; background: #c65b5b !important; color: #fff !important; }
+.prompt-danger:hover { background: var(--danger-hover) !important; }
 .prompt-panel > p { margin: 0; color: var(--muted); font: 11px/1.7 var(--sans); }
