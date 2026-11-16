@@ -32,6 +32,11 @@ function videoEmbed(url) {
       const id = parsed.pathname.split("/").filter(Boolean).pop();
       if (!/^\d+$/.test(id || "")) return "";
       source = `https://player.vimeo.com/video/${id}`;
+    } else if ((parsed.hostname === "instagram.com" || parsed.hostname.endsWith(".instagram.com")) && /^\/(reel|p|tv)\/[\w-]+(?:\/embed)?\/?$/i.test(parsed.pathname)) {
+      const match = parsed.pathname.match(/^\/(reel|p|tv)\/([\w-]+)/i);
+      source = parsed.pathname.toLowerCase().includes("/embed") ? url : `https://www.instagram.com/${match[1]}/${match[2]}/embed`;
+    } else if (parsed.hostname === "facebook.com" && parsed.pathname === "/plugins/video.php") {
+      source = url;
     } else if (parsed.hostname === "facebook.com" || parsed.hostname.endsWith(".facebook.com") || parsed.hostname === "fb.watch" || parsed.hostname.endsWith(".fb.watch")) {
       source = `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(url)}&show_text=0`;
     } else if (/\.(mp4|webm|ogg)$/i.test(parsed.pathname)) {
@@ -48,8 +53,12 @@ function videoEmbed(url) {
 function renderInline(source) {
   let value = escapeHtml(normalizeText(source));
   value = value.replace(/!\[([^\]]*)\]\((https?:\/\/[^\s)]+|data:image\/(?:png|jpe?g|gif|webp);base64,[^\s)]+)(?:\s+"([^"]*)")?\)/gi, (_, alt, src, title) => {
-    const safe = safeImageSource(src);
-    return safe ? `<img class="study-card-image" src="${safe}" alt="${alt}"${title ? ` title="${title}"` : ""} loading="lazy">` : "";
+    const safe = safeImageSource(src.replaceAll("&amp;", "&"));
+    const metadata = String(title || "").match(/width=(\d+);align=(left|center|right)/);
+    const width = metadata ? Math.max(40, Math.min(1600, Number(metadata[1]))) : 420;
+    const align = metadata ? metadata[2] : "center";
+    const style = align === "center" ? `width:${width}px;max-width:100%;display:block;margin:12px auto;` : `width:${width}px;max-width:100%;display:inline-block;vertical-align:middle;float:${align};margin:8px 14px 8px 0;`;
+    return safe ? `<img class="study-card-image" src="${safe}" alt="${escapeHtml(alt)}" style="${style}" loading="lazy">` : "";
   });
   value = value
     .replace(/\x60([^\x60]+)\x60/g, "<code>$1</code>")
