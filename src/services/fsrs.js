@@ -82,6 +82,15 @@ function getScheduledCandidate(scheduler, card, choice, now, settings) {
     last_review: current.last_review ? toStudyTime(current.last_review, config.rolloverHour) : undefined,
   };
   const result = scheduler.repeat(schedulerCard, schedulerNow)[REVIEW_RATINGS[choice]];
+
+  // ts-fsrs v5 applies maximum_interval before enforcing rating order.
+  // That ordering can push Good/Easy one or more days above the cap.
+  // Re-apply the cap after the rating-order adjustment for Review cards.
+  if (result.card.state === State.Review && result.card.scheduled_days > config.maximumInterval) {
+    result.card.scheduled_days = config.maximumInterval;
+    result.card.due = new Date(schedulerNow.getTime() + config.maximumInterval * DAY);
+  }
+
   return { result, schedulerNow, config };
 }
 
