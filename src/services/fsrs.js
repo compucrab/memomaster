@@ -176,8 +176,14 @@ export function undoLatestReview(notebooks) {
     });
   }
   if (!latest) return { notebooks, undone: false, reason: "No scheduled review is available to undo." };
-  if (!Object.hasOwn(latest.log, "previousFsrs")) {
+  if (!Object.hasOwn(latest.log, "previousFsrs") || !Object.hasOwn(latest.log, "nextFsrs")) {
     return { notebooks, undone: false, reason: "This older review does not contain the state needed to undo it safely." };
+  }
+  const targetNotebook = notebooks.find((notebook) => notebook.id === latest.notebookId);
+  const targetCard = targetNotebook?.flashcards?.find((card) => card.id === latest.log.cardId);
+  if (!targetCard) return { notebooks, undone: false, reason: "The reviewed card no longer exists." };
+  if (JSON.stringify(targetCard.fsrs || null) !== JSON.stringify(latest.log.nextFsrs || null)) {
+    return { notebooks, undone: false, reason: "This card's schedule changed after the review. Undo is no longer safe." };
   }
 
   let restored = false;
