@@ -9,8 +9,33 @@
 .settings-row h2 { margin: 0 0 5px; color: var(--ink); font: 700 14px var(--display); }
 .settings-row p { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.6; }
 .settings-row > span { color: var(--muted); font: 8px var(--mono); letter-spacing: .1em; }
-.theme-switch { @apply flex items-center gap-1 rounded-sm p-1; background: var(--paper-deep); }
-.theme-switch button { @apply grid h-[28px] w-[30px] place-items-center rounded-sm border-0 p-0; background: transparent; color: var(--muted); cursor: pointer; }
+.settings-row > .theme-switch {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--paper-deep);
+}
+.theme-switch button {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 66px;
+  height: 30px;
+  padding: 0 9px;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font: 10px var(--sans);
+  white-space: nowrap;
+}
 .theme-switch button svg { width: 13px; height: 13px; }
 .theme-switch button:hover { color: var(--ink); }
 .theme-switch button:focus-visible { outline: 1px solid var(--accent); outline-offset: 1px; }
