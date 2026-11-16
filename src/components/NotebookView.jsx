@@ -2,6 +2,7 @@ import { useEffect, useState } from "preact/hooks";
 import { ArrowLeft, ChevronLeft, ChevronRight, Layers3, Plus } from "lucide-preact";
 import Flashcard from "./Flashcard";
 import CardEditor from "./CardEditor";
+import ReviewSession from "./ReviewSession";
 
 function makeCard() {
   return { id: crypto.randomUUID(), front: "## Your question\n\nWrite a prompt here.", back: "Write the answer here.", chapterId: "", topicId: "" };
@@ -14,12 +15,18 @@ export default function NotebookView({ notebook, onUpdate, onBack, onRequestText
   const [activeIndex, setActiveIndex] = useState(0);
   const [showBack, setShowBack] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [reviewing, setReviewing] = useState(false);
   const activeCard = cards[activeIndex];
+  const dueCount = cards.filter((card) => !card.fsrs?.due || new Date(card.fsrs.due) <= new Date()).length;
 
   useEffect(() => {
     if (activeIndex >= cards.length) setActiveIndex(Math.max(0, cards.length - 1));
   }, [cards.length, activeIndex]);
 
+  function handleReview(cardId, fsrs, log) {
+    const next = cards.map((card) => card.id === cardId ? { ...card, fsrs } : card);
+    onUpdate({ flashcards: next, cards: next.length, reviewHistory: [...(notebook.reviewHistory || []), log] });
+  }
   function updateCard(changes) {
     const next = cards.map((card, index) => index === activeIndex ? { ...card, ...changes } : card);
     onUpdate({ flashcards: next, cards: next.length, markdown: undefined });
@@ -59,6 +66,10 @@ export default function NotebookView({ notebook, onUpdate, onBack, onRequestText
     setShowBack(false);
   }
 
+  if (reviewing) {
+    return <ReviewSession cards={cards} onReview={handleReview} onExit={() => setReviewing(false)} />;
+  }
+
   if (editing && activeCard) {
     return (
       <CardEditor
@@ -78,7 +89,7 @@ export default function NotebookView({ notebook, onUpdate, onBack, onRequestText
       <header class="study-header">
         <button class="back-link" onClick={onBack}><ArrowLeft size={14} /> LIBRARY</button>
         <div class="study-notebook-name"><span>{notebook.title}</span><span>{cards.length} CARDS</span></div>
-        <button class="study-add" onClick={addCard}><Plus size={14} /> Add card</button>
+        <div class="study-header-actions"><button class="study-add" onClick={() => setReviewing(true)} disabled={!dueCount}><span>Study due</span><b>{dueCount}</b></button><button class="study-add" onClick={addCard}><Plus size={14} /> Add card</button></div>
       </header>
       {activeCard ? (
         <div class="study-stage">
