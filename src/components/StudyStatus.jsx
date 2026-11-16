@@ -30,7 +30,8 @@ export default function StudyStatus({ notebooks, onBack }) {
     const daysStart = new Date(today); daysStart.setDate(daysStart.getDate()-363); daysStart.setDate(daysStart.getDate()-daysStart.getDay());
     const days = Array.from({length:371},(_,i)=>{const date=new Date(daysStart);date.setDate(daysStart.getDate()+i);return {date,count:activity.get(dateKey(date))||0};});
     const maxCount=Math.max(1,...days.map(d=>d.count));
-    const upcoming=Array.from({length:7},(_,i)=>{const date=new Date(today);date.setDate(date.getDate()+i);return {date,count:cards.filter(c=>c.fsrs?.due?dateKey(c.fsrs.due)===dateKey(date):i===0).length};});
+    const endOfToday = new Date(today); endOfToday.setDate(endOfToday.getDate() + 1);
+    const upcoming=Array.from({length:7},(_,i)=>{const date=new Date(today);date.setDate(date.getDate()+i);return {date,count:cards.filter(c=>{if(!c.fsrs?.due)return i===0;const dueDate=new Date(c.fsrs.due);return i===0?dueDate<endOfToday:dateKey(dueDate)===dateKey(date);}).length};});
     const remembered=(ratings.easy||0)+(ratings.difficult||0);
     return {history,activity,ratings,days,maxCount,upcoming,cards,streak,remembered,activeDays:activity.size,
       recall:history.length?Math.round(remembered/history.length*100):0,
@@ -45,7 +46,7 @@ export default function StudyStatus({ notebooks, onBack }) {
       <article class="status-stat"><span><Flame size={15}/> CURRENT STREAK</span><strong>{data.streak.current} <small>days</small></strong><p>Longest: {data.streak.longest} days</p></article>
       <article class="status-stat"><span><CalendarDays size={15}/> REVIEWS</span><strong>{data.history.length.toLocaleString()}</strong><p>{data.activeDays} active days</p></article>
       <article class="status-stat"><span><Target size={15}/> RECALL RATE</span><strong>{data.recall}<small>%</small></strong><p>Difficult or Easy responses</p></article>
-      <article class="status-stat"><span><Layers3 size={15}/> CARDS LEARNED</span><strong>{learned}<small> / {data.cards.length}</small></strong><p>{data.due} due now</p></article>
+      <article class="status-stat"><span><Layers3 size={15}/> CARDS REVIEWED</span><strong>{learned}<small> / {data.cards.length}</small></strong><p>{data.due} due now</p></article>
     </div>
     <section class="status-panel consistency-panel">
       <div class="status-panel-heading"><div><h2>Consistency</h2><p>Daily reviews over the last year</p></div><span>{data.activeDays} active days</span></div>
@@ -64,7 +65,7 @@ export default function StudyStatus({ notebooks, onBack }) {
       </section>
     </div>
     <section class="status-panel notebook-progress-panel"><div class="status-panel-heading"><div><h2>Notebook progress</h2><p>Cards reviewed and waiting in each notebook</p></div><BookOpen size={16}/></div>
-      {notebooks.length?<div class="notebook-progress-list">{notebooks.map(n=>{const cards=n.flashcards||[],done=cards.filter(c=>(c.fsrs?.reps||0)>0).length,due=cards.filter(c=>!c.fsrs?.due||new Date(c.fsrs.due)<=new Date()).length,pct=cards.length?Math.round(done/cards.length*100):0;return <div class="notebook-progress-row"><div class="notebook-progress-title"><strong>{n.title}</strong><span>{done}/{cards.length} learned · {due} due</span></div><div class="notebook-progress-track"><i style={{width:`${pct}%`}}/></div></div>;})}</div>:<p class="status-empty">Create a notebook and add cards to start tracking progress.</p>}
+      {notebooks.length?<div class="notebook-progress-list">{notebooks.map(n=>{const cards=n.flashcards||[],done=cards.filter(c=>(c.fsrs?.reps||0)>0).length,due=cards.filter(c=>!c.fsrs?.due||new Date(c.fsrs.due)<=new Date()).length,pct=cards.length?Math.round(done/cards.length*100):0;return <div class="notebook-progress-row"><div class="notebook-progress-title"><strong>{n.title}</strong><span>{done}/{cards.length} reviewed · {due} due</span></div><div class="notebook-progress-track"><i style={{width:`${pct}%`}}/></div></div>;})}</div>:<p class="status-empty">Create a notebook and add cards to start tracking progress.</p>}
     </section>
   </section>;
 }
