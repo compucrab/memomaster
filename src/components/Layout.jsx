@@ -21,6 +21,7 @@ const savedProjectPath = () => {
   catch { return null; }
 };
 const projectFilter = [{ name: "MemoMaster project", extensions: ["memz"] }];
+const normalizeName = (value) => String(value || "").trim().toLocaleLowerCase();
 const ensureExtension = (path) => path.toLowerCase().endsWith(".memz") ? path : path + ".memz";
 
 export default function Layout() {
@@ -118,7 +119,10 @@ export default function Layout() {
       submitLabel: "Create notebook",
       onSubmit: (name) => {
         const title = name.trim();
-        if (!title) return;
+        if (!title) return "Please enter a notebook name.";
+        if (notebooksRef.current.some((item) => normalizeName(item.title) === normalizeName(title))) {
+          return "A notebook with this name already exists.";
+        }
         const id = crypto.randomUUID();
         setNotebooks((items) => [{
           id, title, color: "#6f9dcc", chapters: [], cards: 0, flashcards: [],
@@ -252,7 +256,14 @@ export default function Layout() {
               title: "Rename notebook",
               value: notebook.title,
               placeholder: "Notebook name",
-              onSubmit: (title) => title.trim() && updateNotebook(notebook.id, { title: title.trim() }),
+              onSubmit: (title) => {
+                const nextTitle = title.trim();
+                if (!nextTitle) return "Please enter a notebook name.";
+                if (notebooksRef.current.some((item) => item.id !== notebook.id && normalizeName(item.title) === normalizeName(nextTitle))) {
+                  return "A notebook with this name already exists.";
+                }
+                updateNotebook(notebook.id, { title: nextTitle });
+              },
             });
           }}
           onColorChange={(color) => updateNotebook(menu.notebook.id, { color })}
@@ -278,9 +289,9 @@ export default function Layout() {
           {...prompt}
           onCancel={() => setPrompt(null)}
           onSubmit={(value) => {
-            const submit = prompt.onSubmit;
+            const result = prompt.onSubmit(value);
+            if (typeof result === "string") return result;
             setPrompt(null);
-            submit(value);
           }}
         />
       )}

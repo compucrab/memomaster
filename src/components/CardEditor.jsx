@@ -1,12 +1,28 @@
 import { useState } from "preact/hooks";
 import { ArrowLeft, Check, Plus } from "lucide-preact";
 import RichTextEditor from "./RichTextEditor";
+import { findSimilarQuestion } from "../services/questionSimilarity";
 
-export default function CardEditor({ card, chapters = [], onSave, onCancel, onAddChapter, onAddTopic }) {
+export default function CardEditor({ card, chapters = [], existingCards = [], onSave, onCancel, onAddChapter, onAddTopic }) {
   const [draft, setDraft] = useState(() => ({ ...card }));
   const [side, setSide] = useState("front");
+  const [similarQuestion, setSimilarQuestion] = useState(null);
   const selectedChapter = chapters.find((chapter) => chapter.id === draft.chapterId);
   const topics = selectedChapter?.topics ?? [];
+  const isNewCard = !existingCards.some((item) => item.id === draft.id);
+
+  function requestSave() {
+    const match = findSimilarQuestion(draft.front, existingCards, draft.id);
+    if (match?.exact) {
+      setSimilarQuestion({ ...match, blocked: true });
+      return;
+    }
+    if (match) {
+      setSimilarQuestion(match);
+      return;
+    }
+    onSave(draft);
+  }
 
   function update(changes) {
     setDraft((current) => ({ ...current, ...changes }));
@@ -17,7 +33,7 @@ export default function CardEditor({ card, chapters = [], onSave, onCancel, onAd
       <header class="card-editor-header">
         <button class="back-link" onClick={onCancel}><ArrowLeft size={14} /> BACK TO CARD</button>
         <div class="card-editor-heading"><h1>Edit card</h1><span>QUESTION AND ANSWER</span></div>
-        <button class="study-primary" onClick={() => onSave(draft)}><Check size={15} /> Save card</button>
+        <button class="study-primary" onClick={requestSave}><Check size={15} /> Save card</button>
       </header>
 
       <div class="card-editor-body">
@@ -51,6 +67,25 @@ export default function CardEditor({ card, chapters = [], onSave, onCancel, onAd
           <button class="card-add-structure" type="button" disabled={!selectedChapter} onClick={() => onAddTopic(draft.chapterId)}><Plus size={13} /> New topic</button>
         </div>
       </div>
+      {similarQuestion && (
+        <div class="prompt-backdrop" role="presentation">
+          <section class="prompt-panel question-warning" role="alertdialog" aria-modal="true" aria-labelledby="similar-question-title">
+            <div class="prompt-heading"><h2 id="similar-question-title">{similarQuestion.blocked ? "This question already exists" : "This looks similar to another question"}</h2></div>
+            <p>{similarQuestion.blocked
+              ? "There is already a card with the same question. Edit this question to make it distinct."
+              : "We found a question that is very close in wording. You may already have this card in your notebook."}</p>
+            <div class="similar-question-match">
+              <span>EXISTING QUESTION</span>
+              <p>{String(similarQuestion.card.front || "").replace(/[#>*_]/g, "").trim()}</p>
+            </div>
+            <div class="prompt-actions">
+              <button type="button" class="prompt-cancel" onClick={() => { setSimilarQuestion(null); onCancel(); }}>{isNewCard ? "Discard card" : "Cancel edit"}</button>
+              {!similarQuestion.blocked && <button type="button" class="prompt-confirm" onClick={() => { setSimilarQuestion(null); onSave(draft); }}>Save anyway</button>}
+              {similarQuestion.blocked && <button type="button" class="prompt-confirm" onClick={() => setSimilarQuestion(null)}>Edit question</button>}
+            </div>
+          </section>
+        </div>
+      )}
     </section>
   );
 }
