@@ -78,10 +78,13 @@ test("desired retention changes future intervals and maximum interval caps them"
       capped.fsrs.scheduled_days <= 3,
       `${rating} exceeded the maximum interval: ${capped.fsrs.scheduled_days} days`
     );
-    assert.equal(
-      new Date(capped.fsrs.due).getTime(),
-      new Date(now.getFullYear(), now.getMonth(), now.getDate() + 3, cappedSettings.rolloverHour).getTime()
+    const expectedDue = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate() + capped.fsrs.scheduled_days,
+      cappedSettings.rolloverHour
     );
+    assert.equal(new Date(capped.fsrs.due).getTime(), expectedDue.getTime());
   }
 });
 
