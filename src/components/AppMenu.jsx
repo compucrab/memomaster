@@ -1,22 +1,20 @@
 import { useEffect, useRef, useState } from "preact/hooks";
 import {
-  ChevronDown, FilePlus2, FolderPlus, FolderOpen, SaveAll, Download, Settings2,
+  ChevronDown, FolderPlus, FolderOpen, SaveAll, Settings2,
 } from "lucide-preact";
 
 const groups = [
   { name: "File", items: [
     { label: "New project", shortcut: "Ctrl Shift N", Icon: FolderPlus, action: "newProject" },
-    { label: "New notebook", shortcut: "Ctrl N", Icon: FilePlus2, action: "new" },
     { separator: true },
     { label: "Open project…", shortcut: "Ctrl O", Icon: FolderOpen, action: "openProject" },
     { label: "Save project", shortcut: "Ctrl S", Icon: SaveAll, action: "saveProject" },
-    { label: "Save project as…", shortcut: "Ctrl Shift S", Icon: Download, action: "saveProjectAs" },
     { separator: true },
     { label: "Preferences", Icon: Settings2, action: "preferences" },
   ] },
 ];
 
-export default function AppMenu({ onNew, onNewProject, onOpenProject, onSaveProject, onSaveProjectAs, onPreferences }) {
+export default function AppMenu({ onNewProject, onOpenProject, onSaveProject, onPreferences }) {
   const [active, setActive] = useState(null);
   const root = useRef(null);
   useEffect(() => {
@@ -34,11 +32,9 @@ export default function AppMenu({ onNew, onNewProject, onOpenProject, onSaveProj
   function run(action) {
     setActive(null);
     const actions = {
-      new: onNew,
       newProject: onNewProject,
       openProject: onOpenProject,
       saveProject: onSaveProject,
-      saveProjectAs: onSaveProjectAs,
       preferences: onPreferences,
     };
     actions[action]?.();
