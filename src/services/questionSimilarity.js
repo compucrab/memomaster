@@ -8,8 +8,8 @@ export function normalizeQuestion(value = "") {
   return String(value)
     .replace(/<[^>]*>/g, " ")
     .replace(/[!#*_>`~]/g, " ")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, " ")
+    .toLocaleLowerCase()
+    .replace(/[^\\p{L}\\p{N}]+/gu, " ")
     .trim()
     .replace(/ +/g, " ");
 }
