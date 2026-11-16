@@ -4,23 +4,22 @@ MemoMaster is a desktop-first, local learning workspace built with Tauri 2, Prea
 
 ## Current features
 
-- Notebook library with search, creation, rename, and cover-strip colour selection from the context menu.
+- Empty notebook library on first launch.
 - Notebook hierarchy: chapters and topics, with cards assignable to both.
 - Focused flashcard view with question/answer reveal and a live WYSIWYG editor.
 - Rich-text formatting with keyboard shortcuts; card content remains stored as Markdown.
 - Light and dark themes.
 - Automatic local library persistence using SQLite.
+- One portable backup format: .memz project archives.
 - Native Open and Save dialogs.
-- Portable .memn notebook files and .memz project archives.
 - Custom desktop titlebar and window controls.
 
-## Local files
+## Local data and backups
 
 - SQLite library: stored in the operating system's application-data directory. Changes are saved automatically and restored when MemoMaster starts.
-- .memn: one notebook, including its chapters, topics, and cards.
-- .memz: the complete library as a portable project archive.
+- .memz: the complete library, including every notebook, chapter, topic, flashcard, and related content. Use it to create a manual backup or restore a library on another installation.
 
-The SQLite database is the active working copy. Notebook and project files are explicit portable copies for backup and transfer.
+The SQLite database is the active working copy. A .memz file is a portable snapshot; saving it is an explicit manual action. MemoMaster does not create sample notebooks or individual notebook files.
 
 ## Technology
 
