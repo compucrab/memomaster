@@ -124,6 +124,14 @@ export function renderMarkdown(source = "") {
     }
     if (inCode) { code.push(line); continue; }
 
+    const aligned = line.match(/^<(p|h[1-3]) style="text-align:(center|right)">([\\s\\S]*)<\\/\\1>$/i);
+    if (aligned) {
+      flushParagraph(); flushList(); flushQuote();
+      const tag = aligned[1].toLowerCase();
+      output.push(`<${tag} style="text-align:${aligned[2]}">${renderInline(aligned[3])}</${tag}>`);
+      continue;
+    }
+ 
     const video = line.match(/^\s*@\[video\]\((https?:\/\/[^\s)]+)\)\s*$/);
     if (video) {
       flushParagraph(); flushList(); flushQuote();
