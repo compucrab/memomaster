@@ -33,7 +33,7 @@ function makeScheduler(settings) {
     learning_steps: config.learningSteps,
     relearning_steps: config.relearningSteps,
     enable_short_term: true,
-    enable_fuzz: true,
+    enable_fuzz: false,
   });
 }
 
@@ -102,6 +102,7 @@ export function getMemoryOverview(card, now = new Date(), settings = DEFAULT_FSR
     retrievability,
     elapsedDays,
     curve,
+    horizon,
     state: state.state,
     lapses: state.lapses || 0,
     scheduledDays: state.scheduled_days || 0,
