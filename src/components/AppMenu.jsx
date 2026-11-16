@@ -10,10 +10,8 @@ const groups = [
   { name: "Edit", items: [
     { label: "Preferences", Icon: Settings2, action: "preferences" },
     { separator: true },
-    { label: "Cut", shortcut: "Ctrl X", Icon: Scissors, action: "cut" },
-    { label: "Copy", shortcut: "Ctrl C", Icon: Copy, action: "copy" },
-    { label: "Paste", shortcut: "Ctrl V", Icon: Clipboard, action: "paste" },
-    { label: "Select all", shortcut: "Ctrl A", Icon: ClipboardCheck, action: "selectAll" },
+    { label: "Theme", Icon: Settings2, action: "preferences" },
+
   ] },
 ];
 
@@ -35,11 +33,7 @@ export default function AppMenu({ onNew, onOpen, onExport, onPreferences }) {
   function run(action) {
     setActive(null);
     const actions = {
-      new: onNew, open: onOpen, export: onExport, preferences: onPreferences,
-      cut: () => document.execCommand("cut"),
-      copy: () => document.execCommand("copy"),
-      paste: () => document.execCommand("paste"),
-      selectAll: () => document.execCommand("selectAll"),
+      new: onNew, open: onOpen, export: onExport, preferences: onPreferences
     };
     actions[action]?.();
   }
