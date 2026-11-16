@@ -1,6 +1,7 @@
-import { createEmptyCard, fsrs, Rating } from "ts-fsrs";
+import { createEmptyCard, fsrs, Rating, State } from "ts-fsrs";
+import { DEFAULT_FSRS_SETTINGS, normalizeFsrsSettings } from "./fsrsSettings";
 
-const scheduler = fsrs();
+export { DEFAULT_FSRS_SETTINGS, normalizeFsrsSettings };
 export const REVIEW_RATINGS = {
   forgot: Rating.Again,
   difficult: Rating.Hard,
@@ -24,6 +25,18 @@ export function getFsrsCard(card, now = new Date()) {
   };
 }
 
+function makeScheduler(settings) {
+  const config = normalizeFsrsSettings(settings);
+  return fsrs({
+    request_retention: config.desiredRetention,
+    maximum_interval: config.maximumInterval,
+    learning_steps: config.learningSteps,
+    relearning_steps: config.relearningSteps,
+    enable_short_term: true,
+    enable_fuzz: true,
+  });
+}
+
 function serializeDates(record, fields) {
   const result = { ...record };
   for (const field of fields) {
@@ -45,31 +58,19 @@ export function formatInterval(due, now = new Date()) {
   return years === 1 ? "1 year" : `${years} years`;
 }
 
-export function getReviewOptions(card, now = new Date()) {
+export function getReviewOptions(card, now = new Date(), settings = DEFAULT_FSRS_SETTINGS) {
+  const scheduler = makeScheduler(settings);
   const scheduled = scheduler.repeat(getFsrsCard(card, now), now);
-  return {
-    forgot: {
-      due: scheduled[REVIEW_RATINGS.forgot].card.due,
-      interval: formatInterval(scheduled[REVIEW_RATINGS.forgot].card.due, now),
-    },
-    difficult: {
-      due: scheduled[REVIEW_RATINGS.difficult].card.due,
-      interval: formatInterval(scheduled[REVIEW_RATINGS.difficult].card.due, now),
-    },
-    good: {
-      due: scheduled[REVIEW_RATINGS.good].card.due,
-      interval: formatInterval(scheduled[REVIEW_RATINGS.good].card.due, now),
-    },
-    easy: {
-      due: scheduled[REVIEW_RATINGS.easy].card.due,
-      interval: formatInterval(scheduled[REVIEW_RATINGS.easy].card.due, now),
-    },
-  };
+  return Object.fromEntries(Object.entries(REVIEW_RATINGS).map(([key, rating]) => {
+    const due = scheduled[rating].card.due;
+    return [key, { due, interval: formatInterval(due, now) }];
+  }));
 }
 
-export function scheduleReview(card, choice, now = new Date()) {
+export function scheduleReview(card, choice, now = new Date(), settings = DEFAULT_FSRS_SETTINGS) {
   const rating = REVIEW_RATINGS[choice];
   if (!rating) throw new Error("Unknown review rating");
+  const scheduler = makeScheduler(settings);
   const result = scheduler.repeat(getFsrsCard(card, now), now)[rating];
   return {
     fsrs: serializeDates(result.card, ["due", "last_review"]),
@@ -78,5 +79,34 @@ export function scheduleReview(card, choice, now = new Date()) {
       rating: choice,
       cardId: card.id,
     },
+  };
+}
+
+export function getMemoryOverview(card, now = new Date(), settings = DEFAULT_FSRS_SETTINGS) {
+  const state = card?.fsrs;
+  if (!state || !state.last_review || !(state.stability > 0)) return null;
+  const scheduler = makeScheduler(settings);
+  const lastReview = toDate(state.last_review, null);
+  if (!lastReview) return null;
+  const elapsedDays = Math.max(0, (now.getTime() - lastReview.getTime()) / 86400000);
+  const retrievability = scheduler.get_retrievability(getFsrsCard(card, now), now, false);
+  const horizon = Math.max(7, Math.min(365, Math.ceil(state.stability * 3)));
+  const curve = Array.from({ length: 31 }, (_, index) => {
+    const days = horizon * index / 30;
+    const at = new Date(lastReview.getTime() + days * 86400000);
+    return { days, probability: scheduler.get_retrievability(getFsrsCard(card, at), at, false) };
+  });
+  return {
+    stability: state.stability,
+    difficulty: state.difficulty,
+    retrievability,
+    elapsedDays,
+    curve,
+    state: state.state,
+    lapses: state.lapses || 0,
+    scheduledDays: state.scheduled_days || 0,
+    stateLabel: state.state === State.Learning ? "Learning"
+      : state.state === State.Relearning ? "Relearning"
+      : state.state === State.Review ? "Review" : "New",
   };
 }
