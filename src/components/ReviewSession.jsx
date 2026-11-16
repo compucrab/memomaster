@@ -18,6 +18,8 @@ export default function ReviewSession({ cards, mode = "scheduled", onReview, onE
   });
   const [revealed, setRevealed] = useState(false);
   const [reviewed, setReviewed] = useState(0);
+  const [processing, setProcessing] = useState(false);
+  const [reviewError, setReviewError] = useState("");
   const activeCard = cards.find((card) => card.id === queue[0]);
   const now = new Date();
   const options = useMemo(
@@ -31,26 +33,34 @@ export default function ReviewSession({ cards, mode = "scheduled", onReview, onE
   }
 
   function finishCard(choice) {
-    if (!activeCard) return;
-    if (mode === "scheduled") {
-      const result = scheduleReview(activeCard, choice, new Date());
-      onReview(activeCard.id, result.fsrs, result.log, mode);
-      setReviewed((count) => count + 1);
-      if (choice === "forgot" || choice === "difficult") {
-        // Keep the card in this session until the learner rates it Good or Easy.
-        setQueue((items) => [...items.slice(1), activeCard.id]);
-        setRevealed(false);
-        return;
+    if (!activeCard || processing) return;
+    setProcessing(true);
+    setReviewError("");
+    try {
+      if (mode === "scheduled") {
+        const result = scheduleReview(activeCard, choice, new Date());
+        onReview(activeCard.id, result.fsrs, result.log, mode);
+        setReviewed((count) => count + 1);
+        if (choice === "forgot" || choice === "difficult") {
+          setQueue((items) => [...items.slice(1), activeCard.id]);
+          setRevealed(false);
+          return;
+        }
+      } else {
+        onReview(activeCard.id, null, {
+          cardId: activeCard.id,
+          rating: "done",
+          review: new Date().toISOString(),
+        }, mode);
+        setReviewed((count) => count + 1);
       }
-    } else {
-      onReview(activeCard.id, null, {
-        cardId: activeCard.id,
-        rating: "done",
-        review: new Date().toISOString(),
-      }, mode);
-      setReviewed((count) => count + 1);
+      removeActiveCard();
+    } catch (error) {
+      console.error("Unable to save review:", error);
+      setReviewError(error?.message || "This review could not be saved. Your card is still in the session.");
+    } finally {
+      setProcessing(false);
     }
-    removeActiveCard();
   }
 
   function repeatCard() {
@@ -73,7 +83,9 @@ export default function ReviewSession({ cards, mode = "scheduled", onReview, onE
     );
   }
 
-  if (!activeCard) return null;
+  if (!activeCard) {
+    return <section class="review-session"><div class="review-complete"><h2>Review paused</h2><p>The current card could not be loaded. Exit and reopen the session.</p><button class="study-primary" onClick={onExit}>Back to notebook</button></div></section>;
+  }
 
   return (
     <section class="review-session">
@@ -95,10 +107,10 @@ export default function ReviewSession({ cards, mode = "scheduled", onReview, onE
           <div class="review-ratings">
             <p>How well did you remember?</p>
             <div class="review-rating-options">
-              <button class="review-rating forgot" onClick={() => finishCard("forgot")}><strong>Forgot</strong><span>{options.forgot.interval} · repeat</span></button>
-              <button class="review-rating difficult" onClick={() => finishCard("difficult")}><strong>Difficult</strong><span>{options.difficult.interval} · repeat</span></button>
-              <button class="review-rating good" onClick={() => finishCard("good")}><strong>Good</strong><span>{options.good.interval}</span></button>
-              <button class="review-rating easy" onClick={() => finishCard("easy")}><strong>Easy</strong><span>{options.easy.interval}</span></button>
+              <button disabled={processing} class="review-rating forgot" onClick={() => finishCard("forgot")}><strong>Forgot</strong><span>{options.forgot.interval} · repeat</span></button>
+              <button disabled={processing} class="review-rating difficult" onClick={() => finishCard("difficult")}><strong>Difficult</strong><span>{options.difficult.interval} · repeat</span></button>
+              <button disabled={processing} class="review-rating good" onClick={() => finishCard("good")}><strong>Good</strong><span>{options.good.interval}</span></button>
+              <button disabled={processing} class="review-rating easy" onClick={() => finishCard("easy")}><strong>Easy</strong><span>{options.easy.interval}</span></button>
             </div>
           </div>
         ) : (
