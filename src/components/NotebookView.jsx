@@ -38,17 +38,12 @@ export default function NotebookView({ notebook, onUpdate, onBack }) {
     <section class="workspace study-workspace">
       <header class="study-header">
         <button class="back-link" onClick={onBack}><ArrowLeft size={14} /> LIBRARY</button>
-        <div class="study-notebook-name"><span>{notebook.title}</span><i /> <span>{cards.length} CARDS</span></div>
+        <div class="study-notebook-name"><span>{notebook.title}</span><span>{cards.length} CARDS</span></div>
         <button class="study-add" onClick={addCard}><Plus size={14} /> Add card</button>
       </header>
 
       {activeCard ? (
         <div class="study-stage">
-          <div class="study-stage-heading">
-            <p class="eyebrow">FOCUS SESSION</p>
-            <h1>One thought at a time<span>.</span></h1>
-            <p>Take a moment. Recall the answer before revealing it.</p>
-          </div>
           <Flashcard
             card={activeCard}
             index={activeIndex}
@@ -62,10 +57,7 @@ export default function NotebookView({ notebook, onUpdate, onBack }) {
           />
           <footer class="study-navigation">
             <button class="study-nav-button" onClick={() => move(-1)} disabled={activeIndex === 0}><ChevronLeft size={17} /> Previous</button>
-            <div class="study-progress" aria-label={`Card ${activeIndex + 1} of ${cards.length}`}>
-              <div><span style={{ width: `${((activeIndex + 1) / cards.length) * 100}%` }} /></div>
-              <small>{activeIndex + 1} OF {cards.length}</small>
-            </div>
+            <small class="study-count">{activeIndex + 1} / {cards.length}</small>
             <button class="study-nav-button" onClick={() => move(1)} disabled={activeIndex === cards.length - 1}>Next <ChevronRight size={17} /></button>
           </footer>
         </div>

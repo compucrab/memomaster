@@ -7,9 +7,9 @@
   color: var(--ink);
   user-select: none;
 }
-.titlebar-brand { @apply flex h-full items-center gap-2 px-4; font: 700 12px var(--display); letter-spacing: -.03em; }
+.titlebar-brand { @apply flex h-full items-center gap-2 px-4; font: 700 12px var(--display); letter-spacing: -.03em; cursor: move; }
 .titlebar-mark { @apply grid h-[21px] w-[21px] place-items-center rounded-full; background: var(--ink); color: var(--paper); font: italic 600 14px var(--serif); }
-.titlebar-drag { @apply h-full min-w-0 flex-1; }
+.titlebar-drag { @apply h-full min-w-0 flex-1; cursor: move; }
 .window-controls { @apply flex h-full; }
 .window-controls button { @apply grid h-full w-[46px] place-items-center border-0 bg-transparent; color: var(--muted); cursor: pointer; }
 .window-controls button:hover { background: var(--hover); color: var(--ink); }
