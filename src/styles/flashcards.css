@@ -16,15 +16,15 @@
 .study-card-prose code { padding: 2px 5px; background: var(--hover); font: 13px var(--mono); }
 .study-card-actions { @apply flex shrink-0 items-center justify-center gap-3 px-5 py-4; }
 .study-primary, .study-secondary { @apply inline-flex items-center justify-center gap-2 border px-5 py-3; cursor: pointer; font: 10px var(--sans); }
-.study-primary { border-color: var(--olive); background: var(--olive); color: #171914; }
-.study-primary:hover { filter: brightness(1.06); }
+.study-primary { border-color: var(--accent); background: var(--accent); color: #fff; }
+.study-primary:hover { background: var(--accent-hover); }
 .study-secondary { border-color: var(--line); background: transparent; color: var(--muted); }
-.study-secondary:hover { border-color: var(--olive); color: var(--ink); }
+.study-secondary:hover { border-color: var(--accent); color: var(--ink); }
 .study-card-editor { @apply grid min-h-0 flex-1 gap-4 overflow-auto p-6; align-content: center; }
 .study-card-editor label { @apply grid gap-2; color: var(--muted); font: 8px var(--mono); letter-spacing: .13em; }
 .study-card-editor textarea, .card-organization select { width: 100%; padding: 11px 12px; border: 1px solid var(--line); outline: none; background: var(--paper); color: var(--ink); font: 11px/1.6 var(--sans); }
 .study-card-editor textarea { min-height: 86px; resize: vertical; font: 12px/1.7 var(--mono); }
-.study-card-editor textarea:focus, .card-organization select:focus { border-color: var(--olive); }
+.study-card-editor textarea:focus, .card-organization select:focus { border-color: var(--accent); }
 .study-card-editor .study-primary { justify-self: end; }
 .card-organization { @apply grid items-end gap-3; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto; }
 .card-organization label { min-width: 0; }
@@ -41,8 +41,4 @@
 .study-empty p { margin: 0 0 20px; font-size: 11px; }
 @media (max-height: 720px) { .study-card { height: min(58vh, 440px); } }
 @media (max-width: 850px) { .card-organization { grid-template-columns: 1fr auto; } }
-@media (max-width: 650px) {
-  .study-notebook-name { display: none; }
-  .study-card-content { padding-inline: 18px; }
-  .study-navigation { margin-top: 12px; }
-}
+@media (max-width: 650px) { .study-notebook-name { display: none; } .study-card-content { padding-inline: 18px; } .study-navigation { margin-top: 12px; } }
