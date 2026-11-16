@@ -23,6 +23,11 @@ const savedProjectPath = () => {
 const projectFilter = [{ name: "MemoMaster project", extensions: ["memz"] }];
 const normalizeName = (value) => String(value || "").trim().toLocaleLowerCase();
 const ensureExtension = (path) => path.toLowerCase().endsWith(".memz") ? path : path + ".memz";
+const normalizeLibrary = (items) => items.map((notebook) => ({
+  ...notebook,
+  chapters: (notebook.chapters || []).map(({ topics, ...chapter }) => chapter),
+  ...(Array.isArray(notebook.flashcards) ? { flashcards: notebook.flashcards.map((card) => { const cleanCard = { ...card }; delete cleanCard.topicId; return cleanCard; }) } : {}),
+}));
 
 export default function Layout() {
   const [notebooks, setNotebooks] = useState([]);
@@ -57,7 +62,7 @@ export default function Layout() {
         if (saved) {
           const parsed = JSON.parse(saved);
           if (!Array.isArray(parsed)) throw new Error("Saved library data is invalid");
-          setNotebooks(parsed);
+          setNotebooks(normalizeLibrary(parsed));
         } else {
           setNotebooks([]);
         }
@@ -159,7 +164,7 @@ export default function Layout() {
       const path = await open({ multiple: false, directory: false, filters: projectFilter });
       if (!path) return;
       const imported = await importMemz(await readBytes(path));
-      setNotebooks(imported);
+      setNotebooks(normalizeLibrary(imported));
       setActiveId(null);
       setView("library");
       setProjectPath(path);
@@ -275,7 +280,7 @@ export default function Layout() {
         <div class="prompt-backdrop" onMouseDown={(event) => event.target === event.currentTarget && setDeleteNotebook(null)}>
           <section class="prompt-panel" role="alertdialog" aria-modal="true" aria-labelledby="delete-notebook-title">
             <div class="prompt-heading"><h2 id="delete-notebook-title">Delete notebook?</h2><button type="button" aria-label="Close" onClick={() => setDeleteNotebook(null)}>×</button></div>
-            <p>“{deleteNotebook.title}” and all its chapters, topics, cards and study history will be permanently deleted. This cannot be undone.</p>
+            <p>“{deleteNotebook.title}” and all its chapters, cards and study history will be permanently deleted. This cannot be undone.</p>
             <div class="prompt-actions"><button type="button" class="prompt-cancel" onClick={() => setDeleteNotebook(null)}>Cancel</button><button type="button" class="prompt-confirm prompt-danger" onClick={() => {
               setNotebooks((items) => items.filter((item) => item.id !== deleteNotebook.id));
               if (activeId === deleteNotebook.id) { setActiveId(null); setView("library"); }

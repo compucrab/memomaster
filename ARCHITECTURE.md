@@ -2,7 +2,7 @@
 
 ## Product shape
 
-MemoMaster is a desktop-first learning and revision application. Its content hierarchy is Library → Notebook → Chapter → Topic → Flashcard. Each flashcard has Markdown front and back content. Cards belong to a notebook and can optionally reference a chapter and topic. Notebook view has two tabs: Browse and Study. Browse provides a searchable card list, chapter/topic filters, and a selected-card preview. Study supports Scheduled and Unscheduled sessions over a notebook, chapter, or topic. Scheduled reviews use FSRS-6; the review UI exposes three choices: Forgot (Again), Difficult (Hard), and Easy (Easy). Unscheduled practice records activity separately and must not mutate FSRS state or due dates. A new installation starts with an empty library; no sample notebooks are seeded.
+MemoMaster is a desktop-first learning and revision application. Its content hierarchy is Library → Notebook → Chapter → Flashcard. Each flashcard has Markdown front and back content. Cards belong to a notebook and can optionally reference a chapter. Notebook view has two tabs: Browse and Study. The UI migrates older saved data by dropping legacy topic metadata while preserving notebooks, chapters, cards, FSRS state, and review history. Browse provides a searchable card list, chapter filters, a selected-card preview, multi-selection, bulk deletion, and bulk chapter reassignment. Existing cards can also be deleted from the card editor. Study supports Scheduled and Unscheduled sessions over a notebook or chapter. Scheduled reviews use FSRS-6; the review UI exposes three choices: Forgot (Again), Difficult (Hard), and Easy (Easy). Unscheduled practice records activity separately and must not mutate FSRS state or due dates. A new installation starts with an empty library; no sample notebooks are seeded.
 
 ## Technology and runtime
 
@@ -31,7 +31,7 @@ Theme selection and the last-used .memz save path remain in localStorage. The pa
 
 ### SQLite working copy
 
-SQLite is the automatic local working copy. Notebook, chapter, topic, and card edits are debounced to save_library and are restored on the next launch. Creating a new project writes an empty library to this same storage, replacing the previous working copy.
+SQLite is the automatic local working copy. Notebook, chapter, and card edits are debounced to save_library and are restored on the next launch. Creating a new project writes an empty library to this same storage, replacing the previous working copy.
 
 ### Project archive: .memz
 
@@ -67,7 +67,7 @@ The Tiptap Markdown extension is currently documented as beta. Keep Markdown as 
 
 ## Current data model
 
-A notebook contains id, title, color, chapters, flashcards, reviewHistory, practiceHistory, and a cached cards count. Each card contains id, front, back, chapterId, topicId, and an optional fsrs record. The fsrs record follows ts-fsrs Card fields (due, stability, difficulty, elapsed_days, scheduled_days, reps, lapses, state, and last_review). Review history records each review's rating, card ID, and FSRS log fields. Keep cards synchronized when the card collection changes.
+A notebook contains id, title, color, chapters, flashcards, reviewHistory, practiceHistory, and a cached cards count. Each card contains id, front, back, an optional chapterId, and an optional fsrs record. The fsrs record follows ts-fsrs Card fields (due, stability, difficulty, elapsed_days, scheduled_days, reps, lapses, state, and last_review). Review history records each review's rating, card ID, and FSRS log fields. Keep cards synchronized when the card collection changes.
 
 `src/services/fsrs.js` wraps `ts-fsrs` and converts persisted ISO date strings to/from Date objects. `NotebookView.jsx` owns Browse filters/preview and Study mode/scope selection. `ReviewSession.jsx` builds a queue for the selected scope; scheduled sessions preview intervals and update FSRS state, while unscheduled sessions only append to `practiceHistory`. `StudyStatus.jsx` derives the yearly activity heatmap, streaks, review outcomes, upcoming due counts, recall rate, and notebook progress from saved review history and card state. These reports are local calculations; no analytics are sent externally.
 
