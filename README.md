@@ -8,7 +8,7 @@ MemoMaster is a desktop-first, local learning workspace built with Tauri 2, Prea
 - Create a new empty project at any time.
 - Notebook hierarchy: chapters, with cards optionally assigned to a chapter.
 - Notebook workspace with separate Browse and Study tabs.
-- Two-column card browsing with question/answer search, chapter filters, and a selected-card preview.
+- Two-column card browsing with question/answer search, chapter filters, card multi-selection, bulk deletion, and bulk chapter reassignment.
 - Scheduled FSRS reviews and unscheduled practice for a whole notebook or chapter. Unscheduled practice never changes due dates.
 - FSRS-6 spaced repetition with Forgot, Difficult, and Easy review choices and visible next-review intervals.
 - Study status dashboard with a GitHub-style yearly consistency graph, streaks, recall rate, review outcomes, upcoming reviews, and notebook progress.
