@@ -4,22 +4,32 @@ MemoMaster is a desktop-first, local learning workspace built with Tauri 2, Prea
 
 ## Current features
 
-- Empty notebook library on first launch.
+- Empty library on first launch, with no prebuilt notebooks.
+- Create a new empty project at any time.
 - Notebook hierarchy: chapters and topics, with cards assignable to both.
 - Focused flashcard view with question/answer reveal and a live WYSIWYG editor.
 - Rich-text formatting with keyboard shortcuts; card content remains stored as Markdown.
 - Light and dark themes.
 - Automatic local library persistence using SQLite.
-- One portable backup format: .memz project archives.
+- One portable backup and restore format: .memz project archives.
 - Native Open and Save dialogs.
 - Custom desktop titlebar and window controls.
 
-## Local data and backups
+## Projects, local storage, and backups
 
-- SQLite library: stored in the operating system's application-data directory. Changes are saved automatically and restored when MemoMaster starts.
-- .memz: the complete library, including every notebook, chapter, topic, flashcard, and related content. Use it to create a manual backup or restore a library on another installation.
+MemoMaster separates automatic local persistence from portable project files:
 
-The SQLite database is the active working copy. A .memz file is a portable snapshot; saving it is an explicit manual action. MemoMaster does not create sample notebooks or individual notebook files.
+- **SQLite — working copy:** The active library is saved automatically in the operating system's application-data directory. Changes are restored when MemoMaster is reopened. No manual save is needed for ordinary editing.
+- **.memz — portable snapshot:** Export or save the complete project to a .memz file. It contains all notebooks, chapters, topics, flashcards, and related content. Keep this file separately to back up your work or move it to another computer.
+
+The two formats contain the same project data and work together:
+
+- Saving/exporting a project creates a snapshot from the current library in SQLite-backed app state.
+- Opening a .memz file replaces the active library; the imported contents are then automatically saved to SQLite.
+- Starting a new project replaces the active library with an empty one and clears the remembered .memz save path. The empty project is also saved automatically.
+- Reopening MemoMaster restores the latest local working copy from SQLite. It does not automatically restore an older .memz snapshot.
+
+A .memz file is not updated when you continue editing after exporting it. Save/export again to refresh that backup. Keep backups outside the application-data directory; a local SQLite database is not a substitute for an independent backup.
 
 ## Technology
 
