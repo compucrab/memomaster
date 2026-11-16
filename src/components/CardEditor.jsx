@@ -9,6 +9,7 @@ export default function CardEditor({ card, chapters = [], existingCards = [], on
   const [similarQuestion, setSimilarQuestion] = useState(null);
   const selectedChapter = chapters.find((chapter) => chapter.id === draft.chapterId);
   const topics = selectedChapter?.topics ?? [];
+  const isNewCard = !existingCards.some((item) => item.id === draft.id);
 
   function requestSave() {
     const match = findSimilarQuestion(draft.front, existingCards, draft.id);
@@ -78,7 +79,7 @@ export default function CardEditor({ card, chapters = [], existingCards = [], on
               <p>{String(similarQuestion.card.front || "").replace(/[#>*_]/g, "").trim()}</p>
             </div>
             <div class="prompt-actions">
-              <button type="button" class="prompt-cancel" onClick={() => { setSimilarQuestion(null); if (similarQuestion.blocked) onCancel(); }}>Discard card</button>
+              <button type="button" class="prompt-cancel" onClick={() => { setSimilarQuestion(null); if (similarQuestion.blocked) onCancel(); }}>{isNewCard ? "Discard card" : "Cancel edit"}</button>
               {!similarQuestion.blocked && <button type="button" class="prompt-confirm" onClick={() => { setSimilarQuestion(null); onSave(draft); }}>Save anyway</button>}
               {similarQuestion.blocked && <button type="button" class="prompt-confirm" onClick={() => setSimilarQuestion(null)}>Edit question</button>}
             </div>
