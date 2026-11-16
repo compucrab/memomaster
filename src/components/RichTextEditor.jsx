@@ -25,11 +25,11 @@ function videoTarget(value) {
   const host = url.hostname.toLowerCase().replace(/^www\./, "");
   if (host === "youtube.com" || host.endsWith(".youtube.com") || host === "youtu.be") {
     const id = host === "youtu.be" ? url.pathname.split("/").filter(Boolean)[0] : url.searchParams.get("v") || url.pathname.split("/").filter(Boolean).pop();
-    return /^[\w-]{6,20}$/.test(id || "") ? { url: `https://www.youtube-nocookie.com/embed/${id}`, provider: "youtube" } : { error: "This YouTube link does not contain a valid video ID." };
+    return /^[\w-]{6,20}$/.test(id || "") ? { url: value.trim(), provider: "youtube" } : { error: "This YouTube link does not contain a valid video ID." };
   }
   if (host === "vimeo.com" || host.endsWith(".vimeo.com")) {
     const id = url.pathname.split("/").filter(Boolean).pop();
-    return /^\d+$/.test(id || "") ? { url: `https://player.vimeo.com/video/${id}`, provider: "vimeo" } : { error: "This Vimeo link does not contain a valid video ID." };
+    return /^\d+$/.test(id || "") ? { url: value.trim(), provider: "vimeo" } : { error: "This Vimeo link does not contain a valid video ID." };
   }
   if (host === "instagram.com" || host.endsWith(".instagram.com")) {
     const match = url.pathname.match(/^\/(reel|p|tv)\/([\w-]+)/i);
