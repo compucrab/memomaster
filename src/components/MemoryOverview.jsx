@@ -24,7 +24,8 @@ export default function MemoryOverview({ card, settings }) {
           <polyline points={points} fill="none" stroke="var(--accent)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
           <line class="memory-current-marker" x1={currentX} x2={currentX} y1="0" y2={height}/>
         </svg>
-        <div><span>Last review</span><span>Now</span><span>+{Math.round(memory.horizon)} days</span></div>
+        <div><span>Last review</span><span>+{Math.round(memory.horizon)} days</span></div>
+        <small class="memory-curve-legend">Dashed marker: current position</small>
       </div>
       <p class="memory-overview-footnote">{memory.stateLabel} · {memory.lapses} lapses · last reviewed {Math.max(0, Math.floor(memory.elapsedDays))} days ago</p>
     </section>
