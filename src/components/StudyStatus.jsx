@@ -2,9 +2,7 @@ import { useMemo } from "preact/hooks";
 import { ArrowLeft, Target, Clock3, Brain, TrendingUp, AlertCircle } from "lucide-preact";
 import { State } from "ts-fsrs";
 
-const DAY = 86400000;
 const dateKey = (date) => `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,"0")}-${String(date.getDate()).padStart(2,"0")}`;
-const dayStart = (date) => new Date(date.getFullYear(), date.getMonth(), date.getDate());
 const studyDayKey = (value, rolloverHour) => {
   const date = new Date(value);
   date.setHours(date.getHours() - rolloverHour);
@@ -35,7 +33,6 @@ export default function StudyStatus({ notebooks, settings, onBack }) {
       return { label: date.toLocaleDateString(undefined, { month: "short" }), count: logs.length, retention: logs.length ? passes / logs.length : null };
     });
     const rollover = settings?.rolloverHour ?? 4;
-    const todayKey = studyDayKey(now, rollover);
     const firstStudyDay = new Date(now);
     firstStudyDay.setHours(rollover, 0, 0, 0);
     if (now < firstStudyDay) firstStudyDay.setDate(firstStudyDay.getDate() - 1);
@@ -59,11 +56,10 @@ export default function StudyStatus({ notebooks, settings, onBack }) {
       .sort((a,b) => (b.fsrs?.lapses || 0) - (a.fsrs?.lapses || 0))
       .slice(0, 8);
     const dueNow = workload[0]?.count || 0;
-    return { validHistory, ratings, remembered, retention, monthly, workload, breakdown, forgotten, cards, dueNow, todayKey };
+    return { validHistory, ratings, remembered, retention, monthly, workload, breakdown, forgotten, cards, dueNow };
   }, [notebooks, settings]);
 
   const maxWorkload = Math.max(1, ...data.workload.map(item => item.count));
-  const maxRetention = 1;
   const monthlyPoints = data.monthly.map((item,index) => item.retention === null ? null : `${(index / 11) * 500},${90 - item.retention * 70}`).filter(Boolean).join(" ");
   const target = settings?.desiredRetention ?? 0.9;
   const retentionDelta = data.retention === null ? null : Math.round((data.retention - target) * 100);
