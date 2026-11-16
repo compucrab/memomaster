@@ -58,7 +58,7 @@ export default function SettingsPanel({ theme, onThemeChange, fsrsSettings, onFs
             <select value={draft.rolloverHour} onChange={event => update("rolloverHour", Number(event.currentTarget.value))}>
               {[0,1,2,3,4,5,6,7,8,9,10,11,12].map(hour => <option value={hour}>{String(hour).padStart(2,"0")}:00</option>)}
             </select>
-            <small>Defines when a new study day begins in workload statistics.</small>
+            <small>Defines when a new study day begins for scheduling and workload statistics.</small>
           </label>
         </div>
         <p class="fsrs-settings-note"><RotateCcw size={13}/> Changing retention or interval limits affects future scheduling only. Existing cards are not silently rescheduled.</p>
