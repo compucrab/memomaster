@@ -29,13 +29,6 @@
 [data-theme="dark"] .new-notebook-card { background: transparent; border-color: var(--line); color: var(--muted); }
 [data-theme="dark"] .new-notebook-card:hover { background: var(--hover); border-color: var(--accent); }
 [data-theme="dark"] .new-notebook-card strong { color: var(--ink); }
-[data-theme="dark"] .markdown-card { background: var(--surface); border-color: var(--line); }
-[data-theme="dark"] .markdown-card-toolbar { border-color: var(--line); color: var(--muted); }
-[data-theme="dark"] .markdown-card-toolbar button.is-selected,
-[data-theme="dark"] .markdown-prose code { background: var(--hover); color: var(--ink); }
-[data-theme="dark"] .markdown-prose { color: #d0d9e5; }
-[data-theme="dark"] .markdown-prose blockquote { color: var(--muted); }
-[data-theme="dark"] .markdown-editor { color: var(--ink); }
 [data-theme="dark"] .settings-row p,
 [data-theme="dark"] .settings-row > span { color: var(--muted); }
 [data-theme="dark"] .settings-row > i { border-color: var(--line); }
@@ -46,13 +39,5 @@
 [data-theme="dark"] .context-color-picker { color: var(--muted); }
 [data-theme="dark"] .button-primary { border-color: var(--accent); background: var(--accent); color: #fff; }
 [data-theme="dark"] .button-primary:hover { background: var(--accent-hover); }
-[data-theme="dark"] .brand-mark,
 [data-theme="dark"] .titlebar-mark { background: var(--ink); color: var(--paper); }
-[data-theme="dark"] .flashcard { background: var(--surface); border-color: var(--line); }
-[data-theme="dark"] .flashcard-toolbar { border-color: var(--line); color: var(--muted); }
-[data-theme="dark"] .flashcard-editor textarea { background: var(--paper); color: var(--ink); border-color: var(--line); }
-[data-theme="dark"] .flashcard-prose { color: var(--ink); }
-[data-theme="dark"] .flashcard-flip { border-color: var(--line); color: var(--muted); }
-[data-theme="dark"] .empty-cards { border-color: var(--line); color: var(--muted); }
-[data-theme="dark"] .empty-cards h3 { color: var(--ink); }
 [data-theme="dark"] .theme-switch { background: var(--paper-deep); }
