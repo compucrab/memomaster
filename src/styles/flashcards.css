@@ -115,10 +115,7 @@
 
 /* Unscheduled review actions */
 .unscheduled-review-options { @apply flex flex-wrap items-stretch justify-center gap-2; }
-.repeat-delay-control { @apply flex flex-col justify-center gap-1 border px-3 py-2; border-color: var(--line); color: var(--muted); font: 8px var(--mono); }
-.repeat-delay-control select { border: 0; outline: none; background: transparent; color: var(--ink); font: 10px var(--sans); cursor: pointer; }
 .unscheduled-review-options .review-rating { min-width: 132px; }
 @media (max-width: 560px) {
   .unscheduled-review-options { display: grid; grid-template-columns: 1fr 1fr; }
-  .repeat-delay-control { grid-column: 1 / -1; }
 }
