@@ -105,8 +105,8 @@ export default function Layout() {
     return () => unlisten?.();
   }, [ready]);
 
-  function requestText({ title, value = "", placeholder, onSubmit }) {
-    setPrompt({ title, value, placeholder, onSubmit });
+  function requestText({ title, value = "", placeholder, submitLabel, onSubmit }) {
+    setPrompt({ title, value, placeholder, submitLabel, onSubmit });
   }
   function updateNotebook(id, changes) {
     setNotebooks((items) => items.map((item) => item.id === id ? { ...item, ...changes } : item));
@@ -115,6 +115,7 @@ export default function Layout() {
     requestText({
       title: "New notebook",
       placeholder: "Notebook name",
+      submitLabel: "Create notebook",
       onSubmit: (name) => {
         const title = name.trim();
         if (!title) return;
