@@ -15,7 +15,7 @@ export default function MemoryOverview({ card, settings }) {
       <div class="memory-overview-heading"><div><h3>Memory</h3><p>FSRS estimate · recall probability is an estimate</p></div><span>{Math.round(memory.retrievability * 100)}% recall</span></div>
       <div class="memory-metrics">
         <div><span>STABILITY · 90% INTERVAL</span><strong>{memory.stability < 1 ? `${Math.round(memory.stability * 24)} hours` : `${memory.stability.toFixed(1)} days`}</strong></div>
-        <div><span>DIFFICULTY</span><strong>{memory.difficulty.toFixed(1)} / 10</strong></div>
+        <div><span>DIFFICULTY</span><strong>{Number(memory.difficulty || 0).toFixed(1)} / 10</strong></div>
         <div><span>RETRIEVABILITY</span><strong>{Math.round(memory.retrievability * 100)}%</strong></div>
       </div>
       <div class="memory-curve">
