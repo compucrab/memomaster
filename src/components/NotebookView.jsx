@@ -162,14 +162,30 @@ export default function NotebookView({ notebook, onUpdate, onBack, onRequestText
               </div>
               <div class="browse-list-count">{visibleCards.length} OF {cards.length} CARDS</div>
               <div class="browse-structure-actions">
-                {chapterFilter !== "all" && (() => { const chapter = chapters.find((item) => item.id === chapterFilter); return chapter ? <button type="button" onClick={() => askDelete("Delete chapter?", chapter.name + " and all its topics and cards will be permanently deleted.", () => deleteChapter(chapter))}><Trash2 size={12} /> Delete chapter</button> : null; })()}
+                {chapterFilter !== "all" && (() => { const chapter = chapters.find((item) => item.id === chapterFilter); return chapter ? <button type="button" onClick={() => askDelete("Delete chapter?", chapter.name + " and all its cards will be permanently deleted.", () => deleteChapter(chapter))}><Trash2 size={12} /> Delete chapter</button> : null; })()}
               </div>
-              {selectedCardIds.length > 0 && <div class="browse-selection-bar"><span>{selectedCardIds.length} selected</span><button type="button" onClick={() => setSelectedCardIds([])}>Clear</button><button type="button" class="delete-selected" onClick={() => askDelete("Delete selected cards?", "Permanently delete " + selectedCardIds.length + " selected cards?", () => deleteCards(selectedCardIds))}><Trash2 size={12} /> Delete</button></div>}
+              {selectedCardIds.length > 0 && <div class="browse-selection-bar">
+                <span>{selectedCardIds.length} selected</span>
+                <select aria-label="Move selected cards to chapter" value={targetChapterId} onChange={(event) => setTargetChapterId(event.currentTarget.value)}>
+                  <option value="">Move to chapter...</option>
+                  <option value="__unassigned">Unassigned</option>
+                  {chapters.map((chapter) => <option value={chapter.id}>{chapter.name}</option>)}
+                </select>
+                <button type="button" disabled={!targetChapterId} onClick={() => {
+                  const next = cards.map((card) => selectedCardIds.includes(card.id)
+                    ? { ...card, chapterId: targetChapterId === "__unassigned" ? "" : targetChapterId, topicId: "" }
+                    : card);
+                  onUpdate({ flashcards: next, cards: next.length });
+                  setSelectedCardIds([]);
+                  setTargetChapterId("");
+                }}>Move</button>
+                <button type="button" onClick={() => setSelectedCardIds([])}>Clear</button>
+                <button type="button" class="delete-selected" onClick={() => askDelete("Delete selected cards?", "Permanently delete " + selectedCardIds.length + " selected cards?", () => deleteCards(selectedCardIds))}><Trash2 size={12} /> Delete</button>
+              </div>}
             </div>
             <div class="browse-card-list">
               {visibleCards.length ? visibleCards.map((card, index) => {
                 const chapter = chapters.find(item => item.id === card.chapterId);
-                const topic = chapter?.topics?.find(item => item.id === card.topicId);
                 return (
                   <div key={card.id} class={`browse-card-row ${selectedCard?.id === card.id ? "selected" : ""} ${selectedCardIds.includes(card.id) ? "checked" : ""}`}>
                     <input class="browse-card-checkbox" type="checkbox" aria-label="Select card" checked={selectedCardIds.includes(card.id)} onChange={() => toggleCardSelection(card.id)} />
@@ -220,10 +236,9 @@ export default function NotebookView({ notebook, onUpdate, onBack, onRequestText
                 </select>
               </label>
               {scopeType !== "notebook" && <label>CHAPTER
-                <select value={scopeChapterId} onChange={event => { setScopeChapterId(event.currentTarget.value); setScopeTopicId(""); }}>
+                <select value={scopeChapterId} onChange={event => setScopeChapterId(event.currentTarget.value)}>
                   {chapters.map(chapter => <option value={chapter.id}>{chapter.name}</option>)}
                 </select>
-              </label>}
               </label>}
             </div>
             <div class="study-scope-summary"><span>{studyCards.length} cards in this session</span><span>{studyType === "scheduled" ? "Due cards only" : "All cards · timeline unchanged"}</span></div>
