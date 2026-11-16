@@ -124,7 +124,6 @@ export default function Layout() {
                 setMenu({ x: event.clientX, y: event.clientY, notebook });
               }}
               onCreate={createNotebook}
-              onUpdate={updateNotebook}
             />
           )}
         </main>
