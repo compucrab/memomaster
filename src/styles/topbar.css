@@ -1,1 +1,63 @@
-@reference "tailwindcss";.topbar{@apply flex shrink-0 items-center justify-between h-[66px] px-9 border-b border-[#d7d3c5];background:#f6f3ea}.topbar-breadcrumb{@apply flex items-center gap-5;color:#969487;font-size:11px}.topbar-breadcrumb b{color:#c1bdaf;font-weight:400}.topbar-breadcrumb strong{color:#55564d;font-weight:600}.topbar-actions{@apply flex items-center gap-3}.search-field{@apply flex items-center gap-2 w-[220px] h-[34px] px-[9px] border-b border-[#d7d3c5];color:#969487}.search-field input{@apply min-w-0 flex-1 border-0 outline-0 bg-transparent text-[11px];color:var(--ink)}.search-field input::placeholder{color:#aaa798}.search-field kbd{@apply flex items-center gap-1;color:#aaa798;font:9px var(--mono)}.button-primary{@apply inline-flex items-center gap-2 min-h-[36px] px-[13px] border border-[#171814] rounded-[2px] bg-[#171814] text-[#f4f1e7] cursor-pointer text-[11px] font-semibold;transition:background .18s,transform .18s}.button-primary:hover{transform:translateY(-1px);background:#414332}
+@reference "tailwindcss";
+
+.topbar {
+  @apply flex h-[66px] shrink-0 items-center justify-between border-b;
+  padding: 0 36px;
+  border-color: var(--line);
+  background: #f6f3ea;
+}
+
+.topbar-breadcrumb {
+  @apply flex items-center gap-5;
+  color: #969487;
+  font-size: 11px;
+}
+
+.topbar-breadcrumb b {
+  color: #c1bdaf;
+  font-weight: 400;
+}
+
+.topbar-breadcrumb strong {
+  color: #55564d;
+  font-weight: 600;
+}
+
+.topbar-actions {
+  @apply flex items-center gap-3;
+}
+
+.search-field {
+  @apply flex h-[34px] w-[220px] items-center gap-2 border-b px-[9px];
+  border-color: var(--line);
+  color: #969487;
+}
+
+.search-field input {
+  @apply min-w-0 flex-1 border-0 bg-transparent text-[11px] outline-0;
+  color: var(--ink);
+}
+
+.search-field input::placeholder {
+  color: #aaa798;
+}
+
+.search-field kbd {
+  @apply flex items-center gap-1;
+  color: #aaa798;
+  font: 9px var(--mono);
+}
+
+.button-primary {
+  @apply inline-flex min-h-[36px] items-center gap-2 rounded-[2px] border px-[13px] text-[11px] font-semibold;
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--paper);
+  cursor: pointer;
+  transition: background .18s, transform .18s;
+}
+
+.button-primary:hover {
+  transform: translateY(-1px);
+  background: #414332;
+}
