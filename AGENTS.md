@@ -25,9 +25,12 @@ The intended hierarchy is:
 - A flashcard has Markdown front and back content.
 - A flashcard may be assigned to a chapter and topic.
 - A topic assignment must belong to the selected chapter.
+- Notebook view has separate Browse and Study tabs. Browse is a two-column card list/preview with question+answer search and chapter/topic filters.
+- Study sessions can target the whole notebook, a chapter, or a topic.
+- Scheduled sessions include only due cards and update FSRS scheduling. Unscheduled practice can use any cards, stores activity in `practiceHistory`, and must never change card FSRS state or due dates.
 - The study interface presents one card at a time.
 - Scheduled review uses `ts-fsrs` (FSRS-6). The user-facing choices are Forgot → Rating.Again, Difficult → Rating.Hard, and Easy → Rating.Easy. Do not add a fourth rating without a product decision.
-- Each card may store its scheduler state under `card.fsrs`; each notebook stores review logs in `notebook.reviewHistory`.
+- Each card may store its scheduler state under `card.fsrs`; each notebook stores scheduled review logs in `notebook.reviewHistory` and unscheduled practice logs in `notebook.practiceHistory`.
 - Study status is derived from those persisted records. Do not store heatmap/streak totals as the source of truth.
 - Do not turn the study view into a bulk editable card list.
 - Keep study/revision logic separate from card editing.
@@ -47,7 +50,7 @@ Do not claim or implement against assumptions that are not true:
 - The `.memz` project archive is handled by `src/services/projectArchive.js`; card scheduling fields and notebook review history must survive export/import.
 - Card front/back editing uses Tiptap (`@tiptap/core`, `@tiptap/starter-kit`, `@tiptap/markdown`) through `src/components/RichTextEditor.jsx`; the editor serializes content to Markdown strings.
 - `src/services/markdown.js` renders saved Markdown for read-only study mode.
-- FSRS review scheduling is implemented in `src/services/fsrs.js`; `ReviewSession.jsx` handles the scheduled review flow and `StudyStatus.jsx` presents local progress reports.
+- FSRS review scheduling is implemented in `src/services/fsrs.js`; `NotebookView.jsx` provides Browse and Study modes, `ReviewSession.jsx` handles both scheduled and unscheduled queues, and `StudyStatus.jsx` presents local progress reports. The consistency graph counts both scheduled reviews and unscheduled practice, but only scheduled reviews contribute to FSRS recall/outcome statistics.
 - Anki import, cloud sync, and multi-device synchronization are not implemented.
 - The SQLite implementation currently stores the complete library JSON in one row; normalized domain tables and migrations remain future work.
 
