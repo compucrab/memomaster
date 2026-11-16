@@ -118,26 +118,6 @@ export async function createMemz(notebooks) {
   return createZip(files);
 }
 
-export function createMemn(notebook) {
-  return encoder.encode(JSON.stringify({
-    format: "memomaster-notebook",
-    version: 1,
-    notebook: cleanNotebook(notebook),
-  }, null, 2));
-}
-
-export function importMemn(input) {
-  const bytes = input instanceof Uint8Array ? input : new Uint8Array(input);
-  const payload = JSON.parse(decoder.decode(bytes));
-  if (payload.format !== "memomaster-notebook" || payload.version !== 1 || !payload.notebook) {
-    throw new Error("Unsupported MemoMaster notebook file");
-  }
-  if (typeof payload.notebook.title !== "string" || typeof payload.notebook.id !== "string") {
-    throw new Error("Invalid notebook data");
-  }
-  return cleanNotebook(payload.notebook);
-}
-
 export async function importMemz(input) {
   const bytes = input instanceof Uint8Array ? input : new Uint8Array(input);
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
