@@ -12,7 +12,7 @@ import TextPrompt from "./TextPrompt";
 import StudyStatus from "./StudyStatus";
 import { createMemz, importMemz } from "../services/projectArchive";
 import { loadFsrsSettings, saveFsrsSettings } from "../services/fsrsSettings";
-import { undoLatestReview } from "../services/fsrs";
+import { undoLatestReview } from "../services/fsrs.js";
 
 const savedTheme = () => {
   try { return localStorage.getItem("memomaster-theme") || "light"; }
