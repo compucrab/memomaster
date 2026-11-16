@@ -14,27 +14,30 @@ export default function NotebookGrid({ notebooks, onOpen, onContextMenu, onCreat
       <div class="section-rule"><span>YOUR NOTEBOOKS</span><span>{notebooks.length} COLLECTIONS</span></div>
       {notebooks.length ? (
         <div class="notebook-grid">
-          {notebooks.map((notebook, index) => (
-            <article class="notebook-card" key={notebook.id} onContextMenu={(event) => onContextMenu(event, notebook)}>
-              <button class="notebook-open" onClick={() => onOpen(notebook.id)} aria-label={`Open ${notebook.title}`}>
-                <div class="notebook-cover">
-                  <i class="cover-strip" style={{ backgroundColor: notebook.color }} />
-                  <div class="cover-topline"><span>MM / {String(index + 1).padStart(2, "0")}</span><span>FIELD NOTES</span></div>
-                  <div class="cover-art"><BookOpen size={36} /><i /><b /></div>
-                  <div class="cover-footer"><span>MEMOMASTER</span><span>EST. 2026</span></div>
-                </div>
-                <div class="notebook-info">
-                  <div><h2>{notebook.title}</h2><ArrowUpRight size={16} /></div>
-                  <p>{notebook.description}</p>
-                  <footer><span>{notebook.chapters} CHAPTERS</span><span>{notebook.cards} CARDS</span><span>{notebook.updated.toUpperCase()}</span></footer>
-                </div>
-              </button>
-              <label class="strip-picker" title="Choose any cover strip colour">
-                <span>STRIP COLOUR</span>
-                <input type="color" value={notebook.color} aria-label={`Choose strip colour for ${notebook.title}`} onInput={(event) => onUpdate(notebook.id, { color: event.currentTarget.value })} />
-              </label>
-            </article>
-          ))}
+          {notebooks.map((notebook, index) => {
+            const chapterCount = Array.isArray(notebook.chapters) ? notebook.chapters.length : (notebook.chapters || 0);
+            return (
+              <article class="notebook-card" key={notebook.id} onContextMenu={(event) => onContextMenu(event, notebook)}>
+                <button class="notebook-open" onClick={() => onOpen(notebook.id)} aria-label={`Open ${notebook.title}`}>
+                  <div class="notebook-cover">
+                    <i class="cover-strip" style={{ backgroundColor: notebook.color }} />
+                    <div class="cover-topline"><span>MM / {String(index + 1).padStart(2, "0")}</span><span>FIELD NOTES</span></div>
+                    <div class="cover-art"><BookOpen size={36} /><i /><b /></div>
+                    <div class="cover-footer"><span>MEMOMASTER</span><span>EST. 2026</span></div>
+                  </div>
+                  <div class="notebook-info">
+                    <div><h2>{notebook.title}</h2><ArrowUpRight size={16} /></div>
+                    <p>{notebook.description}</p>
+                    <footer><span>{chapterCount} CHAPTERS</span><span>{notebook.cards} CARDS</span><span>{notebook.updated.toUpperCase()}</span></footer>
+                  </div>
+                </button>
+                <label class="strip-picker" title="Choose any cover strip colour">
+                  <span>STRIP COLOUR</span>
+                  <input type="color" value={notebook.color} aria-label={`Choose strip colour for ${notebook.title}`} onInput={(event) => onUpdate(notebook.id, { color: event.currentTarget.value })} />
+                </label>
+              </article>
+            );
+          })}
           <button class="new-notebook-card" onClick={onCreate}>
             <i><Plus size={22} /></i><strong>Create a notebook</strong><span>Start a new collection of ideas</span>
           </button>

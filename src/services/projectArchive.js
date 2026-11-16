@@ -90,7 +90,13 @@ export async function exportMemz(notebooks) {
       const cardId = /^[\w-]{1,100}$/.test(card.id ?? "") ? card.id : `card-${index + 1}`;
       files.push({
         name: `notebooks/${notebook.id}/cards/${cardId}.json`,
-        content: JSON.stringify({ id: cardId, front: card.front ?? "", back: card.back ?? "" }, null, 2),
+        content: JSON.stringify({
+          id: cardId,
+          front: card.front ?? "",
+          back: card.back ?? "",
+          chapterId: card.chapterId ?? "",
+          topicId: card.topicId ?? "",
+        }, null, 2),
       });
     });
   }
@@ -168,6 +174,6 @@ export async function importMemz(buffer) {
         .filter(([path]) => path.startsWith(`notebooks/${id}/cards/`) && path.endsWith(".json"))
         .map(([, content]) => JSON.parse(content));
     }
-    return { ...notebook, flashcards, cards: flashcards.length };
+    return { ...notebook, chapters: Array.isArray(notebook.chapters) ? notebook.chapters : [], flashcards, cards: flashcards.length };
   });
 }
