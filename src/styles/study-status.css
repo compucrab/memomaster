@@ -58,9 +58,9 @@
 .outcome-row { @apply grid items-center gap-3; grid-template-columns: 75px minmax(0,1fr) 30px; color: var(--muted); font-size: 10px; }
 .outcome-row > div { height: 7px; overflow: hidden; background: var(--hover); }
 .outcome-row > div i { display: block; height: 100%; }
-.outcome-row > div i.easy { background: #75a98e; }
-.outcome-row > div i.difficult { background: #c9a66c; }
-.outcome-row > div i.forgot { background: #d68b8b; }
+.outcome-row > div i.easy { background: var(--success); }
+.outcome-row > div i.difficult { background: var(--warning); }
+.outcome-row > div i.forgot { background: var(--danger); }
 .outcome-row strong { color: var(--ink); font: 10px var(--mono); text-align: right; }
 .status-footnote, .status-empty { margin: 17px 0 0; color: var(--muted); font-size: 9px; }
 .upcoming-row { @apply flex items-center justify-between border-b pb-2; border-color: var(--line); color: var(--muted); font-size: 10px; }
