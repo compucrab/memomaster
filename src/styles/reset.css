@@ -1,6 +1,4 @@
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
 html,
 body,
@@ -22,26 +20,37 @@ body {
 
 button,
 input,
-textarea {
-  font: inherit;
-}
-
-button {
-  color: inherit;
-}
+textarea { font: inherit; }
+button { color: inherit; }
 
 button:focus-visible,
 input:focus-visible,
 textarea:focus-visible {
-  outline: 2px solid var(--olive);
+  outline: 2px solid var(--accent);
   outline-offset: 3px;
 }
 
-::selection {
-  background: #c6d56a80;
-  color: var(--ink);
-}
+::selection { background: color-mix(in srgb, var(--accent) 30%, transparent); color: var(--ink); }
 
-.hidden-file-input {
-  display: none;
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scroll-thumb) var(--scroll-track);
 }
+:root {
+  --scroll-thumb: #b6c5d7;
+  --scroll-track: #edf1f6;
+}
+[data-theme="dark"] {
+  --scroll-thumb: #526a86;
+  --scroll-track: #1a2431;
+}
+*::-webkit-scrollbar { width: 9px; height: 9px; }
+*::-webkit-scrollbar-track { background: var(--scroll-track); }
+*::-webkit-scrollbar-thumb {
+  border: 2px solid var(--scroll-track);
+  border-radius: 10px;
+  background: var(--scroll-thumb);
+}
+*::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+.hidden-file-input { display: none; }
