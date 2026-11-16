@@ -83,3 +83,15 @@
   .card-editor-content-panel { gap: 8px; }
   .card-editor-content-panel .rich-editor-content { padding: 10px 14px; }
 }
+
+
+/* Keep the question and answer editors inside their own half of the available space. */
+.card-editor-content-panel { min-height: 0; overflow: hidden; }
+.card-editor-content-panel > .rich-editor { min-height: 0; height: 0; grid-template-rows: auto auto minmax(0, 1fr); }
+.card-editor-content-panel .rich-editor-surface { min-height: 0; height: 100%; max-height: none; overflow: auto; }
+.card-editor-content-panel .rich-editor-content { min-height: 100%; height: auto; }
+.card-editor-content-divider { width: 100%; }
+@media (max-height: 650px) {
+  .card-editor-content-panel { gap: 6px; }
+  .card-editor-content-panel .rich-editor-toolbar { padding-block: 2px; }
+}
