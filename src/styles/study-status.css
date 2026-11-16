@@ -58,6 +58,7 @@
 .outcome-row { @apply grid items-center gap-3; grid-template-columns: 75px minmax(0,1fr) 30px; color: var(--muted); font-size: 10px; }
 .outcome-row > div { height: 7px; overflow: hidden; background: var(--hover); }
 .outcome-row > div i { display: block; height: 100%; }
+.outcome-row > div i.good { background: var(--accent); }
 .outcome-row > div i.easy { background: var(--success); }
 .outcome-row > div i.difficult { background: var(--warning); }
 .outcome-row > div i.forgot { background: var(--danger); }
