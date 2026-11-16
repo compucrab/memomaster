@@ -5,11 +5,13 @@ import {
 import { renderMarkdown } from "../services/markdown";
 import CardEditor from "./CardEditor";
 import ReviewSession from "./ReviewSession";
+import { findSimilarQuestion } from "../services/questionSimilarity";
 
 function makeCard() {
   return { id: crypto.randomUUID(), front: "## Your question\n\nWrite a prompt here.", back: "Write the answer here.", chapterId: "", topicId: "" };
 }
 const makeId = () => crypto.randomUUID();
+const normalizeName = (value) => String(value || "").trim().toLocaleLowerCase();
 
 export default function NotebookView({ notebook, onUpdate, onBack, onRequestText }) {
   const cards = notebook.flashcards ?? (notebook.markdown ? [{ id: "legacy-card", front: "What is this note about?", back: notebook.markdown }] : []);
@@ -25,8 +27,9 @@ export default function NotebookView({ notebook, onUpdate, onBack, onRequestText
   const [scopeChapterId, setScopeChapterId] = useState(chapters[0]?.id || "");
   const [scopeTopicId, setScopeTopicId] = useState("");
   const [reviewing, setReviewing] = useState(false);
+  const [newCard, setNewCard] = useState(null);
 
-  const editingCard = cards.find(card => card.id === editingCardId) || null;
+  const editingCard = cards.find(card => card.id === editingCardId) || (newCard?.id === editingCardId ? newCard : null);
   const filterTopics = chapters.find(chapter => chapter.id === chapterFilter)?.topics || [];
   const scopeTopics = chapters.find(chapter => chapter.id === scopeChapterId)?.topics || [];
 
@@ -67,14 +70,13 @@ export default function NotebookView({ notebook, onUpdate, onBack, onRequestText
       : [...cards, draft];
     onUpdate({ flashcards: next, cards: next.length, markdown: undefined });
     setSelectedCardId(draft.id);
+    setNewCard(null);
     setEditingCardId(null);
   }
 
   function addCard() {
     const card = makeCard();
-    const next = [...cards, card];
-    onUpdate({ flashcards: next, cards: next.length });
-    setSelectedCardId(card.id);
+    setNewCard(card);
     setEditingCardId(card.id);
     setTab("browse");
   }
@@ -83,8 +85,10 @@ export default function NotebookView({ notebook, onUpdate, onBack, onRequestText
     onRequestText({
       title: "New chapter", placeholder: "Chapter name", submitLabel: "Create chapter",
       onSubmit: name => {
-        if (!name.trim()) return;
-        const chapter = { id: makeId(), name: name.trim(), topics: [] };
+        const title = name.trim();
+        if (!title) return "Please enter a chapter name.";
+        if (chapters.some((item) => normalizeName(item.name) === normalizeName(title))) return "This notebook already has a chapter with that name.";
+        const chapter = { id: makeId(), name: title, topics: [] };
         onUpdate({ chapters: [...chapters, chapter] });
         setScopeChapterId(chapter.id);
       },
@@ -95,9 +99,12 @@ export default function NotebookView({ notebook, onUpdate, onBack, onRequestText
     onRequestText({
       title: "New topic", placeholder: "Topic name", submitLabel: "Create topic",
       onSubmit: name => {
-        if (!name.trim()) return;
+        const title = name.trim();
+        if (!title) return "Please enter a topic name.";
+        const parent = chapters.find((chapter) => chapter.id === chapterId);
+        if (parent?.topics?.some((topic) => normalizeName(topic.name) === normalizeName(title))) return "This chapter already has a topic with that name.";
         const next = chapters.map(chapter => chapter.id === chapterId
-          ? { ...chapter, topics: [...(chapter.topics || []), { id: makeId(), name: name.trim() }] }
+          ? { ...chapter, topics: [...(chapter.topics || []), { id: makeId(), name: title }] }
           : chapter);
         onUpdate({ chapters: next });
       },
@@ -106,7 +113,7 @@ export default function NotebookView({ notebook, onUpdate, onBack, onRequestText
 
   if (editingCard) {
     return <CardEditor key={editingCard.id} card={editingCard} chapters={chapters}
-      onSave={saveCard} onCancel={() => setEditingCardId(null)}
+      onSave={saveCard} existingCards={cards} onCancel={() => { setEditingCardId(null); setNewCard(null); }}
       onAddChapter={addChapter} onAddTopic={addTopic} />;
   }
 
