@@ -38,3 +38,8 @@
   .card-editor-header .study-primary { grid-column: 1 / -1; justify-self: end; }
   .card-editor-heading span { display: none; }
 }
+
+.question-warning > p { margin: 0 0 16px; color: var(--muted); font: 12px/1.6 var(--sans); }
+.similar-question-match { padding: 12px; border: 1px solid var(--line); background: var(--paper); }
+.similar-question-match span { color: var(--muted); font: 8px var(--mono); letter-spacing: .1em; }
+.similar-question-match p { margin: 8px 0 0; color: var(--ink); font: 12px/1.6 var(--sans); white-space: pre-wrap; overflow-wrap: anywhere; }
