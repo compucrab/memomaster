@@ -9,7 +9,7 @@ function isDue(card, now) {
   return Number.isNaN(due.getTime()) || due <= now;
 }
 
-export default function ReviewSession({ cards, onReview, onExit }) {
+export default function ReviewSession({ cards, mode = "scheduled", onReview, onExit }) {
   const [queue, setQueue] = useState(() => {
     const now = new Date();
     return cards.filter((card) => isDue(card, now))
@@ -27,8 +27,12 @@ export default function ReviewSession({ cards, onReview, onExit }) {
 
   function rate(choice) {
     if (!activeCard) return;
-    const result = scheduleReview(activeCard, choice, new Date());
-    onReview(activeCard.id, result.fsrs, result.log);
+    if (mode === "scheduled") {
+      const result = scheduleReview(activeCard, choice, new Date());
+      onReview(activeCard.id, result.fsrs, result.log, mode);
+    } else {
+      onReview(activeCard.id, null, { cardId: activeCard.id, rating: choice, review: new Date().toISOString() }, mode);
+    }
     setReviewed((count) => count + 1);
     setQueue((items) => items.slice(1));
     setRevealed(false);
@@ -52,7 +56,7 @@ export default function ReviewSession({ cards, onReview, onExit }) {
     <section class="review-session">
       <header class="review-session-header">
         <button class="back-link" onClick={onExit}>← EXIT REVIEW</button>
-        <span>{reviewed} DONE · {queue.length} LEFT</span>
+        <span>{mode === "scheduled" ? "SCHEDULED" : "UNSCHEDULED"} · {reviewed} DONE · {queue.length} LEFT</span>
       </header>
       <div class="review-progress"><i style={{ width: `${(reviewed / (reviewed + queue.length)) * 100}%` }} /></div>
       <div class="review-card">
@@ -75,7 +79,7 @@ export default function ReviewSession({ cards, onReview, onExit }) {
           </div>
         )}
       </div>
-      <footer class="review-session-footer"><Clock3 size={13} /> Next review time is calculated by FSRS</footer>
+      <footer class="review-session-footer"><Clock3 size={13} /> {mode === "scheduled" ? "Your answers update the FSRS schedule" : "Practice only · scheduled due dates remain unchanged"}</footer>
     </section>
   );
 }
