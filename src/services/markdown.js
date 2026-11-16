@@ -124,7 +124,7 @@ export function renderMarkdown(source = "") {
     }
     if (inCode) { code.push(line); continue; }
 
-    const aligned = line.match(/^<(p|h[1-3]) style="text-align:(center|right)">([\\s\\S]*)<\\/\\1>$/i);
+    const aligned = line.match(/^<(p|h[1-3]) style="text-align:(center|right)">([\s\S]*)<\/\1>$/i);
     if (aligned) {
       flushParagraph(); flushList(); flushQuote();
       const tag = aligned[1].toLowerCase();
