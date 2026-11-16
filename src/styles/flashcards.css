@@ -208,3 +208,26 @@
   .review-rating-options .review-rating strong { font-size: 9px; }
   .review-rating-options .review-rating span { font-size: 7px; }
 }
+
+
+/* Browse preview: switch between one side of the card at a time */
+.browse-preview-header { min-height: 52px; gap: 12px; }
+.browse-preview-tabs { @apply flex h-full items-center gap-5; }
+.browse-preview-tabs button {
+  position: relative;
+  height: 100%;
+  padding: 0 2px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font: 10px var(--sans);
+}
+.browse-preview-tabs button:hover { color: var(--ink); }
+.browse-preview-tabs button.active { border-bottom-color: var(--accent); color: var(--ink); font-weight: 650; }
+.browse-preview-content { display: block; padding: clamp(20px, 3vw, 36px); }
+.browse-preview-content > .study-card-prose { width: 100%; max-width: 100%; overflow-wrap: anywhere; }
+.browse-preview-content > .study-card-prose img,
+.browse-preview-content > .study-card-prose video,
+.browse-preview-content > .study-card-prose iframe { max-width: 100%; }
