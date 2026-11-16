@@ -1,0 +1,81 @@
+import { useMemo, useState } from "preact/hooks";
+import { Check, Clock3, RotateCw } from "lucide-preact";
+import { renderMarkdown } from "../services/markdown";
+import { getReviewOptions, scheduleReview } from "../services/fsrs";
+
+function isDue(card, now) {
+  if (!card.fsrs?.due) return true;
+  const due = new Date(card.fsrs.due);
+  return Number.isNaN(due.getTime()) || due <= now;
+}
+
+export default function ReviewSession({ cards, onReview, onExit }) {
+  const [queue, setQueue] = useState(() => {
+    const now = new Date();
+    return cards.filter((card) => isDue(card, now))
+      .sort((a, b) => new Date(a.fsrs?.due || 0) - new Date(b.fsrs?.due || 0))
+      .map((card) => card.id);
+  });
+  const [revealed, setRevealed] = useState(false);
+  const [reviewed, setReviewed] = useState(0);
+  const activeCard = cards.find((card) => card.id === queue[0]);
+  const now = new Date();
+  const options = useMemo(
+    () => activeCard ? getReviewOptions(activeCard, now) : null,
+    [activeCard?.id, activeCard?.fsrs, queue.length],
+  );
+
+  function rate(choice) {
+    if (!activeCard) return;
+    const result = scheduleReview(activeCard, choice, new Date());
+    onReview(activeCard.id, result.fsrs, result.log);
+    setReviewed((count) => count + 1);
+    setQueue((items) => items.slice(1));
+    setRevealed(false);
+  }
+
+  if (!queue.length) {
+    return (
+      <section class="review-session">
+        <header class="review-session-header"><button class="back-link" onClick={onExit}>← BACK TO NOTEBOOK</button></header>
+        <div class="review-complete">
+          <Check size={30} />
+          <h1>{reviewed ? "Review complete" : "Nothing due right now"}</h1>
+          <p>{reviewed ? `You reviewed ${reviewed} ${reviewed === 1 ? "card" : "cards"}.` : "All caught up. New cards and due reviews will appear here."}</p>
+          <button class="study-primary" onClick={onExit}>Back to notebook</button>
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <section class="review-session">
+      <header class="review-session-header">
+        <button class="back-link" onClick={onExit}>← EXIT REVIEW</button>
+        <span>{reviewed + 1} REVIEWED · {queue.length} LEFT</span>
+      </header>
+      <div class="review-progress"><i style={{ width: `${(reviewed / (reviewed + queue.length)) * 100}%` }} /></div>
+      <div class="review-card">
+        <div class="review-card-content">
+          <p class="study-side-label">{revealed ? "ANSWER" : "QUESTION"}</p>
+          <div class="study-card-prose" dangerouslySetInnerHTML={{ __html: renderMarkdown(revealed ? activeCard.back : activeCard.front) }} />
+        </div>
+        {!revealed ? (
+          <div class="study-card-actions">
+            <button class="study-primary" onClick={() => setRevealed(true)}><RotateCw size={15} /> Reveal answer</button>
+          </div>
+        ) : (
+          <div class="review-ratings">
+            <p>How well did you remember?</p>
+            <div class="review-rating-options">
+              <button class="review-rating forgot" onClick={() => rate("forgot")}><strong>Forgot</strong><span>{options.forgot.interval}</span></button>
+              <button class="review-rating difficult" onClick={() => rate("difficult")}><strong>Difficult</strong><span>{options.difficult.interval}</span></button>
+              <button class="review-rating easy" onClick={() => rate("easy")}><strong>Easy</strong><span>{options.easy.interval}</span></button>
+            </div>
+          </div>
+        )}
+      </div>
+      <footer class="review-session-footer"><Clock3 size={13} /> Next review time is calculated by FSRS</footer>
+    </section>
+  );
+}
