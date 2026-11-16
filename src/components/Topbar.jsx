@@ -1,6 +1,6 @@
-import { Search, Plus, Command } from "lucide-preact";
+import { Search, Plus, Command, BarChart3 } from "lucide-preact";
 
-export default function Topbar({ title, query, onQueryChange, onCreate }) {
+export default function Topbar({ title, query, onQueryChange, onCreate, onStudyStatus }) {
   return (
     <header class="topbar">
       <div class="topbar-breadcrumb">
@@ -20,6 +20,7 @@ export default function Topbar({ title, query, onQueryChange, onCreate }) {
           <kbd><Command size={10} /> K</kbd>
         </label>
 
+        <button class="topbar-status-button" onClick={onStudyStatus}><BarChart3 size={15} /> Study status</button>
         <button class="button-primary" onClick={onCreate}>
           <Plus size={15} />
           New notebook

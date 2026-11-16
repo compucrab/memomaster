@@ -18,14 +18,18 @@ This document is the working contract for coding agents contributing to MemoMast
 
 The intended hierarchy is:
 
-`Notebook → Chapter → Topic → Flashcard`
+`Notebook → Chapter → Flashcard`
 
 - A notebook contains chapters and flashcards.
-- A chapter contains topics.
 - A flashcard has Markdown front and back content.
-- A flashcard may be assigned to a chapter and topic.
-- A topic assignment must belong to the selected chapter.
+- A flashcard may optionally be assigned to a chapter.
+- Notebook view has separate Browse and Study tabs. Browse is a two-column card list/preview with question+answer search and chapter filters. Cards can be multi-selected for bulk deletion or chapter reassignment; do not add a card right-click menu.
+- Study sessions can target the whole notebook, a chapter.
+- Scheduled sessions include only due cards and update FSRS scheduling. Unscheduled practice can use any cards, stores activity in `practiceHistory`, and must never change card FSRS state or due dates.
 - The study interface presents one card at a time.
+- Scheduled review uses `ts-fsrs` (FSRS-6). The user-facing choices are Forgot → Rating.Again, Difficult → Rating.Hard, and Easy → Rating.Easy. Do not add a fourth rating without a product decision.
+- Each card may store its scheduler state under `card.fsrs`; each notebook stores scheduled review logs in `notebook.reviewHistory` and unscheduled practice logs in `notebook.practiceHistory`.
+- Study status is derived from those persisted records. Do not store heatmap/streak totals as the source of truth.
 - Do not turn the study view into a bulk editable card list.
 - Keep study/revision logic separate from card editing.
 
@@ -41,10 +45,11 @@ Do not claim or implement against assumptions that are not true:
 - Theme selection is persisted in `localStorage`.
 - Rust owns SQLite access and native file read/write commands; the frontend owns the current notebook data model and serialization.
 - The Tauri dialog plugin provides native Open and Save dialogs.
-- The `.memz` project archive is handled by `src/services/projectArchive.js`.
+- The `.memz` project archive is handled by `src/services/projectArchive.js`; card scheduling fields plus notebook `reviewHistory` and `practiceHistory` must survive export/import.
 - Card front/back editing uses Tiptap (`@tiptap/core`, `@tiptap/starter-kit`, `@tiptap/markdown`) through `src/components/RichTextEditor.jsx`; the editor serializes content to Markdown strings.
 - `src/services/markdown.js` renders saved Markdown for read-only study mode.
-- FSRS, Anki import, cloud sync, and multi-device synchronization are not implemented.
+- FSRS review scheduling is implemented in `src/services/fsrs.js`; `NotebookView.jsx` provides Browse and Study modes, `ReviewSession.jsx` handles both scheduled and unscheduled queues, and `StudyStatus.jsx` presents local progress reports. The consistency graph counts both scheduled reviews and unscheduled practice, but only scheduled reviews contribute to FSRS recall/outcome statistics.
+- Anki import, cloud sync, and multi-device synchronization are not implemented.
 - The SQLite implementation currently stores the complete library JSON in one row; normalized domain tables and migrations remain future work.
 
 ## UI and interaction rules
@@ -68,7 +73,7 @@ Do not claim or implement against assumptions that are not true:
 - Use immutable updates for arrays and nested records.
 - Use stable record IDs. Do not use array indexes as persisted IDs.
 - When changing cards, keep the notebook's cached `cards` count in sync with `flashcards.length`.
-- When changing chapter/topic assignments, prevent a card from retaining a topic that belongs to another chapter.
+- When moving cards between chapters, update every selected card's chapter assignment together.
 - Clean up event listeners and effects on unmount.
 - Do not use browser APIs unavailable in the Tauri webview without checking platform support and fallback behavior.
 
@@ -128,7 +133,7 @@ Do not claim or implement against assumptions that are not true:
 - No TypeScript migration.
 - No new framework or state-management library for convenience.
 - No cloud account, analytics, telemetry, or network backend without explicit product approval.
-- No database, FSRS, sync, or Anki feature presented as complete before it exists.
+- Do not present Anki import/export, sync, or other unimplemented features as complete.
 - No native JS alert/prompt/confirm dialogs.
 - No decorative marketing text or UI flourishes.
 - No broad file deletion based only on a filename. Verify imports, references, and runtime use first.

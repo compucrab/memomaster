@@ -38,3 +38,18 @@
   .card-editor-header .study-primary { grid-column: 1 / -1; justify-self: end; }
   .card-editor-heading span { display: none; }
 }
+
+.question-warning > p { margin: 0 0 16px; color: var(--muted); font: 12px/1.6 var(--sans); }
+.similar-question-match { padding: 12px; border: 1px solid var(--line); background: var(--paper); }
+.similar-question-match span { color: var(--muted); font: 8px var(--mono); letter-spacing: .1em; }
+.similar-question-match p { margin: 8px 0 0; color: var(--ink); font: 12px/1.6 var(--sans); white-space: pre-wrap; overflow-wrap: anywhere; }
+
+.card-editor-header-actions { @apply flex items-center justify-end gap-2; }
+.card-editor-header-actions .study-primary { @apply inline-flex items-center justify-center gap-2 border px-4; height: 38px; min-width: 112px; border-color: var(--accent); background: var(--accent); color: #fff; cursor: pointer; font: 600 11px var(--sans); white-space: nowrap; }
+.card-editor-header-actions .study-primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+.card-delete-button { @apply inline-flex items-center justify-center gap-2 border px-3; height: 38px; border-color: color-mix(in srgb, #c65b5b 45%, var(--line)); background: transparent; color: #c65b5b; cursor: pointer; font: 10px var(--sans); }
+.card-delete-button:hover { background: color-mix(in srgb, #c65b5b 9%, transparent); }
+.card-editor-organization { grid-template-columns: minmax(0, 1fr) auto; max-width: 520px; }
+@media (max-width: 700px) {
+  .card-editor-header-actions { grid-column: 1 / -1; justify-self: end; }
+}

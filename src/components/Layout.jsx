@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import { open, save } from "@tauri-apps/plugin-dialog";
+import { open } from "@tauri-apps/plugin-dialog";
 import Topbar from "./Topbar";
 import Titlebar from "./Titlebar";
 import NotebookGrid from "./NotebookGrid";
@@ -9,6 +9,7 @@ import NotebookView from "./NotebookView";
 import SettingsPanel from "./SettingsPanel";
 import ContextMenu from "./ContextMenu";
 import TextPrompt from "./TextPrompt";
+import StudyStatus from "./StudyStatus";
 import { createMemz, importMemz } from "../services/projectArchive";
 
 const savedTheme = () => {
@@ -20,7 +21,12 @@ const savedProjectPath = () => {
   catch { return null; }
 };
 const projectFilter = [{ name: "MemoMaster project", extensions: ["memz"] }];
-const ensureExtension = (path) => path.toLowerCase().endsWith(".memz") ? path : path + ".memz";
+const normalizeName = (value) => String(value || "").trim().toLocaleLowerCase();
+const normalizeLibrary = (items) => items.map((notebook) => ({
+  ...notebook,
+  chapters: (notebook.chapters || []).map(({ topics, ...chapter }) => chapter),
+  ...(Array.isArray(notebook.flashcards) ? { flashcards: notebook.flashcards.map((card) => { const cleanCard = { ...card }; delete cleanCard.topicId; return cleanCard; }) } : {}),
+}));
 
 export default function Layout() {
   const [notebooks, setNotebooks] = useState([]);
@@ -31,6 +37,7 @@ export default function Layout() {
   const [theme, setTheme] = useState(savedTheme);
   const [prompt, setPrompt] = useState(null);
   const [confirmNewProject, setConfirmNewProject] = useState(false);
+  const [deleteNotebook, setDeleteNotebook] = useState(null);
   const [notice, setNotice] = useState("");
   const [ready, setReady] = useState(false);
   const [projectPath, setProjectPath] = useState(savedProjectPath);
@@ -54,7 +61,7 @@ export default function Layout() {
         if (saved) {
           const parsed = JSON.parse(saved);
           if (!Array.isArray(parsed)) throw new Error("Saved library data is invalid");
-          setNotebooks(parsed);
+          setNotebooks(normalizeLibrary(parsed));
         } else {
           setNotebooks([]);
         }
@@ -95,6 +102,9 @@ export default function Layout() {
           return;
         }
         await invoke("save_library", { data: JSON.stringify(notebooksRef.current) });
+        const archive = await createMemz(notebooksRef.current);
+        const backupPath = await invoke("create_automatic_backup", { bytes: Array.from(archive) });
+        console.info("Automatic project backup created:", backupPath);
         await getCurrentWindow().destroy();
       } catch (error) {
         setNotice(`Could not save before closing: ${error.message || error}`);
@@ -104,20 +114,32 @@ export default function Layout() {
     return () => unlisten?.();
   }, [ready]);
 
-  function requestText({ title, value = "", placeholder, onSubmit }) {
-    setPrompt({ title, value, placeholder, onSubmit });
+  function requestText({ title, value = "", placeholder, submitLabel, onSubmit }) {
+    setPrompt({ title, value, placeholder, submitLabel, onSubmit });
   }
   function updateNotebook(id, changes) {
     setNotebooks((items) => items.map((item) => item.id === id ? { ...item, ...changes } : item));
   }
   function createNotebook() {
-    const id = crypto.randomUUID();
-    setNotebooks((items) => [{
-      id, title: "Untitled notebook",
-      color: "#6f9dcc", chapters: [], cards: 0, flashcards: [], updated: "Just created",
-    }, ...items]);
-    setActiveId(id);
-    setView("notebook");
+    requestText({
+      title: "New notebook",
+      placeholder: "Notebook name",
+      submitLabel: "Create notebook",
+      onSubmit: (name) => {
+        const title = name.trim();
+        if (!title) return "Please enter a notebook name.";
+        if (notebooksRef.current.some((item) => normalizeName(item.title) === normalizeName(title))) {
+          return "A notebook with this name already exists.";
+        }
+        const id = crypto.randomUUID();
+        setNotebooks((items) => [{
+          id, title, color: "#6f9dcc", chapters: [], cards: 0, flashcards: [],
+          reviewHistory: [], updated: "Just created",
+        }, ...items]);
+        setActiveId(id);
+        setView("notebook");
+      },
+    });
   }
   function startNewProject() {
     setNotebooks([]);
@@ -144,7 +166,7 @@ export default function Layout() {
       const path = await open({ multiple: false, directory: false, filters: projectFilter });
       if (!path) return;
       const imported = await importMemz(await readBytes(path));
-      setNotebooks(imported);
+      setNotebooks(normalizeLibrary(imported));
       setActiveId(null);
       setView("library");
       setProjectPath(path);
@@ -154,24 +176,17 @@ export default function Layout() {
     }
   }
 
-  async function saveProjectAs() {
-    try {
-      const selected = await save({ defaultPath: "MemoMaster project.memz", filters: projectFilter });
-      if (!selected) return;
-      const path = ensureExtension(selected);
-      await writeBytes(path, await createMemz(notebooks));
-      setProjectPath(path);
-      setNotice("Project backup saved.");
-    } catch (error) {
-      setNotice(`Could not save project: ${error.message || error}`);
-    }
-  }
 
   async function saveProject() {
-    if (!projectPath) return saveProjectAs();
     try {
-      await writeBytes(projectPath, await createMemz(notebooks));
-      setNotice("Project backup saved.");
+      const archive = await createMemz(notebooks);
+      if (projectPath) {
+        await writeBytes(projectPath, archive);
+        setNotice("Project backup saved.");
+      } else {
+        const path = await invoke("create_automatic_backup", { bytes: Array.from(archive) });
+        setNotice(`Backup saved: ${path.split(/[\\\\/]/).pop()}`);
+      }
     } catch (error) {
       setNotice(`Could not save project: ${error.message || error}`);
     }
@@ -184,7 +199,6 @@ export default function Layout() {
       if (key === "n" && event.shiftKey) { event.preventDefault(); setConfirmNewProject(true); }
       else if (key === "n") { event.preventDefault(); createNotebook(); }
       else if (key === "o" && !event.shiftKey) { event.preventDefault(); openProjectFile(); }
-      else if (key === "s" && event.shiftKey) { event.preventDefault(); saveProjectAs(); }
       else if (key === "s") { event.preventDefault(); saveProject(); }
     };
     window.addEventListener("keydown", shortcuts);
@@ -199,15 +213,16 @@ export default function Layout() {
           onNewProject={() => setConfirmNewProject(true)}
           onOpenProject={openProjectFile}
           onSaveProject={saveProject}
-          onSaveProjectAs={saveProjectAs}
           onPreferences={() => { setView("settings"); setActiveId(null); }}
         />
         {view === "library" && (
-          <Topbar title="Your library" query={query} onQueryChange={setQuery} onCreate={createNotebook} />
+          <Topbar title="Your library" query={query} onQueryChange={setQuery} onCreate={createNotebook} onStudyStatus={() => { setView("status"); setActiveId(null); }} />
         )}
         <main class="app-main">
           {view === "settings" ? (
             <SettingsPanel theme={theme} onThemeChange={setTheme} onBack={() => setView("library")} />
+          ) : view === "status" ? (
+            <StudyStatus notebooks={notebooks} onBack={() => setView("library")} />
           ) : view === "notebook" && activeNotebook ? (
             <NotebookView
               notebook={activeNotebook}
@@ -240,11 +255,33 @@ export default function Layout() {
               title: "Rename notebook",
               value: notebook.title,
               placeholder: "Notebook name",
-              onSubmit: (title) => title.trim() && updateNotebook(notebook.id, { title: title.trim() }),
+              onSubmit: (title) => {
+                const nextTitle = title.trim();
+                if (!nextTitle) return "Please enter a notebook name.";
+                if (notebooksRef.current.some((item) => item.id !== notebook.id && normalizeName(item.title) === normalizeName(nextTitle))) {
+                  return "A notebook with this name already exists.";
+                }
+                updateNotebook(notebook.id, { title: nextTitle });
+              },
             });
           }}
+          onDelete={() => { setDeleteNotebook(menu.notebook); setMenu(null); }}
           onColorChange={(color) => updateNotebook(menu.notebook.id, { color })}
         />
+      )}
+      {deleteNotebook && (
+        <div class="prompt-backdrop" onMouseDown={(event) => event.target === event.currentTarget && setDeleteNotebook(null)}>
+          <section class="prompt-panel" role="alertdialog" aria-modal="true" aria-labelledby="delete-notebook-title">
+            <div class="prompt-heading"><h2 id="delete-notebook-title">Delete notebook?</h2><button type="button" aria-label="Close" onClick={() => setDeleteNotebook(null)}>×</button></div>
+            <p>“{deleteNotebook.title}” and all its chapters, cards and study history will be permanently deleted. This cannot be undone.</p>
+            <div class="prompt-actions"><button type="button" class="prompt-cancel" onClick={() => setDeleteNotebook(null)}>Cancel</button><button type="button" class="prompt-confirm prompt-danger" onClick={() => {
+              setNotebooks((items) => items.filter((item) => item.id !== deleteNotebook.id));
+              if (activeId === deleteNotebook.id) { setActiveId(null); setView("library"); }
+              setDeleteNotebook(null);
+              setNotice("Notebook deleted.");
+            }}>Delete notebook</button></div>
+          </section>
+        </div>
       )}
       {confirmNewProject && (
         <div class="prompt-backdrop" onMouseDown={(event) => event.target === event.currentTarget && setConfirmNewProject(false)}>
@@ -266,9 +303,9 @@ export default function Layout() {
           {...prompt}
           onCancel={() => setPrompt(null)}
           onSubmit={(value) => {
-            const submit = prompt.onSubmit;
+            const result = prompt.onSubmit(value);
+            if (typeof result === "string") return result;
             setPrompt(null);
-            submit(value);
           }}
         />
       )}

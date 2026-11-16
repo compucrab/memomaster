@@ -10,3 +10,6 @@
 .context-color-picker input::-webkit-color-swatch-wrapper { padding: 0; }
 .context-color-picker input::-webkit-color-swatch { border: 0; border-radius: 2px; }
 .context-color-picker input::-moz-color-swatch { border: 0; border-radius: 2px; }
+
+.context-menu > button.context-danger { color: #d45f5f; }
+.context-menu > button.context-danger:hover { background: color-mix(in srgb, #d45f5f 10%, transparent); }

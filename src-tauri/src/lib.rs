@@ -2,6 +2,7 @@ use rusqlite::{params, Connection, OptionalExtension};
 use serde_json::Value;
 use std::fs;
 use std::path::PathBuf;
+use std::time::{SystemTime, UNIX_EPOCH};
 use tauri::{AppHandle, Manager};
 
 fn database_connection(app: &AppHandle) -> Result<Connection, String> {
@@ -46,6 +47,22 @@ fn save_library(app: AppHandle, data: String) -> Result<(), String> {
 }
 
 #[tauri::command]
+fn create_automatic_backup(app: AppHandle, bytes: Vec<u8>) -> Result<String, String> {
+    let mut backup_directory = app.path().app_data_dir().map_err(|error| error.to_string())?;
+    backup_directory.push("backups");
+    fs::create_dir_all(&backup_directory).map_err(|error| error.to_string())?;
+
+    let timestamp = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map_err(|error| error.to_string())?
+        .as_millis();
+    let filename = format!("MemoMaster-{timestamp}.memz");
+    let backup_path = backup_directory.join(filename);
+    fs::write(&backup_path, bytes).map_err(|error| error.to_string())?;
+    Ok(backup_path.to_string_lossy().into_owned())
+}
+
+#[tauri::command]
 fn read_project_file(path: String) -> Result<Vec<u8>, String> {
     fs::read(PathBuf::from(path)).map_err(|error| error.to_string())
 }
@@ -63,6 +80,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             load_library,
             save_library,
+            create_automatic_backup,
             read_project_file,
             write_project_file
         ])

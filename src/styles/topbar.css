@@ -23,3 +23,6 @@
   transition: background .18s, transform .18s;
 }
 .button-primary:hover { transform: translateY(-1px); background: var(--accent-hover); }
+
+.topbar-status-button { @apply inline-flex min-h-[36px] items-center gap-2 border px-3 text-[11px] font-semibold; border-color: var(--line); background: transparent; color: var(--ink); cursor: pointer; }
+.topbar-status-button:hover { border-color: var(--accent); background: var(--hover); }

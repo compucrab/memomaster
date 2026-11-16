@@ -41,3 +41,8 @@
 [data-theme="dark"] .button-primary:hover { background: var(--accent-hover); }
 [data-theme="dark"] .titlebar-mark { background: var(--ink); color: var(--paper); }
 [data-theme="dark"] .theme-switch { background: var(--paper-deep); }
+
+[data-theme="dark"] .heatmap-cell.level-1 { background: #29425d; }
+[data-theme="dark"] .heatmap-cell.level-2 { background: #365b80; }
+[data-theme="dark"] .heatmap-cell.level-3 { background: #477aa9; }
+[data-theme="dark"] .heatmap-cell.level-4 { background: #79a9e5; }
