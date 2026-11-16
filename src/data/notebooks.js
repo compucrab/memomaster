@@ -2,7 +2,6 @@ export const initialNotebooks = [
   {
     id: "rust",
     title: "Rust Programming",
-    description: "Ownership, memory safety, concurrency and systems programming.",
     color: "#a9b27a",
     chapters: [
       { id: "rust-basics", name: "Rust fundamentals", topics: [{ id: "rust-ownership-topic", name: "Ownership" }, { id: "rust-borrowing-topic", name: "Borrowing" }] },
@@ -18,7 +17,6 @@ export const initialNotebooks = [
   {
     id: "graphics",
     title: "Computer Graphics",
-    description: "Rendering fundamentals, geometry, shaders and visual mathematics.",
     color: "#c58f76",
     chapters: [
       { id: "graphics-rendering", name: "Rendering pipeline", topics: [{ id: "graphics-raster-topic", name: "Rasterization" }, { id: "graphics-depth-topic", name: "Depth testing" }] },
@@ -33,7 +31,6 @@ export const initialNotebooks = [
   {
     id: "history",
     title: "World History",
-    description: "A collection of events, people and ideas worth remembering.",
     color: "#8c9eaf",
     chapters: [{ id: "history-print", name: "The age of revolutions", topics: [{ id: "history-print-topic", name: "Printing and knowledge" }] }],
     cards: 1,
@@ -45,7 +42,6 @@ export const initialNotebooks = [
   {
     id: "design",
     title: "Visual Design",
-    description: "Composition, colour theory, typography and visual language.",
     color: "#b39abf",
     chapters: [{ id: "design-principles", name: "Design principles", topics: [{ id: "design-contrast-topic", name: "Contrast" }] }],
     cards: 1,

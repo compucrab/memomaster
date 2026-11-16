@@ -46,7 +46,7 @@ export default function Layout() {
   function createNotebook() {
     const id = crypto.randomUUID();
     setNotebooks((items) => [{
-      id, title: "Untitled notebook", description: "",
+      id, title: "Untitled notebook",
       color: "#6f9dcc", chapters: [], cards: 0, flashcards: [], updated: "Just created",
     }, ...items]);
     setActiveId(id);
