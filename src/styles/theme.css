@@ -13,12 +13,6 @@
   --accent-hover: #2f5f98;
   --olive: var(--accent);
   --acid: #8eb5e3;
-  --serif: Georgia, "Times New Roman", serif;
-  --sans: "DM Sans", sans-serif;
-  --display: "Manrope", sans-serif;
-  --mono: "DM Mono", monospace;
-}
-
   --danger: #bd4d4d;
   --danger-hover: #a83f3f;
   --success: #39835f;
@@ -28,5 +22,8 @@
   --heat-3: #709fd0;
   --heat-4: #386fae;
   --media-surface: #17202b;
-
+  --serif: Georgia, "Times New Roman", serif;
+  --sans: "DM Sans", sans-serif;
+  --display: "Manrope", sans-serif;
+  --mono: "DM Mono", monospace;
 }
