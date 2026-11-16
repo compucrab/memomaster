@@ -81,6 +81,7 @@ function cleanNotebook(notebook) {
     ...metadata,
     chapters: Array.isArray(notebook.chapters) ? notebook.chapters : [],
     flashcards: cards.map((card, index) => ({
+      ...card,
       id: card.id || `card-${index + 1}`,
       front: card.front ?? "",
       back: card.back ?? "",
