@@ -20,7 +20,6 @@ export default function NotebookGrid({ notebooks, onOpen, onContextMenu, onCreat
                   </div>
                   <div class="notebook-info">
                     <h2>{notebook.title}</h2>
-                    <p>{notebook.description}</p>
                     <footer><span>{chapterCount} CHAPTERS</span><span>{notebook.cards} CARDS</span></footer>
                   </div>
                 </button>

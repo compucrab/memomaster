@@ -7,8 +7,14 @@ function escapeHtml(value) {
     .replaceAll("'", "&#39;");
 }
 
+function normalizeText(value) {
+  return String(value)
+    .replace(/&nbsp;|&#160;|&#xA0;/gi, " ")
+    .replace(/\u00a0/g, " ");
+}
+
 function renderInline(source) {
-  return escapeHtml(source)
+  return escapeHtml(normalizeText(source))
     .replace(/\x60([^\x60]+)\x60/g, "<code>$1</code>")
     .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
     .replace(/__(.+?)__/g, "<strong>$1</strong>")
@@ -37,7 +43,7 @@ export function renderMarkdown(source = "") {
   function flushList() {
     if (list) {
       const items = list.items.map((item) => "<li>" + renderInline(item) + "</li>").join("");
-      output.push("<" + list.tag + ">" + items + "</" + list.tag + ">");
+      output.push("<" + list.tag + (list.tag === "ol" && list.start > 1 ? ' start="' + list.start + '"' : "") + ">" + items + "</" + list.tag + ">");
     }
     list = null;
   }
@@ -51,7 +57,7 @@ export function renderMarkdown(source = "") {
     inCode = false;
   }
 
-  const lines = String(source).replaceAll("\r\n", "\n").split("\n");
+  const lines = normalizeText(source).replaceAll("\r\n", "\n").split("\n");
   for (const line of lines) {
     if (line.startsWith(fence)) {
       if (inCode) flushCode();
@@ -65,7 +71,7 @@ export function renderMarkdown(source = "") {
 
     const heading = line.match(/^(#{1,3})\s+(.+)$/);
     const bullet = line.match(/^\s*[-*+]\s+(.+)$/);
-    const ordered = line.match(/^\s*\d+\.\s+(.+)$/);
+    const ordered = line.match(/^\s*(\d+)\.\s+(.+)$/);
     const rule = /^\s*(---+|___+|\*\*\*+)\s*$/.test(line);
 
     if (heading || bullet || ordered || line.startsWith(">") || rule || !line.trim()) flushParagraph();
@@ -78,8 +84,8 @@ export function renderMarkdown(source = "") {
       flushQuote();
       const tag = bullet ? "ul" : "ol";
       if (list && list.tag !== tag) flushList();
-      if (!list) list = { tag, items: [] };
-      list.items.push((bullet || ordered)[1]);
+      if (!list) list = { tag, items: [], start: ordered ? Number(ordered[1]) : 1 };
+      list.items.push((bullet || ordered)[bullet ? 1 : 2]);
     } else if (line.startsWith(">")) {
       flushList();
       quote.push(line.replace(/^>\s?/, ""));

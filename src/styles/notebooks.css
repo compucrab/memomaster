@@ -8,7 +8,6 @@
 .cover-strip { position: absolute; inset: 0 0 auto; height: 6px; }
 .notebook-info { padding: 13px 1px 0; }
 .notebook-info h2 { overflow: hidden; margin: 0; color: var(--ink); font: 650 15px var(--display); letter-spacing: -.035em; text-overflow: ellipsis; white-space: nowrap; }
-.notebook-info p { min-height: 32px; margin: 6px 0 11px; color: var(--muted); font-size: 11px; line-height: 1.55; }
 .notebook-info footer { @apply flex flex-wrap gap-x-3 gap-y-1 border-t pt-[9px]; border-color: var(--line); color: var(--muted); font: 8px var(--mono); letter-spacing: .05em; }
 .new-notebook-card { @apply flex min-h-[170px] flex-col items-center justify-center gap-3 border border-dashed; border-color: var(--line); background: transparent; color: var(--muted); cursor: pointer; }
 .new-notebook-card:hover { border-color: var(--accent); background: var(--hover); color: var(--accent); }
@@ -24,7 +23,6 @@
 .notebook-detail-head > div { flex: 1; }
 .notebook-detail-head .eyebrow { margin: 0 0 8px; }
 .notebook-detail-head h1 { margin: 0; color: var(--ink); font: 800 36px var(--display); letter-spacing: -.07em; }
-.notebook-detail-head input { width: min(100%, 600px); margin-top: 8px; padding: 0; border: 0; outline: 0; background: transparent; color: var(--muted); font-size: 12px; }
 .notebook-detail-meta { @apply flex items-center gap-6 py-[17px] pb-[30px]; color: var(--muted); font: 9px var(--mono); letter-spacing: .07em; }
 .notebook-detail-meta span { @apply inline-flex items-center gap-2; }
 .notebook-content-grid { @apply grid; grid-template-columns: minmax(0, 1fr) 220px; gap: 35px; }
