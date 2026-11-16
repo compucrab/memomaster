@@ -23,7 +23,7 @@ The intended hierarchy is:
 - A notebook contains chapters and flashcards.
 - A flashcard has Markdown front and back content.
 - A flashcard may optionally be assigned to a chapter.
-- Notebook view has separate Browse and Study tabs. Browse is a two-column card list/preview with question+answer search and chapter filters.
+- Notebook view has separate Browse and Study tabs. Browse is a two-column card list/preview with question+answer search and chapter filters. Cards can be multi-selected for bulk deletion or chapter reassignment; do not add a card right-click menu.
 - Study sessions can target the whole notebook, a chapter.
 - Scheduled sessions include only due cards and update FSRS scheduling. Unscheduled practice can use any cards, stores activity in `practiceHistory`, and must never change card FSRS state or due dates.
 - The study interface presents one card at a time.
