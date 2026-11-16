@@ -1,15 +1,18 @@
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
-import { listen } from "@tauri-apps/api/event";
-
 import Sidebar from "./Sidebar";
 import Topbar from "./Topbar";
+import Titlebar from "./Titlebar";
 import NotebookGrid from "./NotebookGrid";
 import NotebookView from "./NotebookView";
 import SettingsPanel from "./SettingsPanel";
 import ContextMenu from "./ContextMenu";
-
 import { initialNotebooks } from "../data/notebooks";
 import { exportMemz, importMemz } from "../services/projectArchive";
+
+const savedTheme = () => {
+  try { return localStorage.getItem("memomaster-theme") || "light"; }
+  catch { return "light"; }
+};
 
 export default function Layout() {
   const [notebooks, setNotebooks] = useState(initialNotebooks);
@@ -17,32 +20,28 @@ export default function Layout() {
   const [activeId, setActiveId] = useState(null);
   const [query, setQuery] = useState("");
   const [menu, setMenu] = useState(null);
+  const [theme, setTheme] = useState(savedTheme);
   const fileRef = useRef(null);
 
   const activeNotebook = notebooks.find((notebook) => notebook.id === activeId);
   const filteredNotebooks = useMemo(
-    () => notebooks.filter((notebook) =>
-      notebook.title.toLowerCase().includes(query.toLowerCase())
-    ),
+    () => notebooks.filter((notebook) => notebook.title.toLowerCase().includes(query.toLowerCase())),
     [notebooks, query],
   );
 
+  useEffect(() => {
+    try { localStorage.setItem("memomaster-theme", theme); } catch {}
+  }, [theme]);
+
   function updateNotebook(id, changes) {
-    setNotebooks((items) =>
-      items.map((item) => item.id === id ? { ...item, ...changes } : item)
-    );
+    setNotebooks((items) => items.map((item) => item.id === id ? { ...item, ...changes } : item));
   }
 
   function createNotebook() {
     const id = crypto.randomUUID();
     setNotebooks((items) => [{
-      id,
-      title: "Untitled notebook",
-      description: "A quiet place for your notes and ideas.",
-      color: "#c6d56a",
-      chapters: 0,
-      cards: 0,
-      updated: "Just created",
+      id, title: "Untitled notebook", description: "A quiet place for your ideas.",
+      color: "#c6d56a", chapters: 0, cards: 0, flashcards: [], updated: "Just created",
     }, ...items]);
     setActiveId(id);
     setView("notebook");
@@ -53,126 +52,92 @@ export default function Layout() {
     setView("notebook");
   }
 
-  useEffect(() => {
-    let unlisten;
-    let active = true;
-
-    listen("memomaster://menu", (event) => {
-      switch (event.payload) {
-        case "new-notebook":
-          createNotebook();
-          break;
-        case "open-project":
-          fileRef.current?.click();
-          break;
-        case "export-project":
-          exportMemz(notebooks).catch((error) => alert(error.message));
-          break;
-        case "about":
-          setView("settings");
-          break;
-      }
-    }).then((stop) => {
-      if (active) unlisten = stop;
-      else stop();
-    }).catch(() => {});
-
-    return () => {
-      active = false;
-      unlisten?.();
-    };
-  }, [notebooks]);
-
   async function handleImport(event) {
-    const file = event.currentTarget.files?.[0];
+    const input = event.currentTarget;
+    const file = input.files?.[0];
     if (!file) return;
-
     try {
       const imported = await importMemz(await file.arrayBuffer());
-
       setNotebooks((current) => {
         const existingIds = new Set(current.map((item) => item.id));
-        const safeImports = imported.map((notebook) =>
-          existingIds.has(notebook.id)
-            ? { ...notebook, id: crypto.randomUUID() }
-            : notebook
-        );
-        return [...safeImports, ...current];
+        return [...imported.map((item) => existingIds.has(item.id) ? { ...item, id: crypto.randomUUID() } : item), ...current];
       });
-
       setView("library");
       setActiveId(null);
     } catch (error) {
       alert(`Could not import project: ${error.message}`);
     } finally {
-      event.currentTarget.value = "";
+      input.value = "";
     }
   }
 
+  useEffect(() => {
+    const shortcuts = (event) => {
+      if (!(event.ctrlKey || event.metaKey)) return;
+      const target = event.target;
+      const typing = target instanceof HTMLElement && (target.isContentEditable || ["INPUT", "TEXTAREA"].includes(target.tagName));
+      if (typing && event.key.toLowerCase() !== "o") return;
+      const key = event.key.toLowerCase();
+      if (key === "n") { event.preventDefault(); createNotebook(); }
+      if (key === "o") { event.preventDefault(); fileRef.current?.click(); }
+      if (key === "e" && event.shiftKey) { event.preventDefault(); exportMemz(notebooks).catch((error) => alert(error.message)); }
+    };
+    window.addEventListener("keydown", shortcuts);
+    return () => window.removeEventListener("keydown", shortcuts);
+  }, [notebooks]);
+
   return (
-    <div class="app-layout" onClick={() => menu && setMenu(null)}>
-      <input
-        ref={fileRef}
-        class="hidden-file-input"
-        type="file"
-        accept=".memz,application/zip"
-        onChange={handleImport}
-      />
-
-      <Sidebar
-        activeView={view}
-        onNavigate={(nextView) => {
-          setView(nextView);
-          setActiveId(null);
-        }}
-        notebooks={notebooks}
-        onOpenNotebook={openNotebook}
-      />
-
-      <main class="app-main">
-        <Topbar
-          title={
-            view === "settings"
-              ? "Preferences"
-              : view === "notebook"
-                ? activeNotebook?.title || "Notebook"
-                : "Your library"
-          }
-          query={query}
-          onQueryChange={setQuery}
-          onCreate={createNotebook}
+    <div class="app-layout" data-theme={theme} onClick={() => menu && setMenu(null)}>
+      <input ref={fileRef} class="hidden-file-input" type="file" accept=".memz,application/zip" onChange={handleImport} />
+      <div class="app-frame">
+        <Titlebar
+          onNew={createNotebook}
+          onOpen={() => fileRef.current?.click()}
+          onExport={() => exportMemz(notebooks).catch((error) => alert(error.message))}
+          onPreferences={() => { setView("settings"); setActiveId(null); }}
         />
-
-        {view === "settings" ? (
-          <SettingsPanel />
-        ) : view === "notebook" && activeNotebook ? (
-          <NotebookView
-            notebook={activeNotebook}
-            onUpdate={(changes) => updateNotebook(activeNotebook.id, changes)}
-            onBack={() => setView("library")}
+        <div class="app-body">
+          <Sidebar
+            activeView={view}
+            onNavigate={(nextView) => { setView(nextView); setActiveId(null); }}
+            notebooks={notebooks}
+            onOpenNotebook={openNotebook}
           />
-        ) : (
-          <NotebookGrid
-            notebooks={filteredNotebooks}
-            onOpen={openNotebook}
-            onContextMenu={(event, notebook) => {
-              event.preventDefault();
-              setMenu({ x: event.clientX, y: event.clientY, notebook });
-            }}
-            onCreate={createNotebook}
-            onUpdate={updateNotebook}
-          />
-        )}
-      </main>
-
+          <main class="app-main">
+            <Topbar
+              title={view === "settings" ? "Preferences" : view === "notebook" ? activeNotebook?.title || "Notebook" : "Your library"}
+              query={query}
+              onQueryChange={setQuery}
+              onCreate={createNotebook}
+            />
+            {view === "settings" ? (
+              <SettingsPanel theme={theme} onThemeChange={setTheme} />
+            ) : view === "notebook" && activeNotebook ? (
+              <NotebookView
+                notebook={activeNotebook}
+                onUpdate={(changes) => updateNotebook(activeNotebook.id, changes)}
+                onBack={() => setView("library")}
+              />
+            ) : (
+              <NotebookGrid
+                notebooks={filteredNotebooks}
+                onOpen={openNotebook}
+                onContextMenu={(event, notebook) => {
+                  event.preventDefault();
+                  setMenu({ x: event.clientX, y: event.clientY, notebook });
+                }}
+                onCreate={createNotebook}
+                onUpdate={updateNotebook}
+              />
+            )}
+          </main>
+        </div>
+      </div>
       {menu && (
         <ContextMenu
           {...menu}
           onClose={() => setMenu(null)}
-          onOpen={() => {
-            openNotebook(menu.notebook.id);
-            setMenu(null);
-          }}
+          onOpen={() => { openNotebook(menu.notebook.id); setMenu(null); }}
           onRename={(title) => updateNotebook(menu.notebook.id, { title })}
           onColorChange={(color) => updateNotebook(menu.notebook.id, { color })}
         />

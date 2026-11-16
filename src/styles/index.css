@@ -1,12 +1,15 @@
 @import url("https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap");
 @import "tailwindcss";
-
 @import "./reset.css";
 @import "./theme.css";
 @import "./layout.css";
+@import "./titlebar.css";
+@import "./app-menu.css";
 @import "./sidebar.css";
 @import "./topbar.css";
 @import "./notebooks.css";
 @import "./markdown.css";
+@import "./flashcards.css";
 @import "./context-menu.css";
 @import "./settings.css";
+@import "./dark-theme.css";

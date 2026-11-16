@@ -1,40 +1,9 @@
 @reference "tailwindcss";
 
-.context-menu {
-  @apply fixed z-50 w-[205px] border p-[6px];
-  border-color: var(--line);
-  background: #faf8f1;
-  box-shadow: 0 12px 35px #17181420;
-}
-
-.context-menu > button {
-  @apply flex h-[34px] w-full items-center gap-2 border-0 bg-transparent px-[9px] text-left;
-  color: #55564d;
-  cursor: pointer;
-  font-size: 11px;
-}
-
-.context-menu > button:hover {
-  background: #ebe7d9;
-  color: var(--ink);
-}
-
-.context-divider {
-  height: 1px;
-  margin: 5px 0;
-  background: var(--line);
-}
-
-.context-menu > p {
-  @apply flex items-center gap-2;
-  margin: 10px 9px 9px;
-  color: #969487;
-  font: 8px var(--mono);
-  letter-spacing: .1em;
-}
-
-.context-colors {
-  @apply flex items-center gap-2 px-[9px] pt-[3px] pb-2;
-}
-
-.context-colors button { width: 17px; height: 17px; }
+.context-menu { @apply fixed z-50 w-[205px] border p-[6px]; border-color: var(--line); background: var(--surface); box-shadow: 0 12px 35px #0002; }
+.context-menu > button { @apply flex h-[34px] w-full items-center gap-2 border-0 bg-transparent px-[9px] text-left; color: var(--ink); cursor: pointer; font-size: 11px; }
+.context-menu > button:hover { background: var(--hover); }
+.context-divider { height: 1px; margin: 5px 0; background: var(--line); }
+.context-color-picker { @apply flex items-center justify-between gap-2 px-[9px] py-2; color: var(--muted); font: 8px var(--mono); letter-spacing: .1em; }
+.context-color-picker span { @apply flex items-center gap-2; }
+.context-color-picker input { width: 27px; height: 22px; padding: 0; border: 1px solid var(--line); background: transparent; cursor: pointer; }
