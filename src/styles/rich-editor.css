@@ -28,3 +28,33 @@
 .rich-editor-content pre code { padding: 0; background: transparent; }
 .rich-editor-content a { color: var(--accent); text-decoration: underline; }
 .rich-editor-content p.is-editor-empty:first-child::before { float: left; height: 0; color: var(--muted); content: attr(data-placeholder); pointer-events: none; }
+
+.rich-editor-tool { flex: 0 0 auto; }
+.rich-editor-content img { display: block; max-width: min(100%, 720px); max-height: 420px; height: auto; object-fit: contain; margin: 12px auto; }
+.rich-editor-content .tiptap-mathematics-render { max-width: 100%; overflow-x: auto; }
+.rich-editor-content .tiptap-mathematics-render[data-type="block-math"] { display: block; margin: 18px auto; text-align: center; }
+.rich-editor-content [data-card-video] { display: flex; min-height: 74px; align-items: center; justify-content: center; margin: 12px 0; border: 1px dashed var(--line); background: var(--paper-deep); color: var(--muted); font: 10px var(--mono); }
+.rich-editor-insert-dialog > p { margin: 0 0 12px; color: var(--muted); font: 11px/1.6 var(--sans); }
+.rich-editor-insert-dialog textarea { width: 100%; min-height: 76px; padding: 10px; resize: vertical; border: 1px solid var(--line); outline: none; background: var(--paper); color: var(--ink); font: 12px/1.6 var(--mono); }
+.rich-editor-insert-dialog textarea:focus { border-color: var(--accent); }
+.rich-editor-insert-dialog .prompt-confirm:disabled { opacity: .4; cursor: default; }
+
+
+/* Rich editor refinements */
+.rich-editor { min-height: 0; grid-template-rows: auto auto minmax(120px, 1fr); }
+.rich-editor-heading { font: 600 10px var(--sans); letter-spacing: .02em; text-transform: none; }
+.rich-editor-toolbar { gap: 2px; padding: 4px 6px; }
+.rich-editor-tool { width: 29px; height: 29px; border-radius: 3px; }
+.rich-editor-tool svg { width: 15px; height: 15px; }
+.rich-editor-content .tiptap-mathematics-render { font-size: 1.35em; }
+.rich-editor-content .tiptap-mathematics-render[data-type="block-math"] { font-size: 1.65em; }
+.rich-editor-content .tiptap-mathematics-render[data-type="inline-math"] { vertical-align: middle; }
+.rich-editor-content img { max-width: 100%; max-height: 560px; height: auto; cursor: pointer; }
+.rich-editor-content img.ProseMirror-selectednode { outline: 2px solid var(--accent); outline-offset: 3px; }
+.rich-editor-insert-dialog > p { font: 12px/1.6 var(--sans); }
+
+
+.rich-editor-color { display: inline-flex; width: 29px; height: 29px; align-items: center; justify-content: center; flex: 0 0 auto; cursor: pointer; }
+.rich-editor-color input { width: 17px; height: 17px; padding: 0; border: 0; background: transparent; cursor: pointer; }
+.rich-editor-color input::-webkit-color-swatch-wrapper { padding: 0; }
+.rich-editor-color input::-webkit-color-swatch { border: 1px solid var(--line); border-radius: 3px; }

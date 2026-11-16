@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from "preact/hooks";
+import { useMemo, useState } from "preact/hooks";
 import { Check, Clock3, RotateCw } from "lucide-preact";
-import { renderMarkdown } from "../services/markdown";
+import CardContent from "./CardContent";
 import { getReviewOptions, scheduleReview } from "../services/fsrs";
 
 function isDue(card, now) {
@@ -10,37 +10,23 @@ function isDue(card, now) {
 }
 
 export default function ReviewSession({ cards, mode = "scheduled", onReview, onExit }) {
+  const [sessionCards, setSessionCards] = useState(() => cards.map((card) => ({ ...card })));
   const [queue, setQueue] = useState(() => {
     const now = new Date();
     return cards.filter((card) => mode === "unscheduled" || isDue(card, now))
       .sort((a, b) => new Date(a.fsrs?.due || 0) - new Date(b.fsrs?.due || 0))
       .map((card) => card.id);
   });
-  const [pendingCards, setPendingCards] = useState([]);
   const [revealed, setRevealed] = useState(false);
   const [reviewed, setReviewed] = useState(0);
-  const activeCard = cards.find((card) => card.id === queue[0]);
+  const [processing, setProcessing] = useState(false);
+  const [reviewError, setReviewError] = useState("");
+  const activeCard = sessionCards.find((card) => card.id === queue[0]);
   const now = new Date();
   const options = useMemo(
     () => activeCard && mode === "scheduled" ? getReviewOptions(activeCard, now) : null,
-    [activeCard?.id, activeCard?.fsrs, queue.length],
+    [activeCard?.id, activeCard?.fsrs],
   );
-
-  // Delays are preferences, not blockers: release waiting cards whenever the
-  // active queue becomes empty, or when their individual timer expires.
-  useEffect(() => {
-    if (!pendingCards.length) return;
-    if (!queue.length) {
-      setQueue((items) => [...items, ...pendingCards.map((item) => item.id)]);
-      setPendingCards([]);
-      return;
-    }
-    const timers = pendingCards.map((item) => setTimeout(() => {
-      setQueue((items) => [...items, item.id]);
-      setPendingCards((items) => items.filter((pending) => pending.id !== item.id));
-    }, Math.max(0, item.dueAt - Date.now())));
-    return () => timers.forEach(clearTimeout);
-  }, [pendingCards, queue.length]);
 
   function removeActiveCard() {
     setQueue((items) => items.slice(1));
@@ -48,25 +34,35 @@ export default function ReviewSession({ cards, mode = "scheduled", onReview, onE
   }
 
   function finishCard(choice) {
-    if (!activeCard) return;
-    if (mode === "scheduled") {
-      const result = scheduleReview(activeCard, choice, new Date());
-      onReview(activeCard.id, result.fsrs, result.log, mode);
-      if (choice === "forgot") {
-        setPendingCards((items) => [...items, {
-          id: activeCard.id,
-          dueAt: new Date(result.fsrs.due).getTime(),
-        }]);
+    if (!activeCard || processing) return;
+    setProcessing(true);
+    setReviewError("");
+    try {
+      if (mode === "scheduled") {
+        const result = scheduleReview(activeCard, choice, new Date());
+        onReview(activeCard.id, result.fsrs, result.log, mode);
+        setSessionCards((items) => items.map((card) => card.id === activeCard.id ? { ...card, fsrs: result.fsrs } : card));
+        setReviewed((count) => count + 1);
+        if (choice === "forgot" || choice === "difficult") {
+          setQueue((items) => [...items.slice(1), activeCard.id]);
+          setRevealed(false);
+          return;
+        }
+      } else {
+        onReview(activeCard.id, null, {
+          cardId: activeCard.id,
+          rating: "done",
+          review: new Date().toISOString(),
+        }, mode);
+        setReviewed((count) => count + 1);
       }
-    } else {
-      onReview(activeCard.id, null, {
-        cardId: activeCard.id,
-        rating: "done",
-        review: new Date().toISOString(),
-      }, mode);
+      removeActiveCard();
+    } catch (error) {
+      console.error("Unable to save review:", error);
+      setReviewError(error?.message || "This review could not be saved. Your card is still in the session.");
+    } finally {
+      setProcessing(false);
     }
-    setReviewed((count) => count + 1);
-    removeActiveCard();
   }
 
   function repeatCard() {
@@ -75,14 +71,14 @@ export default function ReviewSession({ cards, mode = "scheduled", onReview, onE
     setRevealed(false);
   }
 
-  if (!queue.length && !pendingCards.length) {
+  if (!queue.length) {
     return (
       <section class="review-session">
         <header class="review-session-header"><button class="back-link" onClick={onExit}>← BACK TO NOTEBOOK</button></header>
         <div class="review-complete">
           <Check size={30} />
           <h1>{reviewed ? "Review complete" : "Nothing due right now"}</h1>
-          <p>{reviewed ? `You reviewed ${reviewed} ${reviewed === 1 ? "card" : "cards"}.` : "All caught up. New cards and due reviews will appear here."}</p>
+          <p>{reviewed ? `You completed ${reviewed} ${reviewed === 1 ? "review" : "reviews"}.` : "All caught up. New cards and due reviews will appear here."}</p>
           <button class="study-primary" onClick={onExit}>Back to notebook</button>
         </div>
       </section>
@@ -90,30 +86,20 @@ export default function ReviewSession({ cards, mode = "scheduled", onReview, onE
   }
 
   if (!activeCard) {
-    return (
-      <section class="review-session">
-        <header class="review-session-header"><button class="back-link" onClick={onExit}>← EXIT REVIEW</button><span>{mode === "scheduled" ? "SCHEDULED" : "UNSCHEDULED"} · WAITING</span></header>
-        <div class="review-complete">
-          <Clock3 size={30} />
-          <h1>Reviewing again shortly</h1>
-          <p>{pendingCards.length} {pendingCards.length === 1 ? "card is" : "cards are"} queued to repeat. You won't have to wait if there are no other cards to review.</p>
-          <button class="study-secondary" onClick={onExit}>Exit review</button>
-        </div>
-      </section>
-    );
+    return <section class="review-session"><div class="review-complete"><h2>Review paused</h2><p>The current card could not be loaded. Exit and reopen the session.</p><button class="study-primary" onClick={onExit}>Back to notebook</button></div></section>;
   }
 
   return (
     <section class="review-session">
       <header class="review-session-header">
         <button class="back-link" onClick={onExit}>← EXIT REVIEW</button>
-        <span>{mode === "scheduled" ? "SCHEDULED" : "UNSCHEDULED"} · {reviewed} DONE · {queue.length + pendingCards.length} LEFT</span>
+        <span>{mode === "scheduled" ? "SCHEDULED" : "UNSCHEDULED"} · {reviewed} REVIEWS · {queue.length} LEFT</span>
       </header>
-      <div class="review-progress"><i style={{ width: `${(reviewed / (reviewed + queue.length + pendingCards.length)) * 100}%` }} /></div>
+      <div class="review-progress"><i style={{ width: `${(reviewed / (reviewed + queue.length)) * 100}%` }} /></div>
       <div class="review-card">
         <div class="review-card-content">
           <p class="study-side-label">{revealed ? "ANSWER" : "QUESTION"}</p>
-          <div class="study-card-prose" dangerouslySetInnerHTML={{ __html: renderMarkdown(revealed ? activeCard.back : activeCard.front) }} />
+          <CardContent content={revealed ? activeCard.back : activeCard.front} />
         </div>
         {!revealed ? (
           <div class="study-card-actions">
@@ -123,9 +109,10 @@ export default function ReviewSession({ cards, mode = "scheduled", onReview, onE
           <div class="review-ratings">
             <p>How well did you remember?</p>
             <div class="review-rating-options">
-              <button class="review-rating forgot" onClick={() => finishCard("forgot")}><strong>Forgot</strong><span>{options.forgot.interval}</span></button>
-              <button class="review-rating difficult" onClick={() => finishCard("difficult")}><strong>Difficult</strong><span>{options.difficult.interval}</span></button>
-              <button class="review-rating easy" onClick={() => finishCard("easy")}><strong>Easy</strong><span>{options.easy.interval}</span></button>
+              <button disabled={processing} class="review-rating forgot" onClick={() => finishCard("forgot")}><strong>Forgot</strong><span>{options.forgot.interval} · repeat</span></button>
+              <button disabled={processing} class="review-rating difficult" onClick={() => finishCard("difficult")}><strong>Difficult</strong><span>{options.difficult.interval} · repeat</span></button>
+              <button disabled={processing} class="review-rating good" onClick={() => finishCard("good")}><strong>Good</strong><span>{options.good.interval}</span></button>
+              <button disabled={processing} class="review-rating easy" onClick={() => finishCard("easy")}><strong>Easy</strong><span>{options.easy.interval}</span></button>
             </div>
           </div>
         ) : (
@@ -138,7 +125,7 @@ export default function ReviewSession({ cards, mode = "scheduled", onReview, onE
           </div>
         )}
       </div>
-      <footer class="review-session-footer"><Clock3 size={13} /> {mode === "scheduled" ? "FSRS updates your schedule · repeat delays won't block the session" : "Practice only · scheduled due dates remain unchanged"}</footer>
+      <footer class="review-session-footer"><Clock3 size={13} /> {mode === "scheduled" ? "Forgot and Difficult repeat until Good or Easy completes the card" : "Practice only · scheduled due dates remain unchanged"}</footer>
     </section>
   );
 }

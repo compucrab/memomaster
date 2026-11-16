@@ -4,6 +4,7 @@ const scheduler = fsrs();
 export const REVIEW_RATINGS = {
   forgot: Rating.Again,
   difficult: Rating.Hard,
+  good: Rating.Good,
   easy: Rating.Easy,
 };
 
@@ -54,6 +55,10 @@ export function getReviewOptions(card, now = new Date()) {
     difficult: {
       due: scheduled[REVIEW_RATINGS.difficult].card.due,
       interval: formatInterval(scheduled[REVIEW_RATINGS.difficult].card.due, now),
+    },
+    good: {
+      due: scheduled[REVIEW_RATINGS.good].card.due,
+      interval: formatInterval(scheduled[REVIEW_RATINGS.good].card.due, now),
     },
     easy: {
       due: scheduled[REVIEW_RATINGS.easy].card.due,

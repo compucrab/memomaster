@@ -13,4 +13,4 @@
 .window-controls { @apply flex h-full; }
 .window-controls button { @apply grid h-full w-[46px] place-items-center border-0 bg-transparent; color: var(--muted); cursor: pointer; }
 .window-controls button:hover { background: var(--hover); color: var(--ink); }
-.window-controls .window-close:hover { background: #c94343; color: white; }
+.window-controls .window-close:hover { background: var(--danger); color: white; }

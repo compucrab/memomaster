@@ -1,139 +1,121 @@
 # Coding Agent Guide
 
-This document is the working contract for coding agents contributing to MemoMaster. Read it together with [README.md](README.md) and [ARCHITECTURE.md](ARCHITECTURE.md) before changing code.
+Read this document together with README.md and ARCHITECTURE.md before changing MemoMaster.
 
 ## Project constraints
 
-- Build a **desktop application**, not a responsive web product. Do not add mobile navigation or mobile-first layouts.
-- Frontend language is **JavaScript** with JSX and Preact. Do not introduce TypeScript, type declarations, or a TypeScript migration.
+- Build a desktop application with Tauri 2; do not add mobile navigation.
+- Use JavaScript/JSX and Preact. Do not introduce TypeScript without an explicit project decision.
 - Runtime stack: Tauri 2, Preact, Vite, Tailwind CSS v4, Rust, and lucide-preact.
-- Keep components directly under `src/components`; do not create component subdirectories unless the project structure is deliberately revised.
-- Keep CSS under `src/styles`, split by concern. Do not create a giant global stylesheet or add inline style blocks for ordinary component styling.
-- Keep dependencies lean. Do not add a library for a small isolated task without explaining why it is needed.
+- Keep components directly under src/components and styles under src/styles.
+- Keep dependencies lean. Explain why a new dependency is needed.
 - Do not add GitHub Actions or other CI workflows unless explicitly requested.
-- Do not silently change product behavior, archive compatibility, keyboard shortcuts, or visual conventions while doing cleanup.
-- Start new installations with an empty library; do not seed sample notebooks.
+- Start new installations with an empty library.
+- Do not silently change product behaviour, archive compatibility, keyboard shortcuts, or visual conventions during cleanup.
 
-## Product model
+## Product model and behaviour
 
-The intended hierarchy is:
+The hierarchy is Notebook → Chapter → Flashcard. Topics have been removed; legacy topic fields must not be reintroduced into newly saved library or archive data.
 
-`Notebook → Chapter → Flashcard`
-
-- A notebook contains chapters and flashcards.
-- A flashcard has Markdown front and back content.
-- A flashcard may optionally be assigned to a chapter.
-- Notebook view has separate Browse and Study tabs. Browse is a two-column card list/preview with question+answer search and chapter filters. Cards can be multi-selected for bulk deletion or chapter reassignment; do not add a card right-click menu.
-- Study sessions can target the whole notebook, a chapter.
-- Scheduled sessions include only due cards and update FSRS scheduling. Unscheduled practice can use any cards, stores activity in `practiceHistory`, and must never change card FSRS state or due dates.
-- The study interface presents one card at a time.
-- Scheduled review uses `ts-fsrs` (FSRS-6). The user-facing choices are Forgot → Rating.Again, Difficult → Rating.Hard, and Easy → Rating.Easy. Do not add a fourth rating without a product decision.
-- Each card may store its scheduler state under `card.fsrs`; each notebook stores scheduled review logs in `notebook.reviewHistory` and unscheduled practice logs in `notebook.practiceHistory`.
-- Study status is derived from those persisted records. Do not store heatmap/streak totals as the source of truth.
-- Do not turn the study view into a bulk editable card list.
+- Cards contain Markdown front/back content and may be assigned to a chapter.
+- Notebook view has Browse and Study tabs. Browse supports search, chapter filtering, next-due-date display, preview, editing, multi-selection, bulk deletion, chapter reassignment, and schedule reset.
+- Do not add a card right-click menu. Notebook cards in the library still use a right-click context menu for open, rename, delete, and cover colour.
+- Exact duplicate questions are blocked; similar questions warn and allow an explicit Save anyway choice.
+- Study sessions can cover a whole notebook or one chapter.
+- Scheduled study includes due cards and updates FSRS-6 state and reviewHistory.
+- Scheduled ratings are Forgot → Again, Difficult → Hard, Good → Good, and Easy → Easy. Forgot and Difficult requeue the card in the current session; Good and Easy complete it.
+- Unscheduled practice can use any card, supports Repeat and Done, records practiceHistory, and must not alter FSRS state or due dates.
+- The review session keeps its own card snapshot while the session is active; do not rely on the parent's due-only list after rating a card.
+- Study status is derived from stored card state and review/practice history. The activity heatmap includes both modes; recall and rating outcomes use scheduled history only.
 - Keep study/revision logic separate from card editing.
 
-## Current implementation reality
+## Current implementation
 
-Do not claim or implement against assumptions that are not true:
-
-- Notebook state is coordinated in Preact and automatically persisted to SQLite through Rust commands. SQLite is the active local working copy and is restored on application launch.
-- Creating a new project replaces the current library with an empty one, clears the remembered .memz save path, and is automatically persisted. It must not delete existing .memz files.
-- Opening a .memz archive replaces the active library and then updates the SQLite working copy.
-- Saving/exporting a .memz archive creates a portable snapshot of the current library. Later edits do not update that archive unless the user saves/exports again.
-- SQLite and .memz represent the same library data. SQLite is automatic local persistence; .memz is the only manual backup/restore format.
-- Theme selection is persisted in `localStorage`.
-- Rust owns SQLite access and native file read/write commands; the frontend owns the current notebook data model and serialization.
-- The Tauri dialog plugin provides native Open and Save dialogs.
-- The `.memz` project archive is handled by `src/services/projectArchive.js`; card scheduling fields plus notebook `reviewHistory` and `practiceHistory` must survive export/import.
-- Card front/back editing uses Tiptap (`@tiptap/core`, `@tiptap/starter-kit`, `@tiptap/markdown`) through `src/components/RichTextEditor.jsx`; the editor serializes content to Markdown strings.
-- `src/services/markdown.js` renders saved Markdown for read-only study mode.
-- FSRS review scheduling is implemented in `src/services/fsrs.js`; `NotebookView.jsx` provides Browse and Study modes, `ReviewSession.jsx` handles both scheduled and unscheduled queues, and `StudyStatus.jsx` presents local progress reports. The consistency graph counts both scheduled reviews and unscheduled practice, but only scheduled reviews contribute to FSRS recall/outcome statistics.
-- Anki import, cloud sync, and multi-device synchronization are not implemented.
-- The SQLite implementation currently stores the complete library JSON in one row; normalized domain tables and migrations remain future work.
+- Layout.jsx coordinates top-level state, theme, view switching, SQLite autosave, project open/save, and close-time backups.
+- SQLite stores the active library JSON in one row and restores it on launch.
+- .memz is the portable snapshot/restore format. It stores notebooks, chapters, cards, FSRS state, and study histories. Preserve supported version 1 import compatibility and current version 2 export structure.
+- Opening a .memz replaces the active library and associates the selected path with Save project.
+- Save project overwrites the associated archive; with no associated path it creates a timestamped backup in the application-data backups folder.
+- A successful application close saves SQLite and creates another timestamped .memz backup in that folder. There is no retention/pruning policy yet.
+- Theme and remembered project path are stored in localStorage.
+- Card front/back content is Markdown. Tiptap edits it; markdown.js renders it for previews and study.
+- Images are embedded as data URLs; preserve width/alignment metadata. File insertion and clipboard paste share the same representation. The insertion limit is 12 MB.
+- Math uses Tiptap Mathematics and KaTeX. Video uses @[video](URL) Markdown and supported provider embeds.
+- Question and Answer editors have separate undo/redo histories.
+- Anki import/export, cloud sync, and multi-device sync are not implemented.
 
 ## UI and interaction rules
 
-- Keep the interface minimal and functional. Avoid taglines, promotional copy, decorative slogans, unnecessary separators, and ornamental elements.
-- Do not introduce native browser `alert()`, `confirm()`, or `prompt()`. Use the existing custom prompt/notice patterns.
-- Native OS file selection is acceptable for choosing a local project file.
-- Notebook strip colour is changed through the notebook's **right-click context menu**. Do not reintroduce a hover-only picker on notebook cards.
-- Use the native colour input for colour selection; do not replace it with a hex text field.
-- Preserve light and dark themes. Use existing CSS custom properties such as `--paper`, `--surface`, `--ink`, `--muted`, `--line`, `--hover`, and `--accent`.
-- Primary actions use the existing blue accent, not green/olive.
+- Keep the interface minimal and functional. Avoid taglines, promotional copy, and decorative flourishes.
+- Do not use browser alert(), confirm(), or prompt(); use the existing custom prompt/notice patterns.
+- Preserve light and dark themes and the blue accent. Use existing semantic CSS variables.
 - Preserve content scrolling and the themed scrollbar.
-- Use lucide-preact icons already in the dependency list.
-- Interactive controls need accessible names, visible focus states, and correct button types inside forms.
-- Avoid adding controls that look interactive but do not perform a real action.
+- Use lucide-preact icons already installed.
+- Interactive controls need accessible names, visible focus states, and correct button types.
+- Do not add controls that do not perform a real action.
+- Use the native colour input for notebook cover colour selection.
 
 ## Component and state design
 
-- `Layout.jsx` currently coordinates top-level state and view switching. Keep ownership clear; avoid duplicating the same state in multiple components.
-- Pass user actions through props/callbacks. Avoid direct mutation of notebook/card objects.
-- Use immutable updates for arrays and nested records.
-- Use stable record IDs. Do not use array indexes as persisted IDs.
-- When changing cards, keep the notebook's cached `cards` count in sync with `flashcards.length`.
-- When moving cards between chapters, update every selected card's chapter assignment together.
+- Keep state ownership clear; avoid duplicating notebook state across components.
+- Pass actions through props/callbacks and use immutable updates.
+- Use stable IDs for persisted records, never array indexes.
+- Keep the cached notebook cards count synchronized with flashcards.length.
+- When moving cards, update all selected card chapter assignments together.
 - Clean up event listeners and effects on unmount.
-- Do not use browser APIs unavailable in the Tauri webview without checking platform support and fallback behavior.
+- Check Tauri webview API availability before relying on browser features.
 
 ## Rust and Tauri
 
-- Keep native window operations in the Tauri layer.
-- Add Rust IPC commands only for concrete native/domain responsibilities, not for UI presentation.
-- Keep capabilities least-privilege. Add only the permission required by a feature.
-- Preserve the undecorated custom titlebar and required window permissions.
-- If adding a Tauri plugin, update both Cargo dependencies/registration and the required capabilities, and explain why it is needed.
-- Keep `src-tauri/src/main.rs`'s Windows release subsystem attribute.
+- Keep native window operations and filesystem/database responsibilities in the Tauri layer.
+- Add IPC commands only for concrete native responsibilities.
+- Keep capabilities least-privilege.
+- Preserve the custom undecorated titlebar and required window permissions.
+- If adding a Tauri plugin, update Cargo dependencies, plugin registration, and capabilities as needed, and explain why.
 
 ## Archive and data safety
 
 - Treat imported archives as untrusted input.
 - Preserve path traversal checks, entry-count and decompressed-size limits, and CRC validation.
 - Validate IDs and required metadata before using imported records.
-- Do not remove version 1 migration support without an explicit format migration plan.
-- If changing the archive structure, update both import and export paths, document the version change, and preserve old archive compatibility.
-- Never silently discard unknown notebook/card fields unless the format contract explicitly requires it.
+- Do not remove version 1 migration support without an explicit migration plan.
+- If changing archive structure, update import and export together, document the format change, and preserve old archive compatibility.
+- Do not write removed legacy topic fields back into new archives.
 - Avoid storing derived data as the only source of truth.
 
 ## Markdown and HTML safety
 
 - Escape user-authored Markdown before generating HTML.
-- Never render user-provided raw HTML directly.
-- Any new HTML-producing feature must be reviewed for XSS, including links and URL schemes.
-- Keep external links restricted to safe protocols and use appropriate external-window handling for Tauri.
-- Add tests for both normal rendering and hostile input when extending the renderer.
+- Never render arbitrary user-provided raw HTML directly.
+- Review new HTML-producing features for XSS, including links and URL schemes.
+- Restrict external links and media to safe protocols.
+- Add tests for normal rendering and hostile input when extending the renderer.
 
 ## Styling conventions
 
-- Use Tailwind utility classes for straightforward layout and spacing where already established.
-- Put reusable and stateful component styling in its corresponding file under `src/styles`.
-- Import each active stylesheet exactly once from `src/styles/index.css`.
-- Use existing CSS variables for theme-aware colours; avoid hard-coded light-only colours in shared components.
+- Use Tailwind utilities for straightforward layout and spacing.
+- Put reusable component styling in its corresponding stylesheet under src/styles.
+- Import each active stylesheet exactly once from src/styles/index.css.
+- Use theme-aware CSS variables; avoid hard-coded light-only colours in shared components.
 - Check both light and dark themes after visual changes.
-- Keep scroll containers compatible with the flex layout: nested flex children that scroll generally need `min-height: 0` and a deliberate `overflow-y` rule.
-- Do not add hover-only interactions for essential actions.
+- Scrollable flex children generally need min-height: 0 and deliberate overflow rules.
+- Do not make essential actions hover-only.
 
-## Workflow for changes
+## Workflow
 
-1. Inspect the relevant component, its stylesheet, its callers, and any related service before editing.
-2. Read the architecture notes when changing data flow, archive structure, or Rust responsibilities.
-3. Make the smallest coherent change. Avoid unrelated redesigns or broad rewrites.
-4. Search for all references before deleting or renaming a component, stylesheet, function, or field.
-5. Update documentation when architecture, commands, data formats, or user-visible behavior changes.
-6. Review the final diff for accidental deletions, stale imports, unused props, and unrelated formatting churn.
-7. Run the relevant checks locally when possible:
-   - `npm run build`
-   - `cargo check --manifest-path src-tauri/Cargo.toml`
-   - `npm run tauri dev` for desktop-only behavior
-8. Report exactly which checks were run and their results. Never claim a build or test passed if it was not executed.
+1. Inspect the component, stylesheet, callers, and related service before editing.
+2. Read architecture notes when changing data flow, archive format, or Rust responsibilities.
+3. Make the smallest coherent change; avoid unrelated redesigns.
+4. Search all references before deleting or renaming code.
+5. Update documentation when architecture, data formats, or visible behaviour changes.
+6. Review the diff for accidental deletions, stale imports, unused props, and formatting churn.
+7. Run relevant local checks when possible: npm run build, cargo check --manifest-path src-tauri/Cargo.toml, and npm run tauri dev for desktop-only behaviour.
+8. Report exactly which checks were run. Never claim an unrun check passed.
 
 ## Avoid
 
-- No TypeScript migration.
-- No new framework or state-management library for convenience.
-- No cloud account, analytics, telemetry, or network backend without explicit product approval.
-- Do not present Anki import/export, sync, or other unimplemented features as complete.
-- No native JS alert/prompt/confirm dialogs.
-- No decorative marketing text or UI flourishes.
-- No broad file deletion based only on a filename. Verify imports, references, and runtime use first.
+- No TypeScript migration or new framework/state library for convenience.
+- No cloud backend, analytics, or telemetry without explicit approval.
+- Do not describe unimplemented features as complete.
+- No browser alert/confirm/prompt dialogs.
+- No broad file deletion based only on a filename; verify references and runtime use first.

@@ -12,17 +12,14 @@
 .review-rating { @apply flex min-h-[66px] flex-col items-center justify-center gap-1 border; background: transparent; cursor: pointer; }
 .review-rating strong { color: var(--ink); font: 650 12px var(--sans); }
 .review-rating span { color: var(--muted); font: 10px var(--mono); }
-.review-rating.forgot { border-color: #d68b8b; }
-.review-rating.difficult { border-color: #c9a66c; }
-.review-rating.easy { border-color: #75a98e; }
+.review-rating.forgot { border-color: var(--danger); }
+.review-rating.difficult { border-color: var(--warning); }
+.review-rating.easy { border-color: var(--success); }
 .review-rating:hover { background: var(--hover); }
 .review-session-footer { @apply flex items-center justify-center gap-2 pt-4; color: var(--muted); font: 9px var(--mono); }
 .review-complete { @apply flex min-h-0 flex-1 flex-col items-center justify-center; color: var(--muted); text-align: center; }
 .review-complete h1 { margin: 16px 0 5px; color: var(--ink); font: 750 26px var(--display); }
 .review-complete p { margin: 0 0 20px; font-size: 11px; }
-.study-header-actions { @apply flex items-center gap-4; }
-.study-add:disabled { opacity: .35; cursor: default; }
-.study-add b { @apply grid h-5 min-w-5 place-items-center rounded-full px-1; background: var(--hover); color: var(--ink); font: 9px var(--mono); }
 
 .status-workspace { display: block; }
 .status-heading { @apply flex items-start gap-8; margin-bottom: 28px; }
@@ -46,10 +43,10 @@
 .heatmap-months { height: 19px; color: var(--muted); font: 9px var(--mono); }
 .heatmap { grid-template-rows: repeat(7, 12px); grid-auto-flow: column; row-gap: 4px; }
 .heatmap-cell { display: block; width: 12px; height: 12px; border-radius: 2px; background: var(--hover); }
-.heatmap-cell.level-1 { background: #c7d8eb; }
-.heatmap-cell.level-2 { background: #8fb5dc; }
-.heatmap-cell.level-3 { background: #5e91c5; }
-.heatmap-cell.level-4 { background: #315f94; }
+.heatmap-cell.level-1 { background: var(--heat-1); }
+.heatmap-cell.level-2 { background: var(--heat-2); }
+.heatmap-cell.level-3 { background: var(--heat-3); }
+.heatmap-cell.level-4 { background: var(--heat-4); }
 .heatmap-legend { @apply flex items-center justify-end gap-1; margin-top: 12px; color: var(--muted); font: 9px var(--mono); }
 .heatmap-legend span:first-child { margin-right: 4px; }
 .heatmap-legend span:last-child { margin-left: 4px; }
@@ -58,9 +55,10 @@
 .outcome-row { @apply grid items-center gap-3; grid-template-columns: 75px minmax(0,1fr) 30px; color: var(--muted); font-size: 10px; }
 .outcome-row > div { height: 7px; overflow: hidden; background: var(--hover); }
 .outcome-row > div i { display: block; height: 100%; }
-.outcome-row > div i.easy { background: #75a98e; }
-.outcome-row > div i.difficult { background: #c9a66c; }
-.outcome-row > div i.forgot { background: #d68b8b; }
+.outcome-row > div i.good { background: var(--accent); }
+.outcome-row > div i.easy { background: var(--success); }
+.outcome-row > div i.difficult { background: var(--warning); }
+.outcome-row > div i.forgot { background: var(--danger); }
 .outcome-row strong { color: var(--ink); font: 10px var(--mono); text-align: right; }
 .status-footnote, .status-empty { margin: 17px 0 0; color: var(--muted); font-size: 9px; }
 .upcoming-row { @apply flex items-center justify-between border-b pb-2; border-color: var(--line); color: var(--muted); font-size: 10px; }
@@ -75,3 +73,70 @@
 @media (max-width: 850px) { .status-stats-grid { @apply grid-cols-2; } .status-two-column { @apply grid-cols-1; } }
 @media (max-width: 600px) { .status-heading { @apply flex-col gap-4; } .status-stat { padding: 13px; } .status-panel { padding: 14px; } .notebook-progress-title { @apply items-start flex-col gap-1; } }
 @media (max-height: 720px) { .review-card { height: min(70vh,640px); } }
+
+
+/* Keep review ratings in one row; this stylesheet loads after flashcards.css. */
+.review-ratings {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  padding: 14px 20px 18px;
+}
+.review-ratings > p { margin: 0 0 11px; }
+.review-rating-options {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  width: min(100%, 560px);
+  gap: 8px;
+}
+.review-rating-options .review-rating {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  min-height: 54px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 8px 5px;
+  white-space: normal;
+}
+.review-rating-options .review-rating strong { font-size: 10px; line-height: 1.2; }
+.review-rating-options .review-rating span {
+  max-width: 100%;
+  font-size: 8px;
+  line-height: 1.25;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 700px) {
+  .review-rating-options { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+
+/* Shared card content layout for Browse and both study modes. */
+.review-card-content { align-items: stretch; }
+.review-card-content > .study-side-label { flex: 0 0 auto; text-align: center; }
+.review-card-content > .study-card-prose {
+  align-self: center;
+  width: 100%;
+  min-width: 0;
+  max-width: 900px;
+  text-align: left;
+}
+.review-card-content .study-card-prose img,
+.browse-preview-content .study-card-prose img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+.review-card-content .study-card-prose .katex-display,
+.browse-preview-content .study-card-prose .katex-display,
+.review-card-content .study-card-prose .study-math-block,
+.browse-preview-content .study-card-prose .study-math-block {
+  max-width: 100%;
+  overflow-x: auto;
+}

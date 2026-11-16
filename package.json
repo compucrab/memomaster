@@ -21,7 +21,17 @@
     "@tiptap/markdown": "^3.30.3",
     "@tiptap/starter-kit": "^3.30.3",
     "@tiptap/extension-placeholder": "^3.30.3",
-    "ts-fsrs": "^5.4.2"
+    "ts-fsrs": "^5.4.2",
+    "@tiptap/extension-image": "^3.30.3",
+    "@tiptap/extension-text-align": "^3.30.3",
+    "@tiptap/extension-mathematics": "^3.30.3",
+    "katex": "^0.16.22",
+    "@tiptap/extension-paragraph": "^3.30.3",
+    "@tiptap/extension-heading": "^3.30.3",
+    "@tiptap/extension-underline": "^3.30.3",
+    "@tiptap/extension-text-style": "^3.30.3",
+    "@tiptap/extension-color": "^3.30.3",
+    "@tiptap/extension-link": "^3.30.3"
   },
   "devDependencies": {
     "@preact/preset-vite": "^2.10.5",

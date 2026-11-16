@@ -2,7 +2,7 @@ import { useMemo, useState } from "preact/hooks";
 import {
   ArrowLeft, BookOpen, GraduationCap, Layers3, Plus, Search, PencilLine, Trash2, X,
 } from "lucide-preact";
-import { renderMarkdown } from "../services/markdown";
+import CardContent from "./CardContent";
 import CardEditor from "./CardEditor";
 import ReviewSession from "./ReviewSession";
 
@@ -11,6 +11,20 @@ function makeCard() {
 }
 const makeId = () => crypto.randomUUID();
 const normalizeName = (value) => String(value || "").trim().toLocaleLowerCase();
+
+function getDueLabel(card) {
+  if (!card.fsrs?.due) return "Not scheduled";
+  const due = new Date(card.fsrs.due);
+  if (Number.isNaN(due.getTime())) return "Not scheduled";
+  if (due <= new Date()) return "Due now";
+  return due.toLocaleString(undefined, {
+    day: "numeric",
+    month: "short",
+    year: due.getFullYear() !== new Date().getFullYear() ? "numeric" : undefined,
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
 
 export default function NotebookView({ notebook, onUpdate, onBack, onRequestText }) {
   const cards = notebook.flashcards ?? (notebook.markdown ? [{ id: "legacy-card", front: "What is this note about?", back: notebook.markdown }] : []);
@@ -90,6 +104,17 @@ export default function NotebookView({ notebook, onUpdate, onBack, onRequestText
     setSelectedCardIds([]);
     if (removing.has(selectedCardId)) setSelectedCardId(next[0]?.id || null);
   }
+  function resetCardSchedules(ids) {
+    const resetting = new Set(ids);
+    const next = cards.map((card) => {
+      if (!resetting.has(card.id)) return card;
+      const cleanCard = { ...card };
+      delete cleanCard.fsrs;
+      return cleanCard;
+    });
+    onUpdate({ flashcards: next, cards: next.length });
+  }
+
   function toggleCardSelection(id) {
     setSelectedCardIds((items) => items.includes(id) ? items.filter((item) => item !== id) : [...items, id]);
   }
@@ -133,7 +158,8 @@ export default function NotebookView({ notebook, onUpdate, onBack, onRequestText
   if (editingCard) {
     return <CardEditor key={editingCard.id} card={editingCard} chapters={chapters}
       onSave={saveCard} existingCards={cards} onCancel={() => { setEditingCardId(null); setNewCard(null); }}
-      onAddChapter={addChapter} onDelete={() => { deleteCards([editingCard.id]); setEditingCardId(null); }} />;
+      onAddChapter={addChapter} onDelete={() => { deleteCards([editingCard.id]); setEditingCardId(null); }}
+      onResetSchedule={(id) => resetCardSchedules([id])} />;
   }
 
   if (reviewing) {
@@ -187,6 +213,7 @@ export default function NotebookView({ notebook, onUpdate, onBack, onRequestText
                   setChapterFilter(targetChapterId === "__unassigned" ? "all" : targetChapterId);
                   setTargetChapterId("");
                 }}>Move</button>
+                <button type="button" onClick={() => { resetCardSchedules(selectedCardIds); setSelectedCardIds([]); }}>Reset schedule</button>
                 <button type="button" onClick={() => setSelectedCardIds([])}>Clear</button>
                 <button type="button" class="delete-selected" onClick={() => askDelete("Delete selected cards?", "Permanently delete " + selectedCardIds.length + " selected cards?", () => deleteCards(selectedCardIds))}><Trash2 size={12} /> Delete</button>
               </div>}
@@ -199,7 +226,7 @@ export default function NotebookView({ notebook, onUpdate, onBack, onRequestText
                     <input class="browse-card-checkbox" type="checkbox" aria-label="Select card" checked={selectedCardIds.includes(card.id)} onChange={() => toggleCardSelection(card.id)} />
                     <button type="button" class="browse-card-select" onClick={() => setSelectedCardId(card.id)}>
                       <span class="browse-card-index">{String(index + 1).padStart(2, "0")}</span>
-                      <span class="browse-card-copy"><strong>{String(card.front || "").replace(/[#>*_\x60]/g, "").trim().split("\n")[0] || "Untitled question"}</strong><small>{chapter?.name || "Unassigned"}</small></span>
+                      <span class="browse-card-copy"><strong>{String(card.front || "").replace(/[#>*_\x60]/g, "").trim().split("\n")[0] || "Untitled question"}</strong><small>{chapter?.name || "Unassigned"} · Due: {getDueLabel(card)}</small></span>
                     </button>
                   </div>
                 );
@@ -212,12 +239,13 @@ export default function NotebookView({ notebook, onUpdate, onBack, onRequestText
               <>
                 <header class="browse-preview-header"><span>CARD PREVIEW</span><button class="study-secondary" onClick={() => setEditingCardId(selectedCard.id)}><PencilLine size={13} /> Edit card</button></header>
                 <div class="browse-preview-content">
-                  <section><p>QUESTION</p><div class="study-card-prose" dangerouslySetInnerHTML={{ __html: renderMarkdown(selectedCard.front) }} /></section>
+                  <section><p>QUESTION</p><CardContent content={selectedCard.front} /></section>
                   <div class="browse-preview-divider" />
-                  <section><p>ANSWER</p><div class="study-card-prose" dangerouslySetInnerHTML={{ __html: renderMarkdown(selectedCard.back) }} /></section>
+                  <section><p>ANSWER</p><CardContent content={selectedCard.back} /></section>
                 </div>
                 <footer class="browse-preview-meta">
-                  {chapters.find(item => item.id === selectedCard.chapterId)?.name || "Unassigned"}
+                  <span>{chapters.find(item => item.id === selectedCard.chapterId)?.name || "Unassigned"}</span>
+                  <span class="browse-card-due">Next review: {getDueLabel(selectedCard)}</span>
                 </footer>
               </>
             ) : <div class="browse-preview-empty"><Layers3 size={26} /><p>Select a card to preview it.</p></div>}
