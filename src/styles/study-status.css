@@ -1,8 +1,5 @@
 @reference "tailwindcss";
 
-.topbar-status-button { @apply inline-flex min-h-[36px] items-center gap-2 border px-3 text-[11px] font-semibold; border-color: var(--line); background: transparent; color: var(--ink); cursor: pointer; }
-.topbar-status-button:hover { border-color: var(--accent); background: var(--hover); }
-
 .review-session { @apply flex min-h-0 flex-1 flex-col; width: 100%; max-width: 1320px; margin: 0 auto; padding: 20px clamp(22px,4vw,56px) 24px; }
 .review-session-header { @apply flex shrink-0 items-center justify-between pb-4; color: var(--muted); font: 9px var(--mono); letter-spacing: .08em; }
 .review-progress { height: 3px; overflow: hidden; background: var(--line); }
