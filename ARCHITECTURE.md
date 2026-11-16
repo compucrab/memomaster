@@ -2,7 +2,7 @@
 
 ## Product shape
 
-MemoMaster is a desktop-first learning and revision application. Its content hierarchy is Library → Notebook → Chapter → Topic → Flashcard. Each flashcard has Markdown front and back content. Cards belong to a notebook and can optionally reference a chapter and topic. The study UI presents one card at a time.
+MemoMaster is a desktop-first learning and revision application. Its content hierarchy is Library → Notebook → Chapter → Topic → Flashcard. Each flashcard has Markdown front and back content. Cards belong to a notebook and can optionally reference a chapter and topic. The study UI presents one card at a time. A new installation starts with an empty library.
 
 ## Technology and runtime
 
@@ -21,17 +21,13 @@ The app is local-first. Google Fonts are currently imported from the network in 
 
 Layout.jsx owns the active Preact state: notebook collection, active view, active notebook ID, library query, dialogs/notices, and theme.
 
-On startup, Rust opens the SQLite database in Tauri's application-data directory. load_library returns the saved library JSON if one exists. If the database is empty, initialNotebooks seeds the first library. The frontend debounces state changes and calls save_library. When the native window is closed, the latest state is saved before the window is destroyed.
+On startup, Rust opens the SQLite database in Tauri's application-data directory. load_library returns the saved library JSON if one exists. If the database is empty, the frontend starts with an empty library. The frontend debounces state changes and calls save_library. When the native window is closed, the latest state is saved before the window is destroyed.
 
 The database contains an app_state table with one row for the current library. The library is serialized as JSON to keep the initial persistence layer small while the notebook schema is still evolving. This is a deliberate first persistence step, not the final normalized relational model for future FSRS scheduling and review history.
 
-Theme selection remains in localStorage.
+Theme selection and the last-used project path remain in localStorage.
 
-## Portable file formats
-
-### Notebook: .memn
-
-A UTF-8 JSON document with a format identifier, version, and one notebook payload. It contains one notebook, including chapters, topics, cards, front/back Markdown, and display metadata. Opening a notebook adds it to the current library. If its ID already exists, MemoMaster assigns a new notebook ID.
+## Portable backup format
 
 ### Project: .memz
 
@@ -42,7 +38,7 @@ A ZIP archive containing:
 
 The importer validates the manifest, IDs, ZIP directory entries, decompressed sizes, and CRC checksums. Version 1 archives remain supported through a legacy Markdown-card migration path; version 2 stores JSON card records.
 
-Opening a project replaces the active library. Saving a project writes a portable snapshot of the complete library. SQLite remains the active working copy and is autosaved independently.
+Opening a project replaces the active library. Saving a project writes a portable snapshot of the complete library. SQLite remains the active working copy and is autosaved independently. This is the only supported manual backup and restore workflow; individual notebook files are not supported.
 
 ## Native commands
 
@@ -73,4 +69,4 @@ A notebook contains id, title, color, chapters, flashcards, and a cached cards c
 
 ## Data flow
 
-Preact components → Layout state and serialization services → Tauri IPC commands → Rust native commands → SQLite and user-selected files.
+Preact components → Layout state and serialization services → Tauri IPC commands → Rust native commands → SQLite and user-selected .memz files.
