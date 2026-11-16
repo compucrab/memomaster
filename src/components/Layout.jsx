@@ -280,7 +280,7 @@ export default function Layout() {
         <div class="prompt-backdrop" onMouseDown={(event) => event.target === event.currentTarget && setDeleteNotebook(null)}>
           <section class="prompt-panel" role="alertdialog" aria-modal="true" aria-labelledby="delete-notebook-title">
             <div class="prompt-heading"><h2 id="delete-notebook-title">Delete notebook?</h2><button type="button" aria-label="Close" onClick={() => setDeleteNotebook(null)}>×</button></div>
-            <p>“{deleteNotebook.title}” and all its chapters, topics, cards and study history will be permanently deleted. This cannot be undone.</p>
+            <p>“{deleteNotebook.title}” and all its chapters, cards and study history will be permanently deleted. This cannot be undone.</p>
             <div class="prompt-actions"><button type="button" class="prompt-cancel" onClick={() => setDeleteNotebook(null)}>Cancel</button><button type="button" class="prompt-confirm prompt-danger" onClick={() => {
               setNotebooks((items) => items.filter((item) => item.id !== deleteNotebook.id));
               if (activeId === deleteNotebook.id) { setActiveId(null); setView("library"); }
