@@ -9,6 +9,7 @@ import NotebookView from "./NotebookView";
 import SettingsPanel from "./SettingsPanel";
 import ContextMenu from "./ContextMenu";
 import TextPrompt from "./TextPrompt";
+import StudyStatus from "./StudyStatus";
 import { createMemz, importMemz } from "../services/projectArchive";
 
 const savedTheme = () => {
@@ -111,13 +112,21 @@ export default function Layout() {
     setNotebooks((items) => items.map((item) => item.id === id ? { ...item, ...changes } : item));
   }
   function createNotebook() {
-    const id = crypto.randomUUID();
-    setNotebooks((items) => [{
-      id, title: "Untitled notebook",
-      color: "#6f9dcc", chapters: [], cards: 0, flashcards: [], updated: "Just created",
-    }, ...items]);
-    setActiveId(id);
-    setView("notebook");
+    requestText({
+      title: "New notebook",
+      placeholder: "Notebook name",
+      onSubmit: (name) => {
+        const title = name.trim();
+        if (!title) return;
+        const id = crypto.randomUUID();
+        setNotebooks((items) => [{
+          id, title, color: "#6f9dcc", chapters: [], cards: 0, flashcards: [],
+          reviewHistory: [], updated: "Just created",
+        }, ...items]);
+        setActiveId(id);
+        setView("notebook");
+      },
+    });
   }
   function startNewProject() {
     setNotebooks([]);
@@ -203,11 +212,13 @@ export default function Layout() {
           onPreferences={() => { setView("settings"); setActiveId(null); }}
         />
         {view === "library" && (
-          <Topbar title="Your library" query={query} onQueryChange={setQuery} onCreate={createNotebook} />
+          <Topbar title="Your library" query={query} onQueryChange={setQuery} onCreate={createNotebook} onStudyStatus={() => { setView("status"); setActiveId(null); }} />
         )}
         <main class="app-main">
           {view === "settings" ? (
             <SettingsPanel theme={theme} onThemeChange={setTheme} onBack={() => setView("library")} />
+          ) : view === "status" ? (
+            <StudyStatus notebooks={notebooks} onBack={() => setView("library")} />
           ) : view === "notebook" && activeNotebook ? (
             <NotebookView
               notebook={activeNotebook}
