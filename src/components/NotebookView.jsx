@@ -5,7 +5,6 @@ import {
 import CardContent from "./CardContent";
 import CardEditor from "./CardEditor";
 import ReviewSession from "./ReviewSession";
-import MemoryOverview from "./MemoryOverview";
 
 function makeCard() {
   return { id: crypto.randomUUID(), front: "## Your question\n\nWrite a prompt here.", back: "Write the answer here.", chapterId: "" };
@@ -246,7 +245,6 @@ export default function NotebookView({ notebook, fsrsSettings, onUpdate, onBack,
                   <section><p>QUESTION</p><CardContent content={selectedCard.front} /></section>
                   <div class="browse-preview-divider" />
                   <section><p>ANSWER</p><CardContent content={selectedCard.back} /></section>
-                  <MemoryOverview card={selectedCard} settings={fsrsSettings} />
                 </div>
                 <footer class="browse-preview-meta">
                   <span>{chapters.find(item => item.id === selectedCard.chapterId)?.name || "Unassigned"}</span>
