@@ -18,7 +18,7 @@ Read this document together with README.md and ARCHITECTURE.md before changing M
 The hierarchy is Notebook → Chapter → Flashcard. Topics have been removed; legacy topic fields must not be reintroduced into newly saved library or archive data.
 
 - Cards contain Markdown front/back content and may be assigned to a chapter.
-- Notebook view has Browse and Study tabs. Browse supports search, chapter filtering, preview, editing, multi-selection, bulk deletion, chapter reassignment, and schedule reset.
+- Notebook view has Browse and Study tabs. Browse supports search, chapter filtering, next-due-date display, preview, editing, multi-selection, bulk deletion, chapter reassignment, and schedule reset.
 - Do not add a card right-click menu. Notebook cards in the library still use a right-click context menu for open, rename, delete, and cover colour.
 - Exact duplicate questions are blocked; similar questions warn and allow an explicit Save anyway choice.
 - Study sessions can cover a whole notebook or one chapter.
