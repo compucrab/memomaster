@@ -63,7 +63,11 @@ export default function NotebookView({ notebook, fsrsSettings, onUpdate, onBack,
     if (scopeType === "chapter") return card.chapterId === scopeChapterId;
     return true;
   }), [cards, scopeType, scopeChapterId]);
-  const dueCards = scopedCards.filter(card => !card.fsrs?.due || new Date(card.fsrs.due) <= new Date());
+  const dueCards = scopedCards.filter(card => {
+    if (!card.fsrs?.due) return true;
+    const due = new Date(card.fsrs.due);
+    return Number.isNaN(due.getTime()) || due <= new Date();
+  });
   const studyCards = studyType === "scheduled" ? dueCards : scopedCards;
 
   function handleReview(cardId, fsrs, log, mode) {
