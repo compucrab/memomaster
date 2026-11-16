@@ -23,6 +23,11 @@ const savedProjectPath = () => {
 const projectFilter = [{ name: "MemoMaster project", extensions: ["memz"] }];
 const normalizeName = (value) => String(value || "").trim().toLocaleLowerCase();
 const ensureExtension = (path) => path.toLowerCase().endsWith(".memz") ? path : path + ".memz";
+const normalizeLibrary = (items) => items.map((notebook) => ({
+  ...notebook,
+  chapters: (notebook.chapters || []).map(({ topics, ...chapter }) => chapter),
+  flashcards: (notebook.flashcards || []).map(({ topicId, ...card }) => card),
+}));
 
 export default function Layout() {
   const [notebooks, setNotebooks] = useState([]);
@@ -57,7 +62,7 @@ export default function Layout() {
         if (saved) {
           const parsed = JSON.parse(saved);
           if (!Array.isArray(parsed)) throw new Error("Saved library data is invalid");
-          setNotebooks(parsed);
+          setNotebooks(normalizeLibrary(parsed));
         } else {
           setNotebooks([]);
         }
@@ -159,7 +164,7 @@ export default function Layout() {
       const path = await open({ multiple: false, directory: false, filters: projectFilter });
       if (!path) return;
       const imported = await importMemz(await readBytes(path));
-      setNotebooks(imported);
+      setNotebooks(normalizeLibrary(imported));
       setActiveId(null);
       setView("library");
       setProjectPath(path);
