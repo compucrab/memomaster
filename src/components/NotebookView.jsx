@@ -12,6 +12,20 @@ function makeCard() {
 const makeId = () => crypto.randomUUID();
 const normalizeName = (value) => String(value || "").trim().toLocaleLowerCase();
 
+function getDueLabel(card) {
+  if (!card.fsrs?.due) return "Not scheduled";
+  const due = new Date(card.fsrs.due);
+  if (Number.isNaN(due.getTime())) return "Not scheduled";
+  if (due <= new Date()) return "Due now";
+  return due.toLocaleString(undefined, {
+    day: "numeric",
+    month: "short",
+    year: due.getFullYear() !== new Date().getFullYear() ? "numeric" : undefined,
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
 export default function NotebookView({ notebook, onUpdate, onBack, onRequestText }) {
   const cards = notebook.flashcards ?? (notebook.markdown ? [{ id: "legacy-card", front: "What is this note about?", back: notebook.markdown }] : []);
   const chapters = Array.isArray(notebook.chapters) ? notebook.chapters : [];
@@ -212,7 +226,7 @@ export default function NotebookView({ notebook, onUpdate, onBack, onRequestText
                     <input class="browse-card-checkbox" type="checkbox" aria-label="Select card" checked={selectedCardIds.includes(card.id)} onChange={() => toggleCardSelection(card.id)} />
                     <button type="button" class="browse-card-select" onClick={() => setSelectedCardId(card.id)}>
                       <span class="browse-card-index">{String(index + 1).padStart(2, "0")}</span>
-                      <span class="browse-card-copy"><strong>{String(card.front || "").replace(/[#>*_\x60]/g, "").trim().split("\n")[0] || "Untitled question"}</strong><small>{chapter?.name || "Unassigned"}</small></span>
+                      <span class="browse-card-copy"><strong>{String(card.front || "").replace(/[#>*_\x60]/g, "").trim().split("\n")[0] || "Untitled question"}</strong><small>{chapter?.name || "Unassigned"} · Due: {getDueLabel(card)}</small></span>
                     </button>
                   </div>
                 );
@@ -230,7 +244,8 @@ export default function NotebookView({ notebook, onUpdate, onBack, onRequestText
                   <section><p>ANSWER</p><div class="study-card-prose" dangerouslySetInnerHTML={{ __html: renderMarkdown(selectedCard.back) }} /></section>
                 </div>
                 <footer class="browse-preview-meta">
-                  {chapters.find(item => item.id === selectedCard.chapterId)?.name || "Unassigned"}
+                  <span>{chapters.find(item => item.id === selectedCard.chapterId)?.name || "Unassigned"}</span>
+                  <span class="browse-card-due">Next review: {getDueLabel(selectedCard)}</span>
                 </footer>
               </>
             ) : <div class="browse-preview-empty"><Layers3 size={26} /><p>Select a card to preview it.</p></div>}
