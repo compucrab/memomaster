@@ -1,43 +1,42 @@
 # MemoMaster
 
-MemoMaster is a desktop-first, local learning workspace built with Tauri 2, Preact, Vite, and Rust. It organizes study material into notebooks, chapters, and Markdown flashcards.
+MemoMaster is a local-first desktop learning and revision app built with Tauri 2, Preact, Vite, and Rust. It organizes material into notebooks, chapters, and flashcards.
 
-## Current features
+## Features
 
-- Empty library on first launch, with no prebuilt notebooks.
-- Create a new empty project at any time.
-- Notebook hierarchy: chapters, with cards optionally assigned to a chapter.
-- Notebook workspace with separate Browse and Study tabs.
-- Two-column card browsing with question/answer search, chapter filters, card multi-selection, bulk deletion, and bulk chapter reassignment.
-- Rich card editor: local image insertion (stored with card content), inline and display LaTeX equations, left/centre/right alignment, and embedded video cards for supported providers.
-- Video embeds support YouTube, Vimeo, Facebook's public embed player, and direct MP4/WebM/OGG URLs. Other providers may block embedding through browser security or provider policy.
-- Images are embedded as data URLs inside card Markdown so they remain available offline and travel with SQLite and .memz backups. Keep image files reasonably small; images are limited to 12 MB each.
-
-- Scheduled FSRS reviews and unscheduled practice for a whole notebook or chapter. Unscheduled practice never changes due dates.
-- FSRS-6 spaced repetition with Forgot, Difficult, and Easy review choices and visible next-review intervals.
-- Study status dashboard with a GitHub-style yearly consistency graph, streaks, recall rate, review outcomes, upcoming reviews, and notebook progress.
-- Rich-text formatting with keyboard shortcuts; card content remains stored as Markdown.
+- Notebook library with notebook creation, rename, deletion, and cover-strip colour selection.
+- Notebook workspace with Browse and Study tabs.
+- Browse cards with question/answer search, chapter filtering, preview, editing, multi-selection, bulk deletion, chapter reassignment, and schedule reset.
+- Duplicate-question detection: exact duplicates are blocked and close matches are flagged before saving.
+- Rich card editor with separate Question and Answer tabs.
+- Markdown-based card content with bold, italic, underline, headings, lists, quotes, inline code, links, and text colour.
+- Image insertion from files or clipboard, with per-image size and alignment controls. Images are embedded in card content (up to 12 MB per inserted image).
+- Inline and display LaTeX equations rendered with KaTeX.
+- Video embeds for YouTube, Vimeo, Instagram public posts/reels, Facebook, and direct MP4/WebM/OGG URLs. Playback depends on the provider's embedding policy.
+- Separate undo/redo history for the Question and Answer editors.
+- Scheduled FSRS-6 reviews and unscheduled practice for a whole notebook or a chapter.
+- Scheduled ratings: Forgot, Difficult, Good, and Easy. Forgot and Difficult repeat the card in the current session; Good and Easy complete it.
+- Next-review intervals during review, and next due date/time in Browse card information.
+- Study status dashboard with activity heatmap, streaks, scheduled review outcomes, recall rate, upcoming reviews, and notebook progress.
 - Light and dark themes.
-- Automatic local library persistence using SQLite.
-- One portable backup and restore format: .memz project archives.
-- Native Open and Save dialogs.
-- Custom desktop titlebar and window controls.
+- Automatic SQLite persistence and automatic .memz backup on application close.
+- Portable .memz project open/save support and a custom desktop titlebar.
 
-## Projects, local storage, and backups
+## Local storage and backups
 
-MemoMaster separates automatic local persistence from portable project files:
+MemoMaster uses two forms of local storage:
 
-- **SQLite — working copy:** The active library is saved automatically in the operating system's application-data directory. Changes are restored when MemoMaster is reopened. No manual save is needed for ordinary editing.
-- **.memz — portable snapshot:** Export or save the complete project to a .memz file. It contains all notebooks, chapters, flashcards, FSRS state, and study history. Keep this file separately to back up your work or move it to another computer.
+- **SQLite working copy:** The active library is saved automatically in the operating system's application-data directory and restored on launch. Ordinary editing does not require a manual save.
+- **.memz project archive:** A portable ZIP snapshot containing notebooks, chapters, cards, FSRS state, and study history.
 
-The two formats contain the same project data and work together:
+The File menu provides New project, Open project, Save project, and Preferences.
 
-- Saving/exporting a project creates a snapshot from the current library in SQLite-backed app state.
-- Opening a .memz file replaces the active library; the imported contents are then automatically saved to SQLite.
-- Starting a new project replaces the active library with an empty one and clears the remembered .memz save path. The empty project is also saved automatically.
-- Reopening MemoMaster restores the latest local working copy from SQLite. It does not automatically restore an older .memz snapshot.
+- **New project** replaces the active library with an empty one and clears the remembered project path. It does not delete existing backups.
+- **Open project** imports a .memz archive, replaces the active library, and makes that file the remembered Save project destination.
+- **Save project** overwrites the remembered .memz file when one exists. If no project file is associated, it creates a timestamped backup in the application's backups folder.
+- **Automatic backup** creates a timestamped .memz snapshot in that same backups folder when the application closes successfully.
 
-A .memz file is not updated when you continue editing after exporting it. Save/export again to refresh that backup. Keep backups outside the application-data directory; a local SQLite database is not a substitute for an independent backup.
+A .memz archive is a snapshot, not a live link to SQLite. Changes made after a snapshot do not update it. Keep independent backups; the SQLite working copy is not a substitute for an external backup.
 
 ## Technology
 
@@ -49,37 +48,39 @@ A .memz file is not updated when you continue editing after exporting it. Save/e
 | UI | Preact + JavaScript |
 | Build tooling | Vite |
 | Styling | Tailwind CSS v4 + project CSS |
+| Editor | Tiptap + Markdown |
+| Repetition | ts-fsrs (FSRS-6) |
+| Math rendering | KaTeX |
 | Icons | lucide-preact |
 
-## Requirements
+## Requirements and setup
 
 - Node.js with npm
 - Rust toolchain supported by Tauri 2
 - Tauri platform prerequisites for your operating system
 
-See the Tauri prerequisites at https://v2.tauri.app/start/prerequisites/.
+See the [Tauri prerequisites](https://v2.tauri.app/start/prerequisites/).
 
-## Setup
+Install dependencies and run the desktop app:
 
-Run npm install, then npm run tauri dev.
+    npm install
+    npm run tauri dev
 
-Build the frontend with npm run build. Build the desktop application with npm run tauri build.
+Build checks:
+
+    npm run build
+    npm run tauri build
 
 Vite uses port 1420; the Tauri configuration expects that fixed development port.
 
 ## Project documents
 
-- ARCHITECTURE.md — runtime, modules, state ownership, data model, and current boundaries.
-- AGENTS.md — coding conventions, safety rules, workflows, and implementation guidance for coding agents.
+- [ARCHITECTURE.md](ARCHITECTURE.md) — runtime, modules, state ownership, persistence, and data model.
+- [AGENTS.md](AGENTS.md) — coding conventions, safety rules, and implementation workflow.
 
-## Important boundaries
+## Boundaries
 
-- Use JavaScript for frontend code. Do not introduce TypeScript without an explicit project decision.
-- Keep the app desktop-first; do not add mobile navigation.
-- Keep Rust responsible for native integration and local persistence.
-- Anki import/export, cloud sync, and multi-device synchronization are future work.
-- FSRS scheduling and review history are stored with notebook/card data and included in .memz backups.
-- Preserve backward compatibility with supported .memz archive versions when changing the archive format.
-
-- The card editor supports pasted images, inline image placement, left/centre/right image alignment and size controls. Image sizing/alignment is preserved in card Markdown. Undo/redo history is isolated to each question or answer editor.
-- Video embeds accept YouTube, Vimeo, Instagram public posts/reels, Facebook links and direct MP4/WebM/OGG URLs. Embedding still depends on each provider allowing playback in an external desktop webview.
+- Frontend code is JavaScript/JSX; do not introduce TypeScript without an explicit project decision.
+- MemoMaster is desktop-first and local-first. No cloud account, analytics, or sync backend is implemented.
+- Anki import/export and multi-device synchronization are not implemented.
+- Preserve .memz archive compatibility when changing its format.
