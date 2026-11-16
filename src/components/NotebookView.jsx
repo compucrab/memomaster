@@ -5,6 +5,7 @@ import {
 import CardContent from "./CardContent";
 import CardEditor from "./CardEditor";
 import ReviewSession from "./ReviewSession";
+import MemoryOverview from "./MemoryOverview";
 
 function makeCard() {
   return { id: crypto.randomUUID(), front: "## Your question\n\nWrite a prompt here.", back: "Write the answer here.", chapterId: "" };
@@ -26,7 +27,7 @@ function getDueLabel(card) {
   });
 }
 
-export default function NotebookView({ notebook, onUpdate, onBack, onRequestText }) {
+export default function NotebookView({ notebook, fsrsSettings, onUpdate, onBack, onRequestText }) {
   const cards = notebook.flashcards ?? (notebook.markdown ? [{ id: "legacy-card", front: "What is this note about?", back: notebook.markdown }] : []);
   const chapters = Array.isArray(notebook.chapters) ? notebook.chapters : [];
   const [tab, setTab] = useState("browse");
@@ -89,7 +90,6 @@ export default function NotebookView({ notebook, onUpdate, onBack, onRequestText
     setNewCard(null);
     setEditingCardId(null);
   }
-
 
   function askDelete(title, message, action) { setConfirmAction({ title, message, action }); }
   function deleteCards(ids) {
@@ -164,7 +164,7 @@ export default function NotebookView({ notebook, onUpdate, onBack, onRequestText
 
   if (reviewing) {
     return <ReviewSession key={`${studyType}-${scopeType}-${scopeChapterId}`}
-      cards={studyCards} mode={studyType}
+      cards={studyCards} mode={studyType} settings={fsrsSettings}
       onReview={handleReview} onExit={() => setReviewing(false)} />;
   }
 
@@ -242,6 +242,7 @@ export default function NotebookView({ notebook, onUpdate, onBack, onRequestText
                   <section><p>QUESTION</p><CardContent content={selectedCard.front} /></section>
                   <div class="browse-preview-divider" />
                   <section><p>ANSWER</p><CardContent content={selectedCard.back} /></section>
+                  <MemoryOverview card={selectedCard} settings={fsrsSettings} />
                 </div>
                 <footer class="browse-preview-meta">
                   <span>{chapters.find(item => item.id === selectedCard.chapterId)?.name || "Unassigned"}</span>
