@@ -82,7 +82,12 @@ export default function NotebookView({ notebook, onUpdate, onBack, onRequestText
   function deleteCards(ids) {
     const removing = new Set(ids);
     const next = cards.filter((card) => !removing.has(card.id));
-    onUpdate({ flashcards: next, cards: next.length });
+    onUpdate({
+      flashcards: next,
+      cards: next.length,
+      reviewHistory: (notebook.reviewHistory || []).filter((entry) => !removing.has(entry.cardId)),
+      practiceHistory: (notebook.practiceHistory || []).filter((entry) => !removing.has(entry.cardId)),
+    });
     setSelectedCardIds([]);
     if (removing.has(selectedCardId)) setSelectedCardId(next[0]?.id || null);
   }
@@ -92,7 +97,14 @@ export default function NotebookView({ notebook, onUpdate, onBack, onRequestText
   function deleteChapter(chapter) {
     const removedIds = cards.filter((card) => card.chapterId === chapter.id).map((card) => card.id);
     const nextCards = cards.filter((card) => card.chapterId !== chapter.id);
-    onUpdate({ chapters: chapters.filter((item) => item.id !== chapter.id), flashcards: nextCards, cards: nextCards.length });
+    const removed = new Set(removedIds);
+    onUpdate({
+      chapters: chapters.filter((item) => item.id !== chapter.id),
+      flashcards: nextCards,
+      cards: nextCards.length,
+      reviewHistory: (notebook.reviewHistory || []).filter((entry) => !removed.has(entry.cardId)),
+      practiceHistory: (notebook.practiceHistory || []).filter((entry) => !removed.has(entry.cardId)),
+    });
     setSelectedCardIds((items) => items.filter((id) => !removedIds.includes(id)));
     if (removedIds.includes(selectedCardId)) setSelectedCardId(nextCards[0]?.id || null);
     if (scopeChapterId === chapter.id) { setScopeChapterId(""); setScopeTopicId(""); setScopeType("notebook"); }
@@ -102,7 +114,14 @@ export default function NotebookView({ notebook, onUpdate, onBack, onRequestText
     const removedIds = cards.filter((card) => card.chapterId === chapter.id && card.topicId === topic.id).map((card) => card.id);
     const nextCards = cards.filter((card) => !(card.chapterId === chapter.id && card.topicId === topic.id));
     const nextChapters = chapters.map((item) => item.id === chapter.id ? { ...item, topics: (item.topics || []).filter((entry) => entry.id !== topic.id) } : item);
-    onUpdate({ chapters: nextChapters, flashcards: nextCards, cards: nextCards.length });
+    const removed = new Set(removedIds);
+    onUpdate({
+      chapters: nextChapters,
+      flashcards: nextCards,
+      cards: nextCards.length,
+      reviewHistory: (notebook.reviewHistory || []).filter((entry) => !removed.has(entry.cardId)),
+      practiceHistory: (notebook.practiceHistory || []).filter((entry) => !removed.has(entry.cardId)),
+    });
     setSelectedCardIds((items) => items.filter((id) => !removedIds.includes(id)));
     if (removedIds.includes(selectedCardId)) setSelectedCardId(nextCards[0]?.id || null);
     if (scopeTopicId === topic.id) setScopeTopicId("");
@@ -171,7 +190,7 @@ export default function NotebookView({ notebook, onUpdate, onBack, onRequestText
       </nav>
 
       {tab === "browse" ? (
-        <div class="browse-workspace">
+        <div class="browse-workspace" onClick={() => cardMenu && setCardMenu(null)}>
           <aside class="browse-list-panel">
             <div class="browse-tools">
               <label class="browse-search"><Search size={14} /><input value={search} onInput={event => setSearch(event.currentTarget.value)} placeholder="Search question or answer..." /></label>
@@ -271,7 +290,7 @@ export default function NotebookView({ notebook, onUpdate, onBack, onRequestText
           </div>
         </div>
       )}
-      {cardMenu && <div class="context-menu browse-card-context" style={{ left: Math.min(cardMenu.x, window.innerWidth - 240), top: Math.min(cardMenu.y, window.innerHeight - 100) }} onContextMenu={(event) => event.preventDefault()}>
+      {cardMenu && <div class="context-menu browse-card-context" style={{ left: Math.min(cardMenu.x, window.innerWidth - 240), top: Math.min(cardMenu.y, window.innerHeight - 100) }} onClick={(event) => event.stopPropagation()} onContextMenu={(event) => event.preventDefault()}>
         <button type="button" class="context-danger" onClick={() => { setCardMenu(null); askDelete("Delete selected cards?", "Permanently delete " + selectedCardIds.length + " selected card(s)?", () => deleteCards(selectedCardIds)); }}><Trash2 size={14} /> Delete selected cards</button>
       </div>}
       {confirmAction && <div class="prompt-backdrop" onMouseDown={(event) => event.target === event.currentTarget && setConfirmAction(null)}>
