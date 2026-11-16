@@ -97,19 +97,23 @@ export default function Layout() {
           onPreferences={() => { setView("settings"); setActiveId(null); }}
         />
         <div class="app-body">
-          <Sidebar
-            activeView={view}
-            onNavigate={(nextView) => { setView(nextView); setActiveId(null); }}
-            notebooks={notebooks}
-            onOpenNotebook={openNotebook}
-          />
-          <main class="app-main">
-            <Topbar
-              title={view === "settings" ? "Preferences" : view === "notebook" ? activeNotebook?.title || "Notebook" : "Your library"}
-              query={query}
-              onQueryChange={setQuery}
-              onCreate={createNotebook}
+          {view !== "notebook" && (
+            <Sidebar
+              activeView={view}
+              onNavigate={(nextView) => { setView(nextView); setActiveId(null); }}
+              notebooks={notebooks}
+              onOpenNotebook={openNotebook}
             />
+          )}
+          <main class="app-main">
+            {view !== "notebook" && (
+              <Topbar
+                title={view === "settings" ? "Preferences" : "Your library"}
+                query={query}
+                onQueryChange={setQuery}
+                onCreate={createNotebook}
+              />
+            )}
             {view === "settings" ? (
               <SettingsPanel theme={theme} onThemeChange={setTheme} />
             ) : view === "notebook" && activeNotebook ? (
