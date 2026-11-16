@@ -1,5 +1,5 @@
 import { createEmptyCard, fsrs, Rating, State } from "ts-fsrs";
-import { DEFAULT_FSRS_SETTINGS, normalizeFsrsSettings } from "./fsrsSettings";
+import { DEFAULT_FSRS_SETTINGS, normalizeFsrsSettings } from "./fsrsSettings.js";
 
 export { DEFAULT_FSRS_SETTINGS, normalizeFsrsSettings };
 export const REVIEW_RATINGS = {
