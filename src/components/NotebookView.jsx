@@ -3,11 +3,13 @@ import { ArrowLeft, ChevronLeft, ChevronRight, Layers3, Plus } from "lucide-prea
 import Flashcard from "./Flashcard";
 
 function makeCard() {
-  return { id: crypto.randomUUID(), front: "## Your question\n\nWrite a prompt here.", back: "Write the answer here." };
+  return { id: crypto.randomUUID(), front: "## Your question\n\nWrite a prompt here.", back: "Write the answer here.", chapterId: "", topicId: "" };
 }
+function makeId() { return crypto.randomUUID(); }
 
 export default function NotebookView({ notebook, onUpdate, onBack }) {
   const cards = notebook.flashcards ?? (notebook.markdown ? [{ id: "legacy-card", front: "What is this note about?", back: notebook.markdown }] : []);
+  const chapters = Array.isArray(notebook.chapters) ? notebook.chapters : [];
   const [activeIndex, setActiveIndex] = useState(0);
   const [showBack, setShowBack] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -28,6 +30,20 @@ export default function NotebookView({ notebook, onUpdate, onBack }) {
     setShowBack(false);
     setEditing(true);
   }
+  function addChapter() {
+    const name = window.prompt("Chapter name");
+    if (!name?.trim()) return;
+    const chapter = { id: makeId(), name: name.trim(), topics: [] };
+    onUpdate({ chapters: [...chapters, chapter] });
+  }
+  function addTopic(chapterId) {
+    const name = window.prompt("Topic name");
+    if (!name?.trim()) return;
+    const next = chapters.map((chapter) => chapter.id === chapterId
+      ? { ...chapter, topics: [...(chapter.topics || []), { id: makeId(), name: name.trim() }] }
+      : chapter);
+    onUpdate({ chapters: next });
+  }
   function move(offset) {
     setActiveIndex((index) => Math.min(Math.max(index + offset, 0), cards.length - 1));
     setShowBack(false);
@@ -46,6 +62,7 @@ export default function NotebookView({ notebook, onUpdate, onBack }) {
         <div class="study-stage">
           <Flashcard
             card={activeCard}
+            chapters={chapters}
             index={activeIndex}
             total={cards.length}
             showBack={showBack}
@@ -54,6 +71,8 @@ export default function NotebookView({ notebook, onUpdate, onBack }) {
             onEdit={() => setEditing(true)}
             onChange={updateCard}
             onDone={() => setEditing(false)}
+            onAddChapter={addChapter}
+            onAddTopic={addTopic}
           />
           <footer class="study-navigation">
             <button class="study-nav-button" onClick={() => move(-1)} disabled={activeIndex === 0}><ChevronLeft size={17} /> Previous</button>

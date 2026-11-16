@@ -22,9 +22,16 @@
 .study-secondary:hover { border-color: var(--olive); color: var(--ink); }
 .study-card-editor { @apply grid min-h-0 flex-1 gap-4 overflow-auto p-6; align-content: center; }
 .study-card-editor label { @apply grid gap-2; color: var(--muted); font: 8px var(--mono); letter-spacing: .13em; }
-.study-card-editor textarea { width: 100%; min-height: 105px; resize: vertical; padding: 13px; border: 1px solid var(--line); outline: none; background: var(--paper); color: var(--ink); font: 12px/1.7 var(--mono); }
-.study-card-editor textarea:focus { border-color: var(--olive); }
+.study-card-editor textarea, .card-organization select { width: 100%; padding: 11px 12px; border: 1px solid var(--line); outline: none; background: var(--paper); color: var(--ink); font: 11px/1.6 var(--sans); }
+.study-card-editor textarea { min-height: 86px; resize: vertical; font: 12px/1.7 var(--mono); }
+.study-card-editor textarea:focus, .card-organization select:focus { border-color: var(--olive); }
 .study-card-editor .study-primary { justify-self: end; }
+.card-organization { @apply grid items-end gap-3; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto; }
+.card-organization label { min-width: 0; }
+.card-organization select:disabled { opacity: .45; cursor: not-allowed; }
+.card-add-structure { @apply inline-flex items-center gap-1 border-0 bg-transparent px-1 py-3; color: var(--muted); cursor: pointer; white-space: nowrap; font: 9px var(--sans); }
+.card-add-structure:hover:not(:disabled) { color: var(--ink); }
+.card-add-structure:disabled { opacity: .35; cursor: default; }
 .study-navigation { @apply flex items-center justify-between; width: min(100%, 790px); margin: 18px auto 0; }
 .study-nav-button { @apply inline-flex items-center gap-1 border-0 bg-transparent px-2 py-2; color: var(--ink); cursor: pointer; font: 10px var(--sans); }
 .study-nav-button:disabled { color: var(--muted); opacity: .35; cursor: default; }
@@ -33,6 +40,7 @@
 .study-empty h1 { margin: 16px 0 6px; color: var(--ink); font: 800 30px var(--display); letter-spacing: -.06em; }
 .study-empty p { margin: 0 0 20px; font-size: 11px; }
 @media (max-height: 720px) { .study-card { height: min(58vh, 440px); } }
+@media (max-width: 850px) { .card-organization { grid-template-columns: 1fr auto; } }
 @media (max-width: 650px) {
   .study-notebook-name { display: none; }
   .study-card-content { padding-inline: 18px; }
