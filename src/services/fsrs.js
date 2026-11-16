@@ -98,12 +98,24 @@ export function formatInterval(due, now = new Date()) {
   return years === 1 ? "1 year" : `${years} years`;
 }
 
+function formatCandidateInterval(candidate, due, now) {
+  if (candidate.state === State.Review && candidate.scheduled_days > 0) {
+    const days = candidate.scheduled_days;
+    if (days < 30) return days === 1 ? "1 day" : `${days} days`;
+    const months = Math.round(days / 30);
+    if (months < 12) return months === 1 ? "1 month" : `${months} months`;
+    const years = Math.round(days / 365);
+    return years === 1 ? "1 year" : `${years} years`;
+  }
+  return formatInterval(due, now);
+}
+
 export function getReviewOptions(card, now = new Date(), settings = DEFAULT_FSRS_SETTINGS) {
   const scheduler = makeScheduler(settings);
   return Object.fromEntries(Object.keys(REVIEW_RATINGS).map((choice) => {
     const { result, schedulerNow, config } = getScheduledCandidate(scheduler, card, choice, now, settings);
     const due = restoreDue(result.card, schedulerNow, now, config.rolloverHour);
-    return [choice, { due, interval: formatInterval(due, now) }];
+    return [choice, { due, interval: formatCandidateInterval(result.card, due, now) }];
   }));
 }
 
