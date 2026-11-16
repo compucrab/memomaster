@@ -1,0 +1,73 @@
+/* Dark palette overrides. Keep the same editorial layout, just change the paper and ink. */
+[data-theme="dark"] {
+  color-scheme: dark;
+  --paper: #151713;
+  --paper-deep: #1c1f19;
+  --paper-card: #20231d;
+  --surface: #1d201a;
+  --bar: #191c17;
+  --hover: #292d24;
+  --ink: #eceee5;
+  --muted: #a0a493;
+  --line: #383d31;
+  --olive: #b3c66a;
+  --acid: #c6d56a;
+}
+[data-theme="dark"] .sidebar { background: #191c17; border-color: var(--line); }
+[data-theme="dark"] .sidebar-label,
+[data-theme="dark"] .sidebar-heading > span,
+[data-theme="dark"] .sidebar-version,
+[data-theme="dark"] .recent-item { color: var(--muted); }
+[data-theme="dark"] .brand { color: var(--ink); }
+[data-theme="dark"] .nav-item:hover,
+[data-theme="dark"] .nav-item.is-active { background: #292d24; color: var(--ink); }
+[data-theme="dark"] .topbar { background: var(--bar); border-color: var(--line); }
+[data-theme="dark"] .topbar-breadcrumb strong { color: var(--ink); }
+[data-theme="dark"] .topbar-breadcrumb b,
+[data-theme="dark"] .topbar-breadcrumb,
+[data-theme="dark"] .search-field { color: var(--muted); }
+[data-theme="dark"] .notebook-cover { background: #24271f; border-color: var(--line); }
+[data-theme="dark"] .cover-topline,
+[data-theme="dark"] .cover-footer,
+[data-theme="dark"] .notebook-info p,
+[data-theme="dark"] .notebook-info footer,
+[data-theme="dark"] .notebook-detail-head input,
+[data-theme="dark"] .notebook-detail-meta,
+[data-theme="dark"] .notebook-aside > p:not(.eyebrow) { color: var(--muted); }
+[data-theme="dark"] .cover-art { color: #a8b77a; }
+[data-theme="dark"] .cover-art i,
+[data-theme="dark"] .cover-art b,
+[data-theme="dark"] .cover-footer { border-color: var(--line); }
+[data-theme="dark"] .new-notebook-card { background: #1c1f19; border-color: var(--line); color: var(--muted); }
+[data-theme="dark"] .new-notebook-card:hover { background: #24281f; border-color: var(--olive); }
+[data-theme="dark"] .new-notebook-card strong { color: var(--ink); }
+[data-theme="dark"] .new-notebook-card i { border-color: var(--line); }
+[data-theme="dark"] .markdown-card { background: var(--surface); border-color: var(--line); }
+[data-theme="dark"] .markdown-card-toolbar { border-color: var(--line); color: var(--muted); }
+[data-theme="dark"] .markdown-card-toolbar button.is-selected,
+[data-theme="dark"] .markdown-prose code { background: var(--hover); color: var(--ink); }
+[data-theme="dark"] .markdown-prose { color: #d0d3c8; }
+[data-theme="dark"] .markdown-prose blockquote { color: var(--muted); }
+[data-theme="dark"] .markdown-editor { color: var(--ink); }
+[data-theme="dark"] .settings-row p,
+[data-theme="dark"] .settings-row > span { color: var(--muted); }
+[data-theme="dark"] .settings-row > i { border-color: var(--line); }
+[data-theme="dark"] .context-menu { background: var(--surface); border-color: var(--line); }
+[data-theme="dark"] .context-menu > button { color: var(--ink); }
+[data-theme="dark"] .context-menu > button:hover { background: var(--hover); }
+[data-theme="dark"] .context-divider { background: var(--line); }
+[data-theme="dark"] .context-color-picker { color: var(--muted); }
+[data-theme="dark"] .button-primary { border-color: var(--olive); background: var(--olive); color: #171914; }
+[data-theme="dark"] .button-primary:hover { background: #c0d77a; }
+[data-theme="dark"] .brand-mark,
+[data-theme="dark"] .titlebar-mark { background: var(--ink); color: var(--paper); }
+[data-theme="dark"] .sidebar-note { border-color: var(--line); color: var(--muted); }
+[data-theme="dark"] .sidebar-note p { color: var(--muted); }
+[data-theme="dark"] .flashcard { background: var(--surface); border-color: var(--line); }
+[data-theme="dark"] .flashcard-toolbar { border-color: var(--line); color: var(--muted); }
+[data-theme="dark"] .flashcard-editor textarea { background: var(--paper); color: var(--ink); border-color: var(--line); }
+[data-theme="dark"] .flashcard-prose { color: var(--ink); }
+[data-theme="dark"] .flashcard-flip { border-color: var(--line); color: var(--muted); }
+[data-theme="dark"] .empty-cards { border-color: var(--line); color: var(--muted); }
+[data-theme="dark"] .empty-cards h3 { color: var(--ink); }
+[data-theme="dark"] .theme-switch { background: var(--paper-deep); }

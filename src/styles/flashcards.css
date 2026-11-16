@@ -1,0 +1,30 @@
+@reference "tailwindcss";
+
+.cards-heading { @apply flex items-end justify-between gap-4 border-b pb-4; border-color: var(--line); }
+.cards-heading .eyebrow { margin: 0 0 7px; }
+.cards-heading h2 { margin: 0; color: var(--ink); font: 700 22px var(--display); letter-spacing: -.05em; }
+.flashcard-list { @apply grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 390px), 1fr)); gap: 18px; padding-top: 18px; }
+.flashcard { min-width: 0; border: 1px solid var(--line); background: var(--surface); }
+.flashcard-toolbar { @apply flex h-[42px] items-center justify-between border-b px-3; border-color: var(--line); color: var(--muted); font: 8px var(--mono); letter-spacing: .1em; }
+.flashcard-toolbar > span { @apply flex items-center gap-2; }
+.flashcard-toolbar > span i { width: 5px; height: 5px; border-radius: 50%; background: var(--olive); }
+.flashcard-toolbar > div { @apply flex items-center gap-1; }
+.flashcard-toolbar button { @apply inline-flex items-center gap-1 border-0 bg-transparent px-2 py-1; color: var(--muted); cursor: pointer; font: 10px var(--sans); }
+.flashcard-toolbar button.is-selected { background: var(--hover); color: var(--ink); }
+.flashcard-toolbar .flashcard-delete { margin-left: 5px; }
+.flashcard-editor { @apply grid gap-3 p-4; }
+.flashcard-editor label { @apply grid gap-2; color: var(--muted); font: 8px var(--mono); letter-spacing: .1em; }
+.flashcard-editor textarea { width: 100%; min-height: 110px; resize: vertical; padding: 11px; border: 1px solid var(--line); outline: 0; background: var(--paper); color: var(--ink); font: 12px/1.7 var(--mono); }
+.flashcard-editor textarea:focus { border-color: var(--olive); }
+.flashcard-editor .button-primary { justify-self: end; }
+.flashcard-study { @apply flex min-h-[245px] flex-col items-center justify-center p-6; text-align: center; }
+.flashcard-side-label { color: var(--muted); font: 8px var(--mono); letter-spacing: .13em; }
+.flashcard-prose { width: 100%; max-width: 540px; min-height: 115px; display: grid; align-content: center; color: var(--ink); font: 15px/1.7 var(--sans); }
+.flashcard-prose h1, .flashcard-prose h2, .flashcard-prose h3 { margin: 0 0 12px; font: 700 22px/1.3 var(--display); letter-spacing: -.04em; }
+.flashcard-prose p { margin: 4px 0; }
+.flashcard-prose code { padding: 2px 4px; background: var(--hover); font: 12px var(--mono); }
+.flashcard-flip { @apply inline-flex items-center gap-2 border px-3 py-2; border-color: var(--line); background: transparent; color: var(--muted); cursor: pointer; font: 10px var(--sans); }
+.flashcard-flip:hover { border-color: var(--olive); color: var(--ink); }
+.empty-cards { @apply flex min-h-[250px] flex-col items-center justify-center border border-dashed; grid-column: 1 / -1; border-color: var(--line); color: var(--muted); text-align: center; }
+.empty-cards h3 { margin: 13px 0 5px; color: var(--ink); font: 700 17px var(--display); }
+.empty-cards p { margin: 0 0 18px; font-size: 11px; }

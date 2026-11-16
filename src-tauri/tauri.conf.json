@@ -12,11 +12,14 @@
   "app": {
     "windows": [
       {
+        "label": "main",
         "title": "MemoMaster",
         "width": 1240,
         "height": 820,
         "minWidth": 900,
-        "minHeight": 620
+        "minHeight": 620,
+        "decorations": false,
+        "shadow": true
       }
     ],
     "security": {

@@ -1,63 +1,57 @@
-import { ArrowLeft, FileText, BookOpen } from "lucide-preact";
-import MarkdownCard from "./MarkdownCard";
+import { ArrowLeft, BookOpen, Plus, Layers3 } from "lucide-preact";
+import Flashcard from "./Flashcard";
 
-const starterMarkdown = `# Welcome to your notebook
-
-This is a **Markdown card**. Use it to collect explanations, examples, and ideas worth revisiting.
-
-## A simple place to begin
-
-- Write in Markdown
-- Keep each card focused on one idea
-- Organise your notes as your knowledge grows
-
-> Good notes are not a transcript. They are a tool for thinking.`;
+function makeCard() {
+  return { id: crypto.randomUUID(), front: "## Your question\n\nWrite a prompt here.", back: "Write the answer here." };
+}
 
 export default function NotebookView({ notebook, onUpdate, onBack }) {
-  const markdown = notebook.markdown ?? starterMarkdown;
+  const cards = notebook.flashcards ?? (notebook.markdown ? [{ id: "legacy-card", front: "What is this note about?", back: notebook.markdown }] : []);
+
+  function updateCard(id, changes) {
+    const next = cards.map((card) => card.id === id ? { ...card, ...changes } : card);
+    onUpdate({ flashcards: next, cards: next.length, markdown: undefined });
+  }
+  function addCard() {
+    const next = [...cards, makeCard()];
+    onUpdate({ flashcards: next, cards: next.length });
+  }
+  function deleteCard(id) {
+    const next = cards.filter((card) => card.id !== id);
+    onUpdate({ flashcards: next, cards: next.length });
+  }
 
   return (
     <section class="workspace notebook-workspace">
-      <button class="back-link" onClick={onBack}>
-        <ArrowLeft size={14} /> ALL NOTEBOOKS
-      </button>
-
+      <button class="back-link" onClick={onBack}><ArrowLeft size={14} /> ALL NOTEBOOKS</button>
       <div class="notebook-detail-head">
-        <i data-color={notebook.color} />
+        <i style={{ backgroundColor: notebook.color }} />
         <div>
           <p class="eyebrow">NOTEBOOK / COLLECTION</p>
           <h1>{notebook.title}</h1>
-          <input
-            value={notebook.description}
-            onInput={(event) => onUpdate({ description: event.currentTarget.value })}
-            aria-label="Notebook description"
-          />
+          <input value={notebook.description} onInput={(event) => onUpdate({ description: event.currentTarget.value })} aria-label="Notebook description" />
         </div>
       </div>
-
       <div class="notebook-detail-meta">
         <span><BookOpen size={14} /> {notebook.chapters} CHAPTERS</span>
-        <span><FileText size={14} /> {notebook.cards} CARDS</span>
+        <span><Layers3 size={14} /> {cards.length} FLASHCARDS</span>
       </div>
-
-      <div class="notebook-content-grid">
-        <div>
-          <div class="section-rule">
-            <span>QUICK NOTE</span>
-            <span>MARKDOWN</span>
+      <div class="cards-heading">
+        <div><p class="eyebrow">ACTIVE COLLECTION</p><h2>Knowledge, one card at a time.</h2></div>
+        <button class="button-primary" onClick={addCard}><Plus size={15} /> Add flashcard</button>
+      </div>
+      <div class="flashcard-list">
+        {cards.length ? cards.map((card, index) => (
+          <Flashcard key={card.id} card={card} index={index}
+            onChange={(changes) => updateCard(card.id, changes)}
+            onDelete={() => deleteCard(card.id)} />
+        )) : (
+          <div class="empty-cards">
+            <Layers3 size={26} /><h3>Your first flashcard is waiting.</h3>
+            <p>Add a question on the front and its answer on the back.</p>
+            <button class="button-primary" onClick={addCard}><Plus size={15} /> Create flashcard</button>
           </div>
-          <MarkdownCard
-            markdown={markdown}
-            onChange={(value) => onUpdate({ markdown: value })}
-          />
-        </div>
-
-        <aside class="notebook-aside">
-          <p class="eyebrow">GETTING STARTED</p>
-          <h3>Build your knowledge, one idea at a time.</h3>
-          <p>Cards contain Markdown content. Keep each card focused on one idea.</p>
-          <span class="coming-soon">CARD ORGANISATION · COMING NEXT</span>
-        </aside>
+        )}
       </div>
     </section>
   );

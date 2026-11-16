@@ -1,97 +1,18 @@
 @reference "tailwindcss";
 
-.app-layout {
-  @apply flex h-screen w-full overflow-hidden;
-  background: var(--paper);
-  color: var(--ink);
-}
-
-.app-main {
-  @apply flex min-w-0 flex-1 flex-col;
-}
-
-.workspace {
-  @apply min-h-0 flex-1 overflow-auto;
-  padding: 42px clamp(28px, 4vw, 64px) 30px;
-}
-
-.page-intro {
-  @apply flex items-end justify-between;
-  margin: 8px 0 42px;
-}
-
-.eyebrow {
-  margin: 0 0 18px;
-  color: var(--muted);
-  font: 500 10px var(--mono);
-  letter-spacing: .13em;
-}
-
-.eyebrow i {
-  display: inline-block;
-  width: 7px;
-  height: 7px;
-  margin-right: 8px;
-  border-radius: 50%;
-  background: #9cae43;
-  box-shadow: 0 0 0 4px #9cae4320;
-}
-
-.page-intro h1 {
-  margin: 0;
-  font: 800 clamp(38px, 4.5vw, 58px)/1.05 var(--display);
-  letter-spacing: -.075em;
-}
-
-.page-intro h1 em {
-  color: #87934a;
-  font: italic 500 .96em var(--serif);
-}
-
-.page-description {
-  margin: 15px 0 0;
-  color: #77776d;
-  font-size: 14px;
-  line-height: 1.7;
-}
-
-.library-meta {
-  padding-bottom: 5px;
-  color: #89887c;
-  font: 10px var(--mono);
-  letter-spacing: .12em;
-}
-
-.library-meta b {
-  margin-right: 8px;
-  color: var(--olive);
-  font-size: 17px;
-}
-
-.section-rule {
-  @apply flex items-center justify-between;
-  padding: 13px 1px;
-  border-top: 1px solid var(--line);
-  color: #89887c;
-  font: 9px var(--mono);
-  letter-spacing: .12em;
-}
-
-.library-footer {
-  @apply flex items-center justify-between;
-  margin-top: 45px;
-  padding-top: 18px;
-  border-top: 1px solid var(--line);
-  color: #969487;
-  font: 9px var(--mono);
-  letter-spacing: .1em;
-}
-
-.library-footer i {
-  display: inline-block;
-  width: 6px;
-  height: 6px;
-  margin-left: 7px;
-  border-radius: 50%;
-  background: #9cae43;
-}
+.app-layout { @apply flex h-screen w-full overflow-hidden; background: var(--paper); color: var(--ink); }
+.app-frame { @apply flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden; }
+.app-body { @apply flex min-h-0 min-w-0 flex-1 overflow-hidden; }
+.app-main { @apply flex min-w-0 flex-1 flex-col; }
+.workspace { @apply min-h-0 flex-1 overflow-auto; padding: 42px clamp(28px, 4vw, 64px) 30px; }
+.page-intro { @apply flex items-end justify-between; margin: 8px 0 42px; }
+.eyebrow { margin: 0 0 18px; color: var(--muted); font: 500 10px var(--mono); letter-spacing: .13em; }
+.eyebrow i { display: inline-block; width: 7px; height: 7px; margin-right: 8px; border-radius: 50%; background: #9cae43; box-shadow: 0 0 0 4px #9cae4320; }
+.page-intro h1 { margin: 0; font: 800 clamp(38px, 4.5vw, 58px)/1.05 var(--display); letter-spacing: -.075em; }
+.page-intro h1 em { color: var(--olive); font: italic 500 .96em var(--serif); }
+.page-description { margin: 15px 0 0; color: var(--muted); font-size: 14px; line-height: 1.7; }
+.library-meta { padding-bottom: 5px; color: var(--muted); font: 10px var(--mono); letter-spacing: .12em; }
+.library-meta b { margin-right: 8px; color: var(--olive); font-size: 17px; }
+.section-rule { @apply flex items-center justify-between; padding: 13px 1px; border-top: 1px solid var(--line); color: var(--muted); font: 9px var(--mono); letter-spacing: .12em; }
+.library-footer { @apply flex items-center justify-between; margin-top: 45px; padding-top: 18px; border-top: 1px solid var(--line); color: var(--muted); font: 9px var(--mono); letter-spacing: .1em; }
+.library-footer i { display: inline-block; width: 6px; height: 6px; margin-left: 7px; border-radius: 50%; background: #9cae43; }

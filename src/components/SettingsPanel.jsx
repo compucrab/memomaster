@@ -1,54 +1,21 @@
-import { Palette, Type, FolderArchive, Keyboard } from "lucide-preact";
+import { Palette, Type, FolderArchive, Keyboard, Moon, Sun } from "lucide-preact";
 
-const settings = [
-  {
-    Icon: Palette,
-    title: "Appearance",
-    description: "Warm paper, ink and olive accents inspired by the CompCrab website.",
-    value: "PAPER / OLIVE",
-  },
-  {
-    Icon: Type,
-    title: "Typography",
-    description: "Manrope headings, DM Sans interface text and DM Mono metadata.",
-    value: "EDITORIAL",
-  },
-  {
-    Icon: FolderArchive,
-    title: "Project files",
-    description: "Import and export the library as a portable .memz ZIP archive from File.",
-    value: "READY",
-  },
-  {
-    Icon: Keyboard,
-    title: "Keyboard shortcuts",
-    description: "New notebook, open project, export project and standard editing commands.",
-    value: "DESKTOP",
-  },
-];
-
-export default function SettingsPanel() {
+export default function SettingsPanel({ theme, onThemeChange }) {
   return (
     <section class="workspace settings-workspace">
-      <div class="page-intro">
-        <div>
-          <p class="eyebrow">MAKE IT YOURS</p>
-          <h1>Preferences<span>.</span></h1>
-          <p class="page-description">A few thoughtful controls for your learning space.</p>
-        </div>
-      </div>
-
+      <div class="page-intro"><div><p class="eyebrow">MAKE IT YOURS</p><h1>Preferences<span>.</span></h1><p class="page-description">A few thoughtful controls for your learning space.</p></div></div>
       <div class="settings-list">
-        {settings.map(({ Icon, title, description, value }) => (
-          <section class="settings-row" key={title}>
-            <i><Icon size={18} /></i>
-            <div>
-              <h2>{title}</h2>
-              <p>{description}</p>
-            </div>
-            <span>{value}</span>
-          </section>
-        ))}
+        <section class="settings-row">
+          <i><Palette size={18} /></i>
+          <div><h2>Appearance</h2><p>Choose a comfortable colour scheme for your workspace.</p></div>
+          <div class="theme-switch">
+            <button class={theme === "light" ? "is-selected" : ""} onClick={() => onThemeChange("light")}><Sun size={14} /> Light</button>
+            <button class={theme === "dark" ? "is-selected" : ""} onClick={() => onThemeChange("dark")}><Moon size={14} /> Dark</button>
+          </div>
+        </section>
+        <section class="settings-row"><i><Type size={18} /></i><div><h2>Typography</h2><p>Manrope headings, DM Sans interface text and DM Mono metadata.</p></div><span>EDITORIAL</span></section>
+        <section class="settings-row"><i><FolderArchive size={18} /></i><div><h2>Project files</h2><p>Import and export the library as a portable .memz ZIP archive from the File menu.</p></div><span>READY</span></section>
+        <section class="settings-row"><i><Keyboard size={18} /></i><div><h2>Keyboard shortcuts</h2><p>New notebook, open project and export project.</p></div><span>DESKTOP</span></section>
       </div>
     </section>
   );
