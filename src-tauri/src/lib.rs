@@ -12,14 +12,11 @@ pub fn run() {
             let quit = MenuItem::with_id(app, "quit", "Quit MemoMaster", true, Some("CmdOrCtrl+Q"))?;
             let file_menu = Submenu::with_items(app, "File", true, &[&new_notebook, &open_project, &export_project, &file_separator, &quit])?;
 
-            let undo = PredefinedMenuItem::undo(app, None)?;
-            let redo = PredefinedMenuItem::redo(app, None)?;
-            let edit_separator = PredefinedMenuItem::separator(app)?;
             let cut = PredefinedMenuItem::cut(app, None)?;
             let copy = PredefinedMenuItem::copy(app, None)?;
             let paste = PredefinedMenuItem::paste(app, None)?;
             let select_all = PredefinedMenuItem::select_all(app, None)?;
-            let edit_menu = Submenu::with_items(app, "Edit", true, &[&undo, &redo, &edit_separator, &cut, &copy, &paste, &select_all])?;
+            let edit_menu = Submenu::with_items(app, "Edit", true, &[&cut, &copy, &paste, &select_all])?;
 
             let about = MenuItem::with_id(app, "about", "About MemoMaster", true, None::<&str>)?;
             let help_menu = Submenu::with_items(app, "Help", true, &[&about])?;

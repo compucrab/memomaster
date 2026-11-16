@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "memomaster",
+  "productName": "MemoMaster",
   "version": "0.1.0",
   "identifier": "com.compucrab.memomaster",
   "build": {
@@ -12,9 +12,11 @@
   "app": {
     "windows": [
       {
-        "title": "memomaster",
-        "width": 800,
-        "height": 600
+        "title": "MemoMaster",
+        "width": 1240,
+        "height": 820,
+        "minWidth": 900,
+        "minHeight": 620
       }
     ],
     "security": {
