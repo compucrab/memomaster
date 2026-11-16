@@ -58,7 +58,8 @@ function renderInline(source) {
     .replace(/\*(.+?)\*/g, "<em>$1</em>")
     .replace(/_(.+?)_/g, "<em>$1</em>")
     .replace(/~~(.+?)~~/g, "<del>$1</del>");
-  value = value.replace(/\$([^$\n]+)\$/g, (_, latex) => katex.renderToString(latex, { throwOnError: false, strict: "ignore" }));
+  value = value.replace(/\$\$([^$\n]+)\$\$/g, (_, latex) => katex.renderToString(latex, { throwOnError: false, strict: "ignore" }));
+  value = value.replace(/(?<!\$)\$([^$\n]+)\$(?!\$)/g, (_, latex) => katex.renderToString(latex, { throwOnError: false, strict: "ignore" }));
   return value.replace(
     /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,
     '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>',
@@ -105,7 +106,7 @@ export function renderMarkdown(source = "") {
 
   const lines = normalizeText(source).replaceAll("\r\n", "\n").split("\n");
   for (const line of lines) {
-    const displayMath = line.match(/^\s*\$\$([\s\S]+)\$\$\s*$/);
+    const displayMath = line.match(/^\s*\$\$\$([\s\S]+)\$\$\$\s*$/) || line.match(/^\s*\$\$([\s\S]+)\$\$\s*$/);
     if (displayMath) {
       flushParagraph(); flushList(); flushQuote();
       output.push('<div class="study-math-block">' + katex.renderToString(displayMath[1], { displayMode: true, throwOnError: false, strict: "ignore" }) + "</div>");
