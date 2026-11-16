@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import { open, save } from "@tauri-apps/plugin-dialog";
+import { open } from "@tauri-apps/plugin-dialog";
 import Topbar from "./Topbar";
 import Titlebar from "./Titlebar";
 import NotebookGrid from "./NotebookGrid";
@@ -22,7 +22,6 @@ const savedProjectPath = () => {
 };
 const projectFilter = [{ name: "MemoMaster project", extensions: ["memz"] }];
 const normalizeName = (value) => String(value || "").trim().toLocaleLowerCase();
-const ensureExtension = (path) => path.toLowerCase().endsWith(".memz") ? path : path + ".memz";
 const normalizeLibrary = (items) => items.map((notebook) => ({
   ...notebook,
   chapters: (notebook.chapters || []).map(({ topics, ...chapter }) => chapter),
@@ -103,6 +102,9 @@ export default function Layout() {
           return;
         }
         await invoke("save_library", { data: JSON.stringify(notebooksRef.current) });
+        const archive = await createMemz(notebooksRef.current);
+        const backupPath = await invoke("create_automatic_backup", { bytes: Array.from(archive) });
+        console.info("Automatic project backup created:", backupPath);
         await getCurrentWindow().destroy();
       } catch (error) {
         setNotice(`Could not save before closing: ${error.message || error}`);
@@ -174,24 +176,17 @@ export default function Layout() {
     }
   }
 
-  async function saveProjectAs() {
-    try {
-      const selected = await save({ defaultPath: "MemoMaster project.memz", filters: projectFilter });
-      if (!selected) return;
-      const path = ensureExtension(selected);
-      await writeBytes(path, await createMemz(notebooks));
-      setProjectPath(path);
-      setNotice("Project backup saved.");
-    } catch (error) {
-      setNotice(`Could not save project: ${error.message || error}`);
-    }
-  }
 
   async function saveProject() {
-    if (!projectPath) return saveProjectAs();
     try {
-      await writeBytes(projectPath, await createMemz(notebooks));
-      setNotice("Project backup saved.");
+      const archive = await createMemz(notebooks);
+      if (projectPath) {
+        await writeBytes(projectPath, archive);
+        setNotice("Project backup saved.");
+      } else {
+        const path = await invoke("create_automatic_backup", { bytes: Array.from(archive) });
+        setNotice(`Backup saved: ${path.split(/[\\\\/]/).pop()}`);
+      }
     } catch (error) {
       setNotice(`Could not save project: ${error.message || error}`);
     }
@@ -204,7 +199,6 @@ export default function Layout() {
       if (key === "n" && event.shiftKey) { event.preventDefault(); setConfirmNewProject(true); }
       else if (key === "n") { event.preventDefault(); createNotebook(); }
       else if (key === "o" && !event.shiftKey) { event.preventDefault(); openProjectFile(); }
-      else if (key === "s" && event.shiftKey) { event.preventDefault(); saveProjectAs(); }
       else if (key === "s") { event.preventDefault(); saveProject(); }
     };
     window.addEventListener("keydown", shortcuts);
@@ -219,7 +213,6 @@ export default function Layout() {
           onNewProject={() => setConfirmNewProject(true)}
           onOpenProject={openProjectFile}
           onSaveProject={saveProject}
-          onSaveProjectAs={saveProjectAs}
           onPreferences={() => { setView("settings"); setActiveId(null); }}
         />
         {view === "library" && (
