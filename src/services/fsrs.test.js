@@ -84,3 +84,15 @@ test("memory overview exposes recall probability and a decaying curve", () => {
   assert.ok(memory.difficulty >= 1 && memory.difficulty <= 10);
   assert.ok(memory.curve[0].probability > memory.curve.at(-1).probability);
 });
+
+test("day rollover controls elapsed review days and review due time", () => {
+  const card = matureCard(new Date(2026, 0, 10, 5, 0, 0));
+  card.fsrs.last_review = new Date(2026, 0, 10, 3, 0, 0);
+  card.fsrs.due = new Date(2026, 0, 10, 5, 0, 0);
+  const now = new Date(2026, 0, 10, 5, 0, 0);
+  const rolled = scheduleReview(card, "good", now, { ...DEFAULT_FSRS_SETTINGS, rolloverHour: 4 });
+  const midnight = scheduleReview(card, "good", now, { ...DEFAULT_FSRS_SETTINGS, rolloverHour: 0 });
+  assert.equal(rolled.log.elapsed_days, 1);
+  assert.equal(midnight.log.elapsed_days, 0);
+  assert.equal(new Date(rolled.fsrs.due).getHours(), 4);
+});
