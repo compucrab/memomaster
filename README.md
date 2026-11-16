@@ -8,7 +8,8 @@ MemoMaster is a desktop-first, local learning workspace built with **Tauri 2, Pr
 
 - Notebook library with search, creation, rename, and cover-strip colour selection from the context menu.
 - Notebook hierarchy: chapters and topics, with cards assignable to both.
-- Focused flashcard view with question/answer reveal and Markdown editing.
+- Focused flashcard view with question/answer reveal and a live WYSIWYG editor.
+- Rich-text formatting with keyboard shortcuts; card content remains stored as Markdown.
 - Light and dark themes; the selected theme is stored in local browser storage.
 - Import and export of portable `.memz` ZIP project archives.
 - Custom desktop titlebar and window controls.
