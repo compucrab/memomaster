@@ -10,8 +10,8 @@ export default function SettingsPanel({ theme, onThemeChange, onBack }) {
           <i><Palette size={18} /></i>
           <div><h2>Appearance</h2><p>Choose a comfortable colour scheme for your workspace.</p></div>
           <div class="theme-switch">
-            <button class={theme === "light" ? "is-selected" : ""} onClick={() => onThemeChange("light")}><Sun size={14} /> Light</button>
-            <button class={theme === "dark" ? "is-selected" : ""} onClick={() => onThemeChange("dark")}><Moon size={14} /> Dark</button>
+            <button type="button" title="Light theme" aria-label="Light theme" class={theme === "light" ? "is-selected" : ""} onClick={() => onThemeChange("light")}><Sun size={14} /> Light</button>
+            <button type="button" title="Dark theme" aria-label="Dark theme" class={theme === "dark" ? "is-selected" : ""} onClick={() => onThemeChange("dark")}><Moon size={14} /> Dark</button>
           </div>
         </section>
         <section class="settings-row"><i><Type size={18} /></i><div><h2>Typography</h2><p>Manrope headings, DM Sans interface text and DM Mono metadata.</p></div><span>EDITORIAL</span></section>
