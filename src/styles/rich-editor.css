@@ -28,3 +28,13 @@
 .rich-editor-content pre code { padding: 0; background: transparent; }
 .rich-editor-content a { color: var(--accent); text-decoration: underline; }
 .rich-editor-content p.is-editor-empty:first-child::before { float: left; height: 0; color: var(--muted); content: attr(data-placeholder); pointer-events: none; }
+
+.rich-editor-tool { flex: 0 0 auto; }
+.rich-editor-content img { display: block; max-width: min(100%, 720px); max-height: 420px; height: auto; object-fit: contain; margin: 12px auto; }
+.rich-editor-content .tiptap-mathematics-render { max-width: 100%; overflow-x: auto; }
+.rich-editor-content .tiptap-mathematics-render[data-type="block-math"] { display: block; margin: 18px auto; text-align: center; }
+.rich-editor-content [data-card-video] { display: flex; min-height: 74px; align-items: center; justify-content: center; margin: 12px 0; border: 1px dashed var(--line); background: var(--paper-deep); color: var(--muted); font: 10px var(--mono); }
+.rich-editor-insert-dialog > p { margin: 0 0 12px; color: var(--muted); font: 11px/1.6 var(--sans); }
+.rich-editor-insert-dialog textarea { width: 100%; min-height: 76px; padding: 10px; resize: vertical; border: 1px solid var(--line); outline: none; background: var(--paper); color: var(--ink); font: 12px/1.6 var(--mono); }
+.rich-editor-insert-dialog textarea:focus { border-color: var(--accent); }
+.rich-editor-insert-dialog .prompt-confirm:disabled { opacity: .4; cursor: default; }
