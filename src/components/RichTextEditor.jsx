@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "preact/hooks";
 import { Editor } from "@tiptap/core";
 import StarterKit from "@tiptap/starter-kit";
 import { Markdown } from "@tiptap/markdown";
+import Placeholder from "@tiptap/extension-placeholder";
 import {
   Bold, Italic, Heading1, Heading2, List, ListOrdered,
   Quote, Code, Undo2, Redo2,
@@ -23,12 +24,13 @@ export default function RichTextEditor({ label, value = "", placeholder, onChang
   const editorRef = useRef(null);
   const onChangeRef = useRef(onChange);
   const [revision, setRevision] = useState(0);
+  const [editorInstance, setEditorInstance] = useState(null);
   onChangeRef.current = onChange;
 
   useEffect(() => {
     const editor = new Editor({
       element: hostRef.current,
-      extensions: [StarterKit, Markdown],
+      extensions: [StarterKit, Markdown, Placeholder.configure({ placeholder: placeholder || "" })],
       content: value,
       contentType: "markdown",
       editorProps: {
@@ -47,13 +49,16 @@ export default function RichTextEditor({ label, value = "", placeholder, onChang
     });
 
     editorRef.current = editor;
+    setEditorInstance(editor);
     return () => {
       editor.destroy();
       editorRef.current = null;
+      setEditorInstance(null);
     };
   }, []);
 
-  const editor = editorRef.current;
+  const editor = editorInstance;
+  void revision;
 
   return (
     <section class="rich-editor">

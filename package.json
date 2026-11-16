@@ -18,7 +18,8 @@
     "tailwindcss": "^4.3.5",
     "@tiptap/core": "^3.30.3",
     "@tiptap/markdown": "^3.30.3",
-    "@tiptap/starter-kit": "^3.30.3"
+    "@tiptap/starter-kit": "^3.30.3",
+    "@tiptap/extension-placeholder": "^3.30.3"
   },
   "devDependencies": {
     "@preact/preset-vite": "^2.10.5",
