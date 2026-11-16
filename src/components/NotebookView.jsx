@@ -7,7 +7,9 @@ import CardEditor from "./CardEditor";
 import ReviewSession from "./ReviewSession";
 
 function makeCard() {
-  return { id: crypto.randomUUID(), front: "## Your question\n\nWrite a prompt here.", back: "Write the answer here.", chapterId: "" };
+  return { id: crypto.randomUUID(), front: "## Your question
+
+Write a prompt here.", back: "Write the answer here.", chapterId: "" };
 }
 const makeId = () => crypto.randomUUID();
 const normalizeName = (value) => String(value || "").trim().toLocaleLowerCase();
@@ -90,6 +92,17 @@ export default function NotebookView({ notebook, onUpdate, onBack, onRequestText
     setSelectedCardIds([]);
     if (removing.has(selectedCardId)) setSelectedCardId(next[0]?.id || null);
   }
+  function resetCardSchedules(ids) {
+    const resetting = new Set(ids);
+    const next = cards.map((card) => {
+      if (!resetting.has(card.id)) return card;
+      const cleanCard = { ...card };
+      delete cleanCard.fsrs;
+      return cleanCard;
+    });
+    onUpdate({ flashcards: next, cards: next.length });
+  }
+
   function toggleCardSelection(id) {
     setSelectedCardIds((items) => items.includes(id) ? items.filter((item) => item !== id) : [...items, id]);
   }
@@ -133,7 +146,8 @@ export default function NotebookView({ notebook, onUpdate, onBack, onRequestText
   if (editingCard) {
     return <CardEditor key={editingCard.id} card={editingCard} chapters={chapters}
       onSave={saveCard} existingCards={cards} onCancel={() => { setEditingCardId(null); setNewCard(null); }}
-      onAddChapter={addChapter} onDelete={() => { deleteCards([editingCard.id]); setEditingCardId(null); }} />;
+      onAddChapter={addChapter} onDelete={() => { deleteCards([editingCard.id]); setEditingCardId(null); }}
+      onResetSchedule={(id) => resetCardSchedules([id])} />;
   }
 
   if (reviewing) {
@@ -187,6 +201,7 @@ export default function NotebookView({ notebook, onUpdate, onBack, onRequestText
                   setChapterFilter(targetChapterId === "__unassigned" ? "all" : targetChapterId);
                   setTargetChapterId("");
                 }}>Move</button>
+                <button type="button" onClick={() => { resetCardSchedules(selectedCardIds); setSelectedCardIds([]); }}>Reset schedule</button>
                 <button type="button" onClick={() => setSelectedCardIds([])}>Clear</button>
                 <button type="button" class="delete-selected" onClick={() => askDelete("Delete selected cards?", "Permanently delete " + selectedCardIds.length + " selected cards?", () => deleteCards(selectedCardIds))}><Trash2 size={12} /> Delete</button>
               </div>}
@@ -199,7 +214,8 @@ export default function NotebookView({ notebook, onUpdate, onBack, onRequestText
                     <input class="browse-card-checkbox" type="checkbox" aria-label="Select card" checked={selectedCardIds.includes(card.id)} onChange={() => toggleCardSelection(card.id)} />
                     <button type="button" class="browse-card-select" onClick={() => setSelectedCardId(card.id)}>
                       <span class="browse-card-index">{String(index + 1).padStart(2, "0")}</span>
-                      <span class="browse-card-copy"><strong>{String(card.front || "").replace(/[#>*_\x60]/g, "").trim().split("\n")[0] || "Untitled question"}</strong><small>{chapter?.name || "Unassigned"}</small></span>
+                      <span class="browse-card-copy"><strong>{String(card.front || "").replace(/[#>*_\x60]/g, "").trim().split("
+")[0] || "Untitled question"}</strong><small>{chapter?.name || "Unassigned"}</small></span>
                     </button>
                   </div>
                 );

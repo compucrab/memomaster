@@ -151,3 +151,9 @@
 .study-card-prose .katex-display { font-size: 1.45em; }
 .study-card-prose .study-math-block .katex { font-size: 1.5em; }
 .study-card-prose .study-card-image { max-width: 100%; max-height: 560px; height: auto; }
+
+
+.review-rating-options { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 9px; }
+.review-rating.good { border-color: color-mix(in srgb, var(--accent) 55%, var(--line)); background: color-mix(in srgb, var(--accent) 8%, var(--surface)); color: var(--ink); }
+.review-rating.good:hover { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, var(--surface)); }
+@media (max-width: 700px) { .review-rating-options { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
