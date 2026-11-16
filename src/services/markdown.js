@@ -105,7 +105,7 @@ export function renderMarkdown(source = "") {
 
   const lines = normalizeText(source).replaceAll("\r\n", "\n").split("\n");
   for (const line of lines) {
-    const displayMath = line.match(/^\\s*\\$\\$([\\s\\S]+)\\$\\$\\s*$/);
+    const displayMath = line.match(/^\s*\$\$([\s\S]+)\$\$\s*$/);
     if (displayMath) {
       flushParagraph(); flushList(); flushQuote();
       output.push('<div class="study-math-block">' + katex.renderToString(displayMath[1], { displayMode: true, throwOnError: false, strict: "ignore" }) + "</div>");
