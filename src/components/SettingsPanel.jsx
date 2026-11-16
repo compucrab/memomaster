@@ -1,5 +1,5 @@
 import { useEffect, useState } from "preact/hooks";
-import { ArrowLeft, Palette, Type, FolderArchive, Keyboard, Moon, Sun, Brain, RotateCcw } from "lucide-preact";
+import { ArrowLeft, Palette, Moon, Sun, Brain, RotateCcw } from "lucide-preact";
 import { DEFAULT_FSRS_SETTINGS, normalizeFsrsSettings } from "../services/fsrsSettings";
 
 export default function SettingsPanel({ theme, onThemeChange, fsrsSettings, onFsrsSettingsChange, onBack }) {
@@ -31,9 +31,6 @@ export default function SettingsPanel({ theme, onThemeChange, fsrsSettings, onFs
             <button type="button" title="Dark theme" aria-label="Dark theme" class={theme === "dark" ? "is-selected" : ""} onClick={() => onThemeChange("dark")}><Moon size={14} /> Dark</button>
           </div>
         </section>
-        <section class="settings-row"><i><Type size={18} /></i><div><h2>Typography</h2><p>Manrope headings, DM Sans interface text and DM Mono metadata.</p></div><span>EDITORIAL</span></section>
-        <section class="settings-row"><i><FolderArchive size={18} /></i><div><h2>Project files</h2><p>Import and export the library as a portable .memz ZIP archive from the File menu.</p></div><span>READY</span></section>
-        <section class="settings-row"><i><Keyboard size={18} /></i><div><h2>Keyboard shortcuts</h2><p>Ctrl+N: New notebook · Ctrl+Shift+N: New project · Ctrl+O: Open project · Ctrl+S: Save project.</p></div><span>DESKTOP</span></section>
       </div>
       <section class="fsrs-settings-panel">
         <div class="fsrs-settings-heading"><i><Brain size={18}/></i><div><h2>FSRS scheduling</h2><p>Shared scheduling preferences for all notebooks. Existing review history and due dates are preserved.</p></div></div>
