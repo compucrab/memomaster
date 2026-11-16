@@ -26,7 +26,7 @@ const ensureExtension = (path) => path.toLowerCase().endsWith(".memz") ? path : 
 const normalizeLibrary = (items) => items.map((notebook) => ({
   ...notebook,
   chapters: (notebook.chapters || []).map(({ topics, ...chapter }) => chapter),
-  flashcards: (notebook.flashcards || []).map(({ topicId, ...card }) => card),
+  ...(Array.isArray(notebook.flashcards) ? { flashcards: notebook.flashcards.map((card) => { const cleanCard = { ...card }; delete cleanCard.topicId; return cleanCard; }) } : {}),
 }));
 
 export default function Layout() {
