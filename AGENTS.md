@@ -47,7 +47,7 @@ Do not claim or implement against assumptions that are not true:
 - Theme selection is persisted in `localStorage`.
 - Rust owns SQLite access and native file read/write commands; the frontend owns the current notebook data model and serialization.
 - The Tauri dialog plugin provides native Open and Save dialogs.
-- The `.memz` project archive is handled by `src/services/projectArchive.js`; card scheduling fields and notebook review history must survive export/import.
+- The `.memz` project archive is handled by `src/services/projectArchive.js`; card scheduling fields plus notebook `reviewHistory` and `practiceHistory` must survive export/import.
 - Card front/back editing uses Tiptap (`@tiptap/core`, `@tiptap/starter-kit`, `@tiptap/markdown`) through `src/components/RichTextEditor.jsx`; the editor serializes content to Markdown strings.
 - `src/services/markdown.js` renders saved Markdown for read-only study mode.
 - FSRS review scheduling is implemented in `src/services/fsrs.js`; `NotebookView.jsx` provides Browse and Study modes, `ReviewSession.jsx` handles both scheduled and unscheduled queues, and `StudyStatus.jsx` presents local progress reports. The consistency graph counts both scheduled reviews and unscheduled practice, but only scheduled reviews contribute to FSRS recall/outcome statistics.
