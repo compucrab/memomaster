@@ -9,14 +9,14 @@ function escapeHtml(value) {
 
 function renderInline(source) {
   return escapeHtml(source)
-    .replace(/`([^`]+)`/g, "<code>$1</code>")
-    .replace(/**(.+?)**/g, "<strong>$1</strong>")
+    .replace(/\x60([^\x60]+)\x60/g, "<code>$1</code>")
+    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
     .replace(/__(.+?)__/g, "<strong>$1</strong>")
-    .replace(/*(.+?)*/g, "<em>$1</em>")
+    .replace(/\*(.+?)\*/g, "<em>$1</em>")
     .replace(/_(.+?)_/g, "<em>$1</em>")
     .replace(/~~(.+?)~~/g, "<del>$1</del>")
     .replace(
-      /[(.+?)]((https?://[^s)]+))/g,
+      /\[(.+?)\]\((https?:\/\/[^\s)]+)\)/g,
       '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>',
     );
 }
@@ -28,31 +28,32 @@ export function renderMarkdown(source = "") {
   let quote = [];
   let code = [];
   let inCode = false;
+  const fence = String.fromCharCode(96).repeat(3);
 
   function flushParagraph() {
-    if (paragraph.length) output.push(`<p>${renderInline(paragraph.join(" "))}</p>`);
+    if (paragraph.length) output.push("<p>" + renderInline(paragraph.join(" ")) + "</p>");
     paragraph = [];
   }
   function flushList() {
     if (list) {
-      const items = list.items.map((item) => `<li>${renderInline(item)}</li>`).join("");
-      output.push(`<${list.tag}>${items}</${list.tag}>`);
+      const items = list.items.map((item) => "<li>" + renderInline(item) + "</li>").join("");
+      output.push("<" + list.tag + ">" + items + "</" + list.tag + ">");
     }
     list = null;
   }
   function flushQuote() {
-    if (quote.length) output.push(`<blockquote>${renderInline(quote.join(" "))}</blockquote>`);
+    if (quote.length) output.push("<blockquote>" + renderInline(quote.join(" ")) + "</blockquote>");
     quote = [];
   }
   function flushCode() {
-    output.push(`<pre><code>${escapeHtml(code.join("\n"))}</code></pre>`);
+    output.push("<pre><code>" + escapeHtml(code.join("\n")) + "</code></pre>");
     code = [];
     inCode = false;
   }
 
   const lines = String(source).replaceAll("\r\n", "\n").split("\n");
   for (const line of lines) {
-    if (line.startsWith("```")) {
+    if (line.startsWith(fence)) {
       if (inCode) flushCode();
       else {
         flushParagraph(); flushList(); flushQuote();
@@ -72,7 +73,7 @@ export function renderMarkdown(source = "") {
     if (heading) {
       flushList(); flushQuote();
       const level = heading[1].length;
-      output.push(`<h${level}>${renderInline(heading[2])}</h${level}>`);
+      output.push("<h" + level + ">" + renderInline(heading[2]) + "</h" + level + ">");
     } else if (bullet || ordered) {
       flushQuote();
       const tag = bullet ? "ul" : "ol";
