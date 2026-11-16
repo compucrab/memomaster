@@ -17,12 +17,20 @@ export const CardImage = Image.extend({
     const metadata = String(token.title || "").match(/width=(\d+);align=(left|center|right)/);
     return { type: "image", attrs: { src: safeMediaUrl(token.href), alt: token.text || "", title: null, width: metadata ? Number(metadata[1]) : 420, align: metadata ? metadata[2] : "center" } };
   },
-  renderMarkdown({ node }) {
+  renderMarkdown(node) {
+    const attrs = node?.attrs || {};
+    const src = safeMediaUrl(attrs.src);
+    if (!src) return "";
+    const alt = String(attrs.alt || "").replace(/[\]\\]/g, "\\  renderMarkdown({ node }) {
     const src = safeMediaUrl(node.attrs.src);
     if (!src) return "";
     const alt = String(node.attrs.alt || "").replace(/[\]\\]/g, "\\$&");
     const width = Math.max(40, Math.min(1600, Number(node.attrs.width) || 420));
     const align = ["left", "center", "right"].includes(node.attrs.align) ? node.attrs.align : "center";
+    return `![${alt}](${src} "width=${width};align=${align}")`;
+  },");
+    const width = Math.max(40, Math.min(1600, Number(attrs.width) || 420));
+    const align = ["left", "center", "right"].includes(attrs.align) ? attrs.align : "center";
     return `![${alt}](${src} "width=${width};align=${align}")`;
   },
 });
@@ -38,6 +46,6 @@ export const CardVideo = Node.create({
     tokenize(source) { const match = /^@\[video\]\((https?:\/\/[^\s)]+)\)/.exec(source); return match ? { type: "cardVideo", raw: match[0], href: match[1] } : undefined; },
   },
   parseMarkdown: (token) => ({ type: "cardVideo", attrs: { url: token.href || "", provider: "video" } }),
-  renderMarkdown: ({ node }) => { const url = safeMediaUrl(node.attrs.url); return url ? `@[video](${url})` : ""; },
+  renderMarkdown: (node) => { const url = safeMediaUrl(node?.attrs?.url); return url ? `@[video](${url})` : ""; },
 });
 export const CardMath = Mathematics.configure({ katexOptions: { throwOnError: false, strict: "ignore" } });
