@@ -1,0 +1,24 @@
+@reference "tailwindcss";
+
+.card-editor-page { @apply flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden; padding: 26px clamp(24px, 5vw, 72px) 32px; }
+.card-editor-header { @apply flex shrink-0 items-center justify-between gap-5 border-b pb-5; border-color: var(--line); }
+.card-editor-heading { @apply flex flex-1 items-baseline gap-3; }
+.card-editor-heading h1 { margin: 0; color: var(--ink); font: 700 23px var(--display); letter-spacing: -.045em; }
+.card-editor-heading span { color: var(--muted); font: 8px var(--mono); letter-spacing: .1em; }
+.card-editor-body { @apply flex min-h-0 flex-1 flex-col; width: min(100%, 1120px); margin: 26px auto 0; }
+.card-editor-tabs { @apply flex shrink-0 gap-2 border-b; border-color: var(--line); }
+.card-editor-tabs button { padding: 11px 18px; border: 0; border-bottom: 2px solid transparent; background: transparent; color: var(--muted); cursor: pointer; font: 12px var(--sans); }
+.card-editor-tabs button.is-active { border-bottom-color: var(--accent); color: var(--ink); }
+.card-editor-writing { @apply min-h-0 flex-1; padding: 20px 0; }
+.card-editor-writing .rich-editor { height: 100%; grid-template-rows: auto auto minmax(0, 1fr); }
+.card-editor-writing .rich-editor-surface { min-height: 0; max-height: none; height: 100%; overflow-y: auto; }
+.card-editor-writing .rich-editor-content { min-height: 100%; padding: 20px 22px; font-size: 15px; line-height: 1.8; }
+.card-editor-writing .rich-editor-content h1 { font-size: 27px; }
+.card-editor-writing .rich-editor-content h2 { font-size: 23px; }
+.card-editor-writing .rich-editor-content h3 { font-size: 19px; }
+.card-editor-writing .rich-editor-content li + li { margin-top: 6px; }
+.card-editor-organization { @apply grid shrink-0 items-end gap-3 border-t pt-5; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto; border-color: var(--line); }
+.card-editor-organization label { @apply grid min-w-0 gap-2; color: var(--muted); font: 8px var(--mono); letter-spacing: .13em; }
+.card-editor-organization select { width: 100%; padding: 11px 12px; border: 1px solid var(--line); outline: none; background: var(--paper); color: var(--ink); font: 12px var(--sans); }
+.card-editor-organization select:focus { border-color: var(--accent); }
+@media (max-width: 760px) { .card-editor-organization { grid-template-columns: 1fr auto; } .card-editor-heading span { display: none; } }

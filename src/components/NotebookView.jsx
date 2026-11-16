@@ -1,6 +1,7 @@
 import { useEffect, useState } from "preact/hooks";
 import { ArrowLeft, ChevronLeft, ChevronRight, Layers3, Plus } from "lucide-preact";
 import Flashcard from "./Flashcard";
+import CardEditor from "./CardEditor";
 
 function makeCard() {
   return { id: crypto.randomUUID(), front: "## Your question\n\nWrite a prompt here.", back: "Write the answer here.", chapterId: "", topicId: "" };
@@ -56,7 +57,20 @@ export default function NotebookView({ notebook, onUpdate, onBack, onRequestText
   function move(offset) {
     setActiveIndex((index) => Math.min(Math.max(index + offset, 0), cards.length - 1));
     setShowBack(false);
-    setEditing(false);
+  }
+
+  if (editing && activeCard) {
+    return (
+      <CardEditor
+        key={activeCard.id}
+        card={activeCard}
+        chapters={chapters}
+        onSave={(draft) => { updateCard(draft); setEditing(false); }}
+        onCancel={() => setEditing(false)}
+        onAddChapter={addChapter}
+        onAddTopic={addTopic}
+      />
+    );
   }
 
   return (
@@ -70,17 +84,9 @@ export default function NotebookView({ notebook, onUpdate, onBack, onRequestText
         <div class="study-stage">
           <Flashcard
             card={activeCard}
-            chapters={chapters}
-            index={activeIndex}
-            total={cards.length}
             showBack={showBack}
-            editing={editing}
             onFlip={() => setShowBack((value) => !value)}
             onEdit={() => setEditing(true)}
-            onChange={updateCard}
-            onDone={() => setEditing(false)}
-            onAddChapter={addChapter}
-            onAddTopic={addTopic}
           />
           <footer class="study-navigation">
             <button class="study-nav-button" onClick={() => move(-1)} disabled={activeIndex === 0}><ChevronLeft size={17} /> Previous</button>

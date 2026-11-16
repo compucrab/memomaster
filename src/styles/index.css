@@ -8,6 +8,7 @@
 @import "./topbar.css";
 @import "./notebooks.css";
 @import "./flashcards.css";
+@import "./card-editor.css";
 @import "./rich-editor.css";
 @import "./context-menu.css";
 @import "./settings.css";
