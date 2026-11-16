@@ -10,7 +10,10 @@
 .settings-row p { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.6; }
 .settings-row > span { color: var(--muted); font: 8px var(--mono); letter-spacing: .1em; }
 .theme-switch { @apply flex items-center gap-1 rounded-sm p-1; background: var(--paper-deep); }
-.theme-switch button { @apply inline-flex items-center gap-1 rounded-sm border-0 px-3 py-2; background: transparent; color: var(--muted); cursor: pointer; font: 10px var(--sans); }
+.theme-switch button { @apply grid h-[28px] w-[30px] place-items-center rounded-sm border-0 p-0; background: transparent; color: var(--muted); cursor: pointer; }
+.theme-switch button svg { width: 13px; height: 13px; }
+.theme-switch button:hover { color: var(--ink); }
+.theme-switch button:focus-visible { outline: 1px solid var(--accent); outline-offset: 1px; }
 .theme-switch button.is-selected { background: var(--surface); color: var(--ink); box-shadow: 0 1px 4px #0001; }
 .settings-back { @apply inline-flex items-center gap-2 border-0 bg-transparent p-0; margin-bottom: 28px; color: var(--muted); cursor: pointer; font: 9px var(--mono); letter-spacing: .08em; }
 .settings-back:hover { color: var(--ink); }
