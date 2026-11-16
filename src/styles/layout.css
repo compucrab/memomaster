@@ -1,0 +1,27 @@
+@reference "tailwindcss";
+.app-layout {
+  @apply flex h-screen w-full overflow-hidden;
+  background: var(--color-bg);
+}
+
+.app-main {
+  @apply flex min-w-0 flex-1 flex-col;
+}
+
+.workspace {
+  @apply min-h-0 flex-1 overflow-auto p-8;
+}
+
+.workspace-placeholder {
+  @apply max-w-[900px];
+}
+
+.workspace-placeholder h1 {
+  @apply text-[28px] font-semibold tracking-tight;
+  color: var(--color-text);
+}
+
+.workspace-placeholder p {
+  @apply mt-2;
+  color: var(--color-muted);
+}
