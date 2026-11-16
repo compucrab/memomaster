@@ -9,10 +9,37 @@ export const REVIEW_RATINGS = {
   easy: Rating.Easy,
 };
 
+const DAY = 86400000;
+
 function toDate(value, fallback) {
   if (!value) return fallback;
   const date = value instanceof Date ? value : new Date(value);
   return Number.isNaN(date.getTime()) ? fallback : date;
+}
+
+function studyDayIndex(value, rolloverHour) {
+  const date = new Date(value);
+  if (date.getHours() < rolloverHour) date.setDate(date.getDate() - 1);
+  return Math.floor(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / DAY);
+}
+
+// FSRS v5 measures elapsed days in fixed 24-hour blocks. Normalize review
+// timestamps to study-day boundaries so the configured rollover is respected.
+function toStudyTime(value, rolloverHour) {
+  return new Date(studyDayIndex(value, rolloverHour) * DAY);
+}
+
+function fromStudyTime(value, rolloverHour) {
+  const day = new Date(Math.floor(value.getTime() / DAY) * DAY);
+  return new Date(day.getUTCFullYear(), day.getUTCMonth(), day.getUTCDate(), rolloverHour);
+}
+
+function restoreDue(card, schedulerNow, actualNow, rolloverHour) {
+  if (card.state === State.Learning || card.state === State.Relearning) {
+    const delay = card.due.getTime() - schedulerNow.getTime();
+    return new Date(actualNow.getTime() + delay);
+  }
+  return fromStudyTime(card.due, rolloverHour);
 }
 
 export function getFsrsCard(card, now = new Date()) {
@@ -45,6 +72,19 @@ function serializeDates(record, fields) {
   return result;
 }
 
+function getScheduledCandidate(scheduler, card, choice, now, settings) {
+  const config = normalizeFsrsSettings(settings);
+  const schedulerNow = toStudyTime(now, config.rolloverHour);
+  const current = getFsrsCard(card, now);
+  const schedulerCard = {
+    ...current,
+    due: toStudyTime(current.due, config.rolloverHour),
+    last_review: current.last_review ? toStudyTime(current.last_review, config.rolloverHour) : undefined,
+  };
+  const result = scheduler.repeat(schedulerCard, schedulerNow)[REVIEW_RATINGS[choice]];
+  return { result, schedulerNow, config };
+}
+
 export function formatInterval(due, now = new Date()) {
   const minutes = Math.max(0, Math.round((new Date(due).getTime() - now.getTime()) / 60000));
   if (minutes < 60) return minutes <= 1 ? "1 min" : `${minutes} mins`;
@@ -60,41 +100,56 @@ export function formatInterval(due, now = new Date()) {
 
 export function getReviewOptions(card, now = new Date(), settings = DEFAULT_FSRS_SETTINGS) {
   const scheduler = makeScheduler(settings);
-  const scheduled = scheduler.repeat(getFsrsCard(card, now), now);
-  return Object.fromEntries(Object.entries(REVIEW_RATINGS).map(([key, rating]) => {
-    const due = scheduled[rating].card.due;
-    return [key, { due, interval: formatInterval(due, now) }];
+  return Object.fromEntries(Object.keys(REVIEW_RATINGS).map((choice) => {
+    const { result, schedulerNow, config } = getScheduledCandidate(scheduler, card, choice, now, settings);
+    const due = restoreDue(result.card, schedulerNow, now, config.rolloverHour);
+    return [choice, { due, interval: formatInterval(due, now) }];
   }));
 }
 
 export function scheduleReview(card, choice, now = new Date(), settings = DEFAULT_FSRS_SETTINGS) {
-  const rating = REVIEW_RATINGS[choice];
-  if (!rating) throw new Error("Unknown review rating");
+  if (!REVIEW_RATINGS[choice]) throw new Error("Unknown review rating");
   const scheduler = makeScheduler(settings);
-  const result = scheduler.repeat(getFsrsCard(card, now), now)[rating];
+  const { result, schedulerNow, config } = getScheduledCandidate(scheduler, card, choice, now, settings);
+  const nextCard = {
+    ...result.card,
+    due: restoreDue(result.card, schedulerNow, now, config.rolloverHour),
+    last_review: now,
+  };
+  const current = getFsrsCard(card, now);
+  const nextLog = {
+    ...result.log,
+    due: current.due,
+    review: now,
+    rating: choice,
+    cardId: card.id,
+  };
   return {
-    fsrs: serializeDates(result.card, ["due", "last_review"]),
-    log: {
-      ...serializeDates(result.log, ["due", "review"]),
-      rating: choice,
-      cardId: card.id,
-    },
+    fsrs: serializeDates(nextCard, ["due", "last_review"]),
+    log: serializeDates(nextLog, ["due", "review"]),
   };
 }
 
 export function getMemoryOverview(card, now = new Date(), settings = DEFAULT_FSRS_SETTINGS) {
   const state = card?.fsrs;
   if (!state || !state.last_review || !(state.stability > 0)) return null;
-  const scheduler = makeScheduler(settings);
+  const config = normalizeFsrsSettings(settings);
+  const scheduler = makeScheduler(config);
   const lastReview = toDate(state.last_review, null);
   if (!lastReview) return null;
-  const elapsedDays = Math.max(0, (now.getTime() - lastReview.getTime()) / 86400000);
-  const retrievability = scheduler.get_retrievability(getFsrsCard(card, now), now, false);
+  const schedulerLastReview = toStudyTime(lastReview, config.rolloverHour);
+  const schedulerNow = toStudyTime(now, config.rolloverHour);
+  const schedulerCard = {
+    ...getFsrsCard(card, now),
+    due: toStudyTime(toDate(state.due, now), config.rolloverHour),
+    last_review: schedulerLastReview,
+  };
+  const elapsedDays = Math.max(0, (schedulerNow.getTime() - schedulerLastReview.getTime()) / DAY);
+  const retrievability = scheduler.get_retrievability(schedulerCard, schedulerNow, false);
   const horizon = Math.max(7, Math.min(365, Math.ceil(state.stability * 3)));
   const curve = Array.from({ length: 31 }, (_, index) => {
     const days = horizon * index / 30;
-    const at = new Date(lastReview.getTime() + days * 86400000);
-    return { days, probability: scheduler.get_retrievability(getFsrsCard(card, at), at, false) };
+    return { days, probability: scheduler.forgetting_curve(days, state.stability) };
   });
   return {
     stability: state.stability,
