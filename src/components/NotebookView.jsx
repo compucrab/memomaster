@@ -60,9 +60,14 @@ export default function NotebookView({ notebook, onUpdate, onBack, onRequestText
   }
 
   function saveCard(draft) {
+    const { topicId, ...cleanDraft } = draft;
     const next = cards.some(card => card.id === draft.id)
-      ? cards.map(card => card.id === draft.id ? { ...card, ...draft } : card)
-      : [...cards, draft];
+      ? cards.map(card => {
+        if (card.id !== draft.id) return card;
+        const { topicId: oldTopicId, ...cleanCard } = card;
+        return { ...cleanCard, ...cleanDraft };
+      })
+      : [...cards, cleanDraft];
     onUpdate({ flashcards: next, cards: next.length, markdown: undefined });
     setSelectedCardId(draft.id);
     setNewCard(null);
@@ -186,7 +191,7 @@ export default function NotebookView({ notebook, onUpdate, onBack, onRequestText
               {visibleCards.length ? visibleCards.map((card, index) => {
                 const chapter = chapters.find(item => item.id === card.chapterId);
                 return (
-                  <div key={card.id} class={`browse-card-row ${selectedCard?.id === card.id ? "selected" : ""} ${selectedCardIds.includes(card.id) ? "checked" : ""}`}>
+                  <div key={card.id} class={`browse-card-row ${selectedCard?.id === card.id ? "selected" : ""} ${selectedCardIds.includes(card.id) ? "checked" : ""}`} onContextMenu={(event) => event.preventDefault()}>
                     <input class="browse-card-checkbox" type="checkbox" aria-label="Select card" checked={selectedCardIds.includes(card.id)} onChange={() => toggleCardSelection(card.id)} />
                     <button type="button" class="browse-card-select" onClick={() => setSelectedCardId(card.id)}>
                       <span class="browse-card-index">{String(index + 1).padStart(2, "0")}</span>
