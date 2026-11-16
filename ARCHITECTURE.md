@@ -67,7 +67,7 @@ The Tiptap Markdown extension is currently documented as beta. Keep Markdown as 
 
 ## Current data model
 
-A notebook contains id, title, color, chapters, flashcards, reviewHistory, and a cached cards count. Each card contains id, front, back, chapterId, topicId, and an optional fsrs record. The fsrs record follows ts-fsrs Card fields (due, stability, difficulty, elapsed_days, scheduled_days, reps, lapses, state, and last_review). Review history records each review's rating, card ID, and FSRS log fields. Keep cards synchronized when the card collection changes.
+A notebook contains id, title, color, chapters, flashcards, reviewHistory, practiceHistory, and a cached cards count. Each card contains id, front, back, chapterId, topicId, and an optional fsrs record. The fsrs record follows ts-fsrs Card fields (due, stability, difficulty, elapsed_days, scheduled_days, reps, lapses, state, and last_review). Review history records each review's rating, card ID, and FSRS log fields. Keep cards synchronized when the card collection changes.
 
 `src/services/fsrs.js` wraps `ts-fsrs` and converts persisted ISO date strings to/from Date objects. `NotebookView.jsx` owns Browse filters/preview and Study mode/scope selection. `ReviewSession.jsx` builds a queue for the selected scope; scheduled sessions preview intervals and update FSRS state, while unscheduled sessions only append to `practiceHistory`. `StudyStatus.jsx` derives the yearly activity heatmap, streaks, review outcomes, upcoming due counts, recall rate, and notebook progress from saved review history and card state. These reports are local calculations; no analytics are sent externally.
 
