@@ -5,7 +5,6 @@ import {
 import { renderMarkdown } from "../services/markdown";
 import CardEditor from "./CardEditor";
 import ReviewSession from "./ReviewSession";
-import { findSimilarQuestion } from "../services/questionSimilarity";
 
 function makeCard() {
   return { id: crypto.randomUUID(), front: "## Your question\n\nWrite a prompt here.", back: "Write the answer here.", chapterId: "", topicId: "" };
@@ -20,42 +19,35 @@ export default function NotebookView({ notebook, onUpdate, onBack, onRequestText
   const [selectedCardId, setSelectedCardId] = useState(cards[0]?.id || null);
   const [search, setSearch] = useState("");
   const [chapterFilter, setChapterFilter] = useState("all");
-  const [topicFilter, setTopicFilter] = useState("all");
   const [editingCardId, setEditingCardId] = useState(null);
   const [studyType, setStudyType] = useState("scheduled");
   const [scopeType, setScopeType] = useState("notebook");
   const [scopeChapterId, setScopeChapterId] = useState(chapters[0]?.id || "");
-  const [scopeTopicId, setScopeTopicId] = useState("");
   const [reviewing, setReviewing] = useState(false);
   const [newCard, setNewCard] = useState(null);
   const [selectedCardIds, setSelectedCardIds] = useState([]);
-  const [cardMenu, setCardMenu] = useState(null);
   const [confirmAction, setConfirmAction] = useState(null);
+  const [targetChapterId, setTargetChapterId] = useState("");
 
   const editingCard = cards.find(card => card.id === editingCardId) || (newCard?.id === editingCardId ? newCard : null);
-  const filterTopics = chapters.find(chapter => chapter.id === chapterFilter)?.topics || [];
-  const scopeTopics = chapters.find(chapter => chapter.id === scopeChapterId)?.topics || [];
 
   const visibleCards = useMemo(() => {
     const needle = search.trim().toLocaleLowerCase();
     return cards.filter(card => {
       const chapter = chapters.find(item => item.id === card.chapterId);
-      const topic = chapter?.topics?.find(item => item.id === card.topicId);
-      const matchesSearch = !needle || [card.front, card.back, chapter?.name, topic?.name]
+      const matchesSearch = !needle || [card.front, card.back, chapter?.name]
         .some(value => String(value || "").toLocaleLowerCase().includes(needle));
       const matchesChapter = chapterFilter === "all" || card.chapterId === chapterFilter;
-      const matchesTopic = topicFilter === "all" || card.topicId === topicFilter;
-      return matchesSearch && matchesChapter && matchesTopic;
+      return matchesSearch && matchesChapter;
     });
-  }, [cards, chapters, search, chapterFilter, topicFilter]);
+  }, [cards, chapters, search, chapterFilter]);
 
   const selectedCard = visibleCards.find(card => card.id === selectedCardId) || visibleCards[0] || null;
 
   const scopedCards = useMemo(() => cards.filter(card => {
     if (scopeType === "chapter") return card.chapterId === scopeChapterId;
-    if (scopeType === "topic") return card.chapterId === scopeChapterId && card.topicId === scopeTopicId;
     return true;
-  }), [cards, scopeType, scopeChapterId, scopeTopicId]);
+  }), [cards, scopeType, scopeChapterId]);
   const dueCards = scopedCards.filter(card => !card.fsrs?.due || new Date(card.fsrs.due) <= new Date());
   const studyCards = studyType === "scheduled" ? dueCards : scopedCards;
 
@@ -107,25 +99,8 @@ export default function NotebookView({ notebook, onUpdate, onBack, onRequestText
     });
     setSelectedCardIds((items) => items.filter((id) => !removedIds.includes(id)));
     if (removedIds.includes(selectedCardId)) setSelectedCardId(nextCards[0]?.id || null);
-    if (scopeChapterId === chapter.id) { setScopeChapterId(""); setScopeTopicId(""); setScopeType("notebook"); }
-    if (chapterFilter === chapter.id) { setChapterFilter("all"); setTopicFilter("all"); }
-  }
-  function deleteTopic(chapter, topic) {
-    const removedIds = cards.filter((card) => card.chapterId === chapter.id && card.topicId === topic.id).map((card) => card.id);
-    const nextCards = cards.filter((card) => !(card.chapterId === chapter.id && card.topicId === topic.id));
-    const nextChapters = chapters.map((item) => item.id === chapter.id ? { ...item, topics: (item.topics || []).filter((entry) => entry.id !== topic.id) } : item);
-    const removed = new Set(removedIds);
-    onUpdate({
-      chapters: nextChapters,
-      flashcards: nextCards,
-      cards: nextCards.length,
-      reviewHistory: (notebook.reviewHistory || []).filter((entry) => !removed.has(entry.cardId)),
-      practiceHistory: (notebook.practiceHistory || []).filter((entry) => !removed.has(entry.cardId)),
-    });
-    setSelectedCardIds((items) => items.filter((id) => !removedIds.includes(id)));
-    if (removedIds.includes(selectedCardId)) setSelectedCardId(nextCards[0]?.id || null);
-    if (scopeTopicId === topic.id) setScopeTopicId("");
-    if (topicFilter === topic.id) setTopicFilter("all");
+    if (scopeChapterId === chapter.id) { setScopeChapterId(""); setScopeType("notebook"); }
+    if (chapterFilter === chapter.id) setChapterFilter("all");
   }
   function addCard() {
     const card = makeCard();
@@ -148,30 +123,14 @@ export default function NotebookView({ notebook, onUpdate, onBack, onRequestText
     });
   }
 
-  function addTopic(chapterId) {
-    onRequestText({
-      title: "New topic", placeholder: "Topic name", submitLabel: "Create topic",
-      onSubmit: name => {
-        const title = name.trim();
-        if (!title) return "Please enter a topic name.";
-        const parent = chapters.find((chapter) => chapter.id === chapterId);
-        if (parent?.topics?.some((topic) => normalizeName(topic.name) === normalizeName(title))) return "This chapter already has a topic with that name.";
-        const next = chapters.map(chapter => chapter.id === chapterId
-          ? { ...chapter, topics: [...(chapter.topics || []), { id: makeId(), name: title }] }
-          : chapter);
-        onUpdate({ chapters: next });
-      },
-    });
-  }
-
   if (editingCard) {
     return <CardEditor key={editingCard.id} card={editingCard} chapters={chapters}
       onSave={saveCard} existingCards={cards} onCancel={() => { setEditingCardId(null); setNewCard(null); }}
-      onAddChapter={addChapter} onAddTopic={addTopic} />;
+      onAddChapter={addChapter} onDelete={() => askDelete("Delete card?", "This card and its review history will be permanently deleted.", () => { deleteCards([editingCard.id]); setEditingCardId(null); })} />;
   }
 
   if (reviewing) {
-    return <ReviewSession key={`${studyType}-${scopeType}-${scopeChapterId}-${scopeTopicId}`}
+    return <ReviewSession key={`${studyType}-${scopeType}-${scopeChapterId}`}
       cards={studyCards} mode={studyType}
       onReview={handleReview} onExit={() => setReviewing(false)} />;
   }
@@ -190,24 +149,20 @@ export default function NotebookView({ notebook, onUpdate, onBack, onRequestText
       </nav>
 
       {tab === "browse" ? (
-        <div class="browse-workspace" onClick={() => cardMenu && setCardMenu(null)}>
+        <div class="browse-workspace">
           <aside class="browse-list-panel">
             <div class="browse-tools">
               <label class="browse-search"><Search size={14} /><input value={search} onInput={event => setSearch(event.currentTarget.value)} placeholder="Search question or answer..." /></label>
               <div class="browse-filters">
-                <select value={chapterFilter} onChange={event => { setChapterFilter(event.currentTarget.value); setTopicFilter("all"); }}>
+                <select value={chapterFilter} onChange={event => setChapterFilter(event.currentTarget.value)}>
                   <option value="all">All chapters</option>
                   {chapters.map(chapter => <option value={chapter.id}>{chapter.name}</option>)}
                 </select>
-                <select value={topicFilter} onChange={event => setTopicFilter(event.currentTarget.value)} disabled={chapterFilter === "all" || !filterTopics.length}>
-                  <option value="all">All topics</option>
-                  {filterTopics.map(topic => <option value={topic.id}>{topic.name}</option>)}
                 </select>
               </div>
               <div class="browse-list-count">{visibleCards.length} OF {cards.length} CARDS</div>
               <div class="browse-structure-actions">
                 {chapterFilter !== "all" && (() => { const chapter = chapters.find((item) => item.id === chapterFilter); return chapter ? <button type="button" onClick={() => askDelete("Delete chapter?", chapter.name + " and all its topics and cards will be permanently deleted.", () => deleteChapter(chapter))}><Trash2 size={12} /> Delete chapter</button> : null; })()}
-                {chapterFilter !== "all" && topicFilter !== "all" && (() => { const chapter = chapters.find((item) => item.id === chapterFilter); const topic = chapter?.topics?.find((item) => item.id === topicFilter); return chapter && topic ? <button type="button" onClick={() => askDelete("Delete topic?", topic.name + " and its cards will be permanently deleted.", () => deleteTopic(chapter, topic))}><Trash2 size={12} /> Delete topic</button> : null; })()}
               </div>
               {selectedCardIds.length > 0 && <div class="browse-selection-bar"><span>{selectedCardIds.length} selected</span><button type="button" onClick={() => setSelectedCardIds([])}>Clear</button><button type="button" class="delete-selected" onClick={() => askDelete("Delete selected cards?", "Permanently delete " + selectedCardIds.length + " selected cards?", () => deleteCards(selectedCardIds))}><Trash2 size={12} /> Delete</button></div>}
             </div>
@@ -216,15 +171,11 @@ export default function NotebookView({ notebook, onUpdate, onBack, onRequestText
                 const chapter = chapters.find(item => item.id === card.chapterId);
                 const topic = chapter?.topics?.find(item => item.id === card.topicId);
                 return (
-                  <div key={card.id} class={`browse-card-row ${selectedCard?.id === card.id ? "selected" : ""} ${selectedCardIds.includes(card.id) ? "checked" : ""}`} onContextMenu={(event) => {
-                    event.preventDefault();
-                    if (!selectedCardIds.includes(card.id)) setSelectedCardIds([card.id]);
-                    setCardMenu({ x: event.clientX, y: event.clientY });
-                  }}>
+                  <div key={card.id} class={`browse-card-row ${selectedCard?.id === card.id ? "selected" : ""} ${selectedCardIds.includes(card.id) ? "checked" : ""}`}>
                     <input class="browse-card-checkbox" type="checkbox" aria-label="Select card" checked={selectedCardIds.includes(card.id)} onChange={() => toggleCardSelection(card.id)} />
                     <button type="button" class="browse-card-select" onClick={() => setSelectedCardId(card.id)}>
                       <span class="browse-card-index">{String(index + 1).padStart(2, "0")}</span>
-                      <span class="browse-card-copy"><strong>{String(card.front || "").replace(/[#>*_\x60]/g, "").trim().split("\n")[0] || "Untitled question"}</strong><small>{topic?.name || chapter?.name || "Unassigned"}</small></span>
+                      <span class="browse-card-copy"><strong>{String(card.front || "").replace(/[#>*_\x60]/g, "").trim().split("\n")[0] || "Untitled question"}</strong><small>{chapter?.name || "Unassigned"}</small></span>
                     </button>
                   </div>
                 );
@@ -242,9 +193,7 @@ export default function NotebookView({ notebook, onUpdate, onBack, onRequestText
                   <section><p>ANSWER</p><div class="study-card-prose" dangerouslySetInnerHTML={{ __html: renderMarkdown(selectedCard.back) }} /></section>
                 </div>
                 <footer class="browse-preview-meta">
-                  {chapters.find(item => item.id === selectedCard.chapterId)?.name || "No chapter"}
-                  <span>·</span>
-                  {chapters.find(item => item.id === selectedCard.chapterId)?.topics?.find(item => item.id === selectedCard.topicId)?.name || "No topic"}
+                  {chapters.find(item => item.id === selectedCard.chapterId)?.name || "Unassigned"}
                 </footer>
               </>
             ) : <div class="browse-preview-empty"><Layers3 size={26} /><p>Select a card to preview it.</p></div>}
@@ -268,7 +217,6 @@ export default function NotebookView({ notebook, onUpdate, onBack, onRequestText
                 <select value={scopeType} onChange={event => setScopeType(event.currentTarget.value)}>
                   <option value="notebook">Whole notebook</option>
                   <option value="chapter" disabled={!chapters.length}>Chapter</option>
-                  <option value="topic" disabled={!chapters.some(chapter => chapter.topics?.length)}>Topic</option>
                 </select>
               </label>
               {scopeType !== "notebook" && <label>CHAPTER
@@ -276,23 +224,15 @@ export default function NotebookView({ notebook, onUpdate, onBack, onRequestText
                   {chapters.map(chapter => <option value={chapter.id}>{chapter.name}</option>)}
                 </select>
               </label>}
-              {scopeType === "topic" && <label>TOPIC
-                <select value={scopeTopicId} onChange={event => setScopeTopicId(event.currentTarget.value)}>
-                  <option value="">Choose a topic</option>
-                  {scopeTopics.map(topic => <option value={topic.id}>{topic.name}</option>)}
-                </select>
               </label>}
             </div>
             <div class="study-scope-summary"><span>{studyCards.length} cards in this session</span><span>{studyType === "scheduled" ? "Due cards only" : "All cards · timeline unchanged"}</span></div>
-            <button class="study-primary study-start-button" disabled={!studyCards.length || (scopeType === "topic" && !scopeTopicId)} onClick={() => setReviewing(true)}>
+            <button class="study-primary study-start-button" disabled={!studyCards.length} onClick={() => setReviewing(true)}>
               <GraduationCap size={15} /> {studyCards.length ? "Start studying" : "No cards to study"}
             </button>
           </div>
         </div>
       )}
-      {cardMenu && <div class="context-menu browse-card-context" style={{ left: Math.min(cardMenu.x, window.innerWidth - 240), top: Math.min(cardMenu.y, window.innerHeight - 100) }} onClick={(event) => event.stopPropagation()} onContextMenu={(event) => event.preventDefault()}>
-        <button type="button" class="context-danger" onClick={() => { setCardMenu(null); askDelete("Delete selected cards?", "Permanently delete " + selectedCardIds.length + " selected card(s)?", () => deleteCards(selectedCardIds)); }}><Trash2 size={14} /> Delete selected cards</button>
-      </div>}
       {confirmAction && <div class="prompt-backdrop" onMouseDown={(event) => event.target === event.currentTarget && setConfirmAction(null)}>
         <section class="prompt-panel" role="alertdialog" aria-modal="true">
           <div class="prompt-heading"><h2>{confirmAction.title}</h2><button type="button" aria-label="Close" onClick={() => setConfirmAction(null)}><X size={16} /></button></div>
