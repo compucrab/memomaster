@@ -9,8 +9,8 @@
   --ink: #182231;
   --muted: #697789;
   --line: #d7e0eb;
-  --accent: #477dbb;
-  --accent-hover: #386ba8;
+  --accent: #386fae;
+  --accent-hover: #2f5f98;
   --olive: var(--accent);
   --acid: #8eb5e3;
   --serif: Georgia, "Times New Roman", serif;
@@ -18,3 +18,13 @@
   --display: "Manrope", sans-serif;
   --mono: "DM Mono", monospace;
 }
+
+  --danger: #bd4d4d;
+  --danger-hover: #a83f3f;
+  --success: #39835f;
+  --warning: #a87328;
+  --heat-1: #dce8f5;
+  --heat-2: #a9c7e7;
+  --heat-3: #709fd0;
+  --heat-4: #386fae;
+  --media-surface: #17202b;
