@@ -102,7 +102,7 @@ FSRS v5 measures elapsed time in fixed 24-hour blocks. MemoMaster normalizes sch
 - New, Learning/Relearning, Young, and Mature card breakdown. Mature uses a 21-day-or-longer review interval.
 - Frequently forgotten cards ranked by FSRS lapse count.
 
-FSRS parameter optimization from review history is not yet executable in the app. `fsrsOptimizerData.js` prepares the official FSRS-6 optimizer CSV schema from complete review logs, including study-day rollover and timezone metadata; legacy logs without a recorded pre-review state are skipped rather than guessed. The remaining step is integrating the official optimizer binding in a Tauri-compatible worker/runtime. Do not substitute hand-written parameter fitting for the official FSRS optimizer. Modern Anki does not impose a fixed 1,000-review minimum, so readiness should be based on data quality and the optimizer evaluation rather than an arbitrary hard threshold.
+FSRS parameter optimization from review history is not yet executable in the app. `fsrsOptimizerData.js` prepares the official FSRS-6 optimizer CSV schema from complete review logs, including study-day rollover and timezone metadata; legacy logs without a recorded pre-review state are skipped rather than guessed. Settings exposes an export action that writes this CSV using the native save dialog. The remaining step is integrating the official optimizer binding in a Tauri-compatible worker/runtime. Do not substitute hand-written parameter fitting for the official FSRS optimizer. Modern Anki does not impose a fixed 1,000-review minimum, so readiness should be based on data quality and the optimizer evaluation rather than an arbitrary hard threshold.
 
 ## Card editor and content formats
 
