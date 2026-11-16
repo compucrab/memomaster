@@ -24,6 +24,10 @@ function matureCard(now) {
   };
 }
 
+test("FSRS defaults to a 180-day maximum interval", () => {
+  assert.equal(DEFAULT_FSRS_SETTINGS.maximumInterval, 180);
+});
+
 test("Again enters a timed relearning step", () => {
   const now = new Date("2026-01-10T12:00:00.000Z");
   const result = scheduleReview(matureCard(now), "forgot", now);
