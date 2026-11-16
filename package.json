@@ -25,7 +25,9 @@
     "@tiptap/extension-image": "^3.30.3",
     "@tiptap/extension-text-align": "^3.30.3",
     "@tiptap/extension-mathematics": "^3.30.3",
-    "katex": "^0.16.22"
+    "katex": "^0.16.22",
+    "@tiptap/extension-paragraph": "^3.30.3",
+    "@tiptap/extension-heading": "^3.30.3"
   },
   "devDependencies": {
     "@preact/preset-vite": "^2.10.5",
