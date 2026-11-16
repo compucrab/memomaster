@@ -80,3 +80,10 @@ A notebook contains id, title, color, chapters, flashcards, reviewHistory, pract
 ## Data flow
 
 Preact components → Layout state and serialization services → Tauri IPC commands → Rust native commands → SQLite and user-selected .memz files.
+
+## Rich card content
+
+- Card front/back remain Markdown strings so the existing SQLite and .memz formats continue to carry the content without a separate media migration.
+- Local images are embedded as data URLs in the card Markdown. This keeps images self-contained and portable across automatic SQLite persistence and .memz export/import; editor insertion is limited to 12 MB per image.
+- LaTeX is edited as Tiptap mathematics nodes and rendered with KaTeX. Alignment is preserved in Markdown as HTML paragraph/heading attributes.
+- Video cards use the `@[video](URL)` Markdown convention. Read-only rendering creates provider-specific embeds for YouTube, Vimeo, Facebook, or direct MP4/WebM/OGG playback. Providers can refuse third-party embedding; arbitrary sites cannot be forced to play inside MemoMaster.
