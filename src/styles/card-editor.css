@@ -47,8 +47,8 @@
 .card-editor-header-actions { @apply flex items-center justify-end gap-2; }
 .card-editor-header-actions .study-primary { @apply inline-flex items-center justify-center gap-2 border px-4; height: 38px; min-width: 112px; border-color: var(--accent); background: var(--accent); color: #fff; cursor: pointer; font: 600 11px var(--sans); white-space: nowrap; }
 .card-editor-header-actions .study-primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
-.card-delete-button { @apply inline-flex items-center justify-center gap-2 border px-3; height: 38px; border-color: color-mix(in srgb, #c65b5b 45%, var(--line)); background: transparent; color: #c65b5b; cursor: pointer; font: 10px var(--sans); }
-.card-delete-button:hover { background: color-mix(in srgb, #c65b5b 9%, transparent); }
+.card-delete-button { @apply inline-flex items-center justify-center gap-2 border px-3; height: 38px; border-color: color-mix(in srgb, var(--danger) 45%, var(--line)); background: transparent; color: var(--danger); cursor: pointer; font: 10px var(--sans); }
+.card-delete-button:hover { background: color-mix(in srgb, var(--danger) 9%, transparent); }
 .card-editor-organization { grid-template-columns: minmax(0, 1fr) auto; max-width: 520px; }
 @media (max-width: 700px) {
   .card-editor-header-actions { grid-column: 1 / -1; justify-self: end; }
@@ -151,4 +151,25 @@
   .card-editor-footer { align-items: flex-start; flex-wrap: wrap; }
   .card-editor-footer .card-editor-organization { flex: 1 1 100%; }
   .card-editor-footer-right { margin-left: auto; }
+}
+
+
+/* Give the return navigation its own breathing room. */
+.card-editor-compact-header {
+  min-height: 48px;
+  padding-bottom: 14px;
+  margin-bottom: 8px;
+}
+.card-editor-compact-header .back-link {
+  min-height: 34px;
+  padding: 0 8px 0 0;
+  gap: 9px;
+}
+.card-editor-body { margin-top: 16px; }
+.card-editor-footer .card-delete-button {
+  border-color: color-mix(in srgb, var(--danger) 48%, var(--line));
+  color: var(--danger);
+}
+.card-editor-footer .card-delete-button:hover {
+  background: color-mix(in srgb, var(--danger) 9%, transparent);
 }
