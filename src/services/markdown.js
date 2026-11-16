@@ -34,11 +34,10 @@ function videoEmbed(url) {
       source = `https://player.vimeo.com/video/${id}`;
     } else if ((parsed.hostname === "instagram.com" || parsed.hostname.endsWith(".instagram.com")) && /^\/(reel|p|tv)\/[\w-]+(?:\/embed)?\/?$/i.test(parsed.pathname)) {
       const match = parsed.pathname.match(/^\/(reel|p|tv)\/([\w-]+)/i);
-      source = parsed.pathname.toLowerCase().includes("/embed") ? url : \`https://www.instagram.com/\${match[1]}/\${match[2]}/embed\`;
+      source = parsed.pathname.toLowerCase().includes("/embed") ? url : `https://www.instagram.com/${match[1]}/${match[2]}/embed`;
     } else if (parsed.hostname === "facebook.com" && parsed.pathname === "/plugins/video.php") {
       source = url;
     } else if (parsed.hostname === "facebook.com" || parsed.hostname.endsWith(".facebook.com") || parsed.hostname === "fb.watch" || parsed.hostname.endsWith(".fb.watch")) {
-      source = \`https://www.facebook.com/plugins/video.php?href=\${encodeURIComponent(url)}&show_text=0\`;
       source = `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(url)}&show_text=0`;
     } else if (/\.(mp4|webm|ogg)$/i.test(parsed.pathname)) {
       return `<video class="study-embedded-video" controls preload="metadata" src="${escapeHtml(url)}"></video>`;
