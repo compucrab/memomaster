@@ -90,6 +90,17 @@ export default function NotebookView({ notebook, onUpdate, onBack, onRequestText
     setSelectedCardIds([]);
     if (removing.has(selectedCardId)) setSelectedCardId(next[0]?.id || null);
   }
+  function resetCardSchedules(ids) {
+    const resetting = new Set(ids);
+    const next = cards.map((card) => {
+      if (!resetting.has(card.id)) return card;
+      const cleanCard = { ...card };
+      delete cleanCard.fsrs;
+      return cleanCard;
+    });
+    onUpdate({ flashcards: next, cards: next.length });
+  }
+
   function toggleCardSelection(id) {
     setSelectedCardIds((items) => items.includes(id) ? items.filter((item) => item !== id) : [...items, id]);
   }
@@ -133,7 +144,7 @@ export default function NotebookView({ notebook, onUpdate, onBack, onRequestText
   if (editingCard) {
     return <CardEditor key={editingCard.id} card={editingCard} chapters={chapters}
       onSave={saveCard} existingCards={cards} onCancel={() => { setEditingCardId(null); setNewCard(null); }}
-      onAddChapter={addChapter} onDelete={() => { deleteCards([editingCard.id]); setEditingCardId(null); }} />;
+      onAddChapter={addChapter} onDelete={() => { deleteCards([editingCard.id]); setEditingCardId(null); }}\n      onResetSchedule={(id) => resetCardSchedules([id])} />;
   }
 
   if (reviewing) {
@@ -187,7 +198,7 @@ export default function NotebookView({ notebook, onUpdate, onBack, onRequestText
                   setChapterFilter(targetChapterId === "__unassigned" ? "all" : targetChapterId);
                   setTargetChapterId("");
                 }}>Move</button>
-                <button type="button" onClick={() => setSelectedCardIds([])}>Clear</button>
+                <button type="button" onClick={() => { resetCardSchedules(selectedCardIds); setSelectedCardIds([]); }}>Reset schedule</button>\n                <button type="button" onClick={() => setSelectedCardIds([])}>Clear</button>
                 <button type="button" class="delete-selected" onClick={() => askDelete("Delete selected cards?", "Permanently delete " + selectedCardIds.length + " selected cards?", () => deleteCards(selectedCardIds))}><Trash2 size={12} /> Delete</button>
               </div>}
             </div>
