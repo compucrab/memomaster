@@ -7,9 +7,7 @@ import CardEditor from "./CardEditor";
 import ReviewSession from "./ReviewSession";
 
 function makeCard() {
-  return { id: crypto.randomUUID(), front: "## Your question
-
-Write a prompt here.", back: "Write the answer here.", chapterId: "" };
+  return { id: crypto.randomUUID(), front: "## Your question\n\nWrite a prompt here.", back: "Write the answer here.", chapterId: "" };
 }
 const makeId = () => crypto.randomUUID();
 const normalizeName = (value) => String(value || "").trim().toLocaleLowerCase();
