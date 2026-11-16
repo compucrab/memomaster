@@ -12,6 +12,7 @@ This document is the working contract for coding agents contributing to MemoMast
 - Keep dependencies lean. Do not add a library for a small isolated task without explaining why it is needed.
 - Do not add GitHub Actions or other CI workflows unless explicitly requested.
 - Do not silently change product behavior, archive compatibility, keyboard shortcuts, or visual conventions while doing cleanup.
+- Start new installations with an empty library; do not seed sample notebooks.
 
 ## Product model
 
@@ -36,7 +37,7 @@ Do not claim or implement against assumptions that are not true:
 - Theme selection is persisted in `localStorage`.
 - Rust owns SQLite access and native file read/write commands; the frontend owns the current notebook data model and serialization.
 - The Tauri dialog plugin provides native Open and Save dialogs.
-- `.memn` notebook files and `.memz` project archives are handled by `src/services/projectArchive.js`.
+- The `.memz` project archive is the only portable backup/restore format, handled by `src/services/projectArchive.js`.
 - Card front/back editing uses Tiptap (`@tiptap/core`, `@tiptap/starter-kit`, `@tiptap/markdown`) through `src/components/RichTextEditor.jsx`; the editor serializes content to Markdown strings.
 - `src/services/markdown.js` renders saved Markdown for read-only study mode.
 - FSRS, Anki import, cloud sync, and multi-device synchronization are not implemented.
