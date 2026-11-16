@@ -1,5 +1,6 @@
 import { Check, PencilLine, RotateCw, Plus } from "lucide-preact";
 import { renderMarkdown } from "../services/markdown";
+import RichTextEditor from "./RichTextEditor";
 
 export default function Flashcard({ card, chapters = [], showBack, editing, onFlip, onEdit, onChange, onDone, onAddChapter, onAddTopic }) {
   const selectedChapter = chapters.find((chapter) => chapter.id === card.chapterId);
@@ -9,12 +10,18 @@ export default function Flashcard({ card, chapters = [], showBack, editing, onFl
     <article class={`study-card ${editing ? "is-editing" : ""}`}>
       {editing ? (
         <div class="study-card-editor">
-          <label>FRONT · QUESTION
-            <textarea autoFocus value={card.front} onInput={(event) => onChange({ front: event.currentTarget.value })} placeholder="Write the question or prompt in Markdown..." />
-          </label>
-          <label>BACK · ANSWER
-            <textarea value={card.back} onInput={(event) => onChange({ back: event.currentTarget.value })} placeholder="Write the answer in Markdown..." />
-          </label>
+          <RichTextEditor
+            label="FRONT · QUESTION"
+            value={card.front}
+            placeholder="Write your question..."
+            onChange={(front) => onChange({ front })}
+          />
+          <RichTextEditor
+            label="BACK · ANSWER"
+            value={card.back}
+            placeholder="Write your answer..."
+            onChange={(back) => onChange({ back })}
+          />
           <div class="card-organization">
             <label>CHAPTER
               <select value={card.chapterId || ""} onChange={(event) => onChange({ chapterId: event.currentTarget.value, topicId: "" })}>

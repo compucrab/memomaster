@@ -24,6 +24,7 @@ Cards currently belong to a notebook and can optionally reference a chapter and 
 - **Vite** builds and serves the frontend on port `1420`.
 - **Tailwind CSS v4** is integrated through the Vite plugin. Component-specific styles live in `src/styles`.
 - **lucide-preact** supplies interface icons.
+- **Tiptap** provides the structured rich-text editing surface; its Markdown extension loads and serializes the existing card content.
 
 The runtime is local-first and does not require a network service for its core UI. Google Fonts are currently imported from the network in `src/styles/index.css`; if fully offline typography becomes a requirement, bundle those fonts locally.
 
@@ -40,7 +41,8 @@ src/
 │   ├── Topbar.jsx           # Library search and create action
 │   ├── NotebookGrid.jsx     # Notebook library
 │   ├── NotebookView.jsx     # Single-card study flow and hierarchy editing
-│   ├── Flashcard.jsx        # Card display/editor
+│   ├── Flashcard.jsx        # Card display and card editor composition
+│   ├── RichTextEditor.jsx   # Tiptap WYSIWYG Markdown editor
 │   ├── ContextMenu.jsx      # Notebook context menu
 │   ├── TextPrompt.jsx       # Reusable custom text prompt
 │   └── SettingsPanel.jsx    # Theme preferences
@@ -126,7 +128,9 @@ IDs are stable strings. Newly created records use `crypto.randomUUID()`. Existin
 
 ## Markdown rendering
 
-`services/markdown.js` converts the currently supported Markdown subset into HTML. It escapes HTML-sensitive characters before applying inline formatting. The renderer supports headings (levels 1–3), paragraphs, unordered and ordered lists, blockquotes, bold, italics, inline code, and HTTP(S) links.
+`components/RichTextEditor.jsx` uses Tiptap StarterKit and its Markdown extension to present formatted content while storing card front/back as Markdown strings. The toolbar exposes common formatting, while keyboard shortcuts are provided by the editor engine. `services/markdown.js` renders saved Markdown in the read-only study view; it escapes HTML-sensitive characters and supports headings (levels 1–3), paragraphs, unordered and ordered lists, blockquotes, bold, italics, strikethrough, inline code, fenced code blocks, horizontal rules, and HTTP(S) links.
+
+The Tiptap Markdown extension is currently documented as beta. Keep Markdown as the persisted interchange format and test parse/serialize round trips before enabling additional node types.
 
 When extending Markdown support:
 - Escape source text before generating markup.
