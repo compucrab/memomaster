@@ -1,1 +1,88 @@
-const esc=s=>s.replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#39;");const inline=s=>esc(s).replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>").replace(/\*(.+?)\*/g,"<em>$1</em>").replace(/`([^`]+)`/g,"<code>$1</code>").replace(/\[(.+?)\]\((https?:\/\/[^\s)]+)\)/g,'<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');export function renderMarkdown(source){const out=[];let p=[],list=null,q=[];const fp=()=>{if(p.length)out.push("<p>"+inline(p.join(" "))+"</p>");p=[];};const fl=()=>{if(list)out.push("<"+list.tag+">"+list.items.map(x=>"<li>"+inline(x)+"</li>").join("")+"</"+list.tag+">");list=null;};const fq=()=>{if(q.length)out.push("<blockquote>"+inline(q.join(" "))+"</blockquote>");q=[];};for(const line of source.replaceAll("\r\n","\n").split("\n")){const h=line.match(/^(#{1,3})\s+(.+)$/),b=line.match(/^\s*[-*+]\s+(.+)$/),o=line.match(/^\s*\d+\.\s+(.+)$/);if(h||b||o||line.startsWith(">")||!line.trim())fp();if(h){fl();fq();const n=h[1].length;out.push("<h"+n+">"+inline(h[2])+"</h"+n+">");}else if(b||o){fq();const tag=b?"ul":"ol";if(list&&list.tag!==tag)fl();if(!list)list={tag,items:[]};list.items.push((b||o)[1]);}else if(line.startsWith(">")){fl();q.push(line.replace(/^>\s?/,""));}else if(!line.trim()){fl();fq();}else{fl();fq();p.push(line.trim());}}fp();fl();fq();return out.join("\n");}
+function escapeHtml(value) {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+function renderInline(source) {
+  return escapeHtml(source)
+    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+    .replace(/\*(.+?)\*/g, "<em>$1</em>")
+    .replace(/`([^`]+)`/g, "<code>$1</code>")
+    .replace(
+      /\[(.+?)\]\((https?:\/\/[^\s)]+)\)/g,
+      '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>',
+    );
+}
+
+export function renderMarkdown(source) {
+  const output = [];
+  let paragraph = [];
+  let list = null;
+  let quote = [];
+
+  function flushParagraph() {
+    if (paragraph.length) {
+      output.push(`<p>${renderInline(paragraph.join(" "))}</p>`);
+    }
+    paragraph = [];
+  }
+
+  function flushList() {
+    if (list) {
+      const items = list.items.map((item) => `<li>${renderInline(item)}</li>`).join("");
+      output.push(`<${list.tag}>${items}</${list.tag}>`);
+    }
+    list = null;
+  }
+
+  function flushQuote() {
+    if (quote.length) {
+      output.push(`<blockquote>${renderInline(quote.join(" "))}</blockquote>`);
+    }
+    quote = [];
+  }
+
+  const lines = source.replaceAll("\r\n", "\n").split("\n");
+
+  for (const line of lines) {
+    const heading = line.match(/^(#{1,3})\s+(.+)$/);
+    const bullet = line.match(/^\s*[-*+]\s+(.+)$/);
+    const ordered = line.match(/^\s*\d+\.\s+(.+)$/);
+
+    if (heading || bullet || ordered || line.startsWith(">") || !line.trim()) {
+      flushParagraph();
+    }
+
+    if (heading) {
+      flushList();
+      flushQuote();
+      const level = heading[1].length;
+      output.push(`<h${level}>${renderInline(heading[2])}</h${level}>`);
+    } else if (bullet || ordered) {
+      flushQuote();
+      const tag = bullet ? "ul" : "ol";
+      if (list && list.tag !== tag) flushList();
+      if (!list) list = { tag, items: [] };
+      list.items.push((bullet || ordered)[1]);
+    } else if (line.startsWith(">")) {
+      flushList();
+      quote.push(line.replace(/^>\s?/, ""));
+    } else if (!line.trim()) {
+      flushList();
+      flushQuote();
+    } else {
+      flushList();
+      flushQuote();
+      paragraph.push(line.trim());
+    }
+  }
+
+  flushParagraph();
+  flushList();
+  flushQuote();
+  return output.join("\n");
+}

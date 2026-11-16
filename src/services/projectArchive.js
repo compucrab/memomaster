@@ -1,5 +1,283 @@
-const encoder=new TextEncoder(),decoder=new TextDecoder();const crcTable=(()=>{const t=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=(c&1)?0xedb88320^(c>>>1):c>>>1;t[n]=c>>>0;}return t;})();function crc32(bytes){let c=0xffffffff;for(const b of bytes)c=crcTable[(c^b)&255]^(c>>>8);return(c^0xffffffff)>>>0;}function u16(v){return new Uint8Array([v&255,v>>>8&255]);}function u32(v){return new Uint8Array([v&255,v>>>8&255,v>>>16&255,v>>>24&255]);}function join(parts){const out=new Uint8Array(parts.reduce((n,p)=>n+p.length,0));let at=0;for(const p of parts){out.set(p,at);at+=p.length;}return out;}async function deflate(bytes){return new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(new CompressionStream("deflate-raw"))).arrayBuffer());}async function inflate(bytes){return new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream("deflate-raw"))).arrayBuffer());}function stamp(){const d=new Date();return{time:d.getHours()<<11|d.getMinutes()<<5|d.getSeconds()>>1,date:(d.getFullYear()-1980)<<9|(d.getMonth()+1)<<5|d.getDate()};}
-async function zip(files){const local=[],central=[];let offset=0;const date=stamp();for(const file of files){const name=encoder.encode(file.name),raw=encoder.encode(file.content),packed=await deflate(raw),crc=crc32(raw);local.push(join([u32(0x04034b50),u16(20),u16(0x0800),u16(8),u16(date.time),u16(date.date),u32(crc),u32(packed.length),u32(raw.length),u16(name.length),u16(0),name,packed]));central.push(join([u32(0x02014b50),u16(20),u16(20),u16(0x0800),u16(8),u16(date.time),u16(date.date),u32(crc),u32(packed.length),u32(raw.length),u16(name.length),u16(0),u16(0),u16(0),u16(0),u32(0),u32(offset),name]));offset+=local.at(-1).length;}const directory=join(central),end=join([u32(0x06054b50),u16(0),u16(0),u16(files.length),u16(files.length),u32(directory.length),u32(offset),u16(0)]);return join([...local,directory,end]);}
-const starter=n=>n.markdown??`# ${n.title}\n\nStart collecting ideas in this notebook.\n`;
-export async function exportMemz(notebooks){const files=[],ids=[];for(const n of notebooks){if(!/^[\w-]{1,100}$/.test(n.id))throw Error("Invalid notebook identifier");ids.push(n.id);files.push({name:`notebooks/${n.id}/notebook.json`,content:JSON.stringify({id:n.id,title:n.title,description:n.description,color:n.color,chapters:n.chapters,cards:n.cards,updated:n.updated},null,2)},{name:`notebooks/${n.id}/cards/first-card.md`,content:starter(n)});}files.unshift({name:"manifest.json",content:JSON.stringify({format:"memomaster",version:1,notebooks:ids},null,2)});const bytes=await zip(files),url=URL.createObjectURL(new Blob([bytes],{type:"application/zip"})),a=document.createElement("a");a.href=url;a.download="memomaster-library.memz";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
-export async function importMemz(buffer){const bytes=new Uint8Array(buffer),view=new DataView(bytes.buffer,bytes.byteOffset,bytes.byteLength);let end=-1;for(let p=bytes.length-22;p>=Math.max(0,bytes.length-65557);p--){if(view.getUint32(p,true)===0x06054b50){end=p;break;}}if(end<0)throw Error("This file is not a valid ZIP archive");const count=view.getUint16(end+10,true),directoryOffset=view.getUint32(end+16,true);if(count>20000)throw Error("Archive contains too many entries");let cursor=directoryOffset;const files=new Map();for(let i=0;i<count;i++){if(view.getUint32(cursor,true)!==0x02014b50)throw Error("Invalid ZIP directory");const method=view.getUint16(cursor+10,true),crc=view.getUint32(cursor+16,true),packedSize=view.getUint32(cursor+20,true),rawSize=view.getUint32(cursor+24,true),nameLength=view.getUint16(cursor+28,true),extraLength=view.getUint16(cursor+30,true),commentLength=view.getUint16(cursor+32,true),localOffset=view.getUint32(cursor+42,true),name=decoder.decode(bytes.slice(cursor+46,cursor+46+nameLength));if(name.startsWith("/")||name.includes("..")||name.includes("\\"))throw Error("Unsafe archive path");if(rawSize>20000000)throw Error("An archive entry is too large");if(view.getUint32(localOffset,true)!==0x04034b50)throw Error("Invalid ZIP entry");const dataStart=localOffset+30+view.getUint16(localOffset+26,true)+view.getUint16(localOffset+28,true),packed=bytes.slice(dataStart,dataStart+packedSize);const raw=method===8?await inflate(packed):method===0?packed:null;if(!raw)throw Error("Unsupported ZIP compression method");if(raw.length!==rawSize||crc32(raw)!==crc)throw Error("Archive entry failed integrity validation");files.set(name,decoder.decode(raw));cursor+=46+nameLength+extraLength+commentLength;}const text=files.get("manifest.json");if(!text)throw Error("Missing MemoMaster manifest");const manifest=JSON.parse(text);if(manifest.format!=="memomaster"||manifest.version!==1||!Array.isArray(manifest.notebooks))throw Error("Unsupported MemoMaster project format");return manifest.notebooks.map(id=>{if(typeof id!=="string"||!/^[\w-]{1,100}$/.test(id))throw Error("Invalid notebook identifier");const json=files.get(`notebooks/${id}/notebook.json`);if(!json)throw Error(`Notebook data is missing: ${id}`);const n=JSON.parse(json);if(n.id!==id||typeof n.title!=="string")throw Error("Invalid notebook metadata");return{...n,markdown:files.get(`notebooks/${id}/cards/first-card.md`)??""};});}
+const encoder = new TextEncoder();
+const decoder = new TextDecoder();
+
+const crcTable = (() => {
+  const table = new Uint32Array(256);
+  for (let value = 0; value < 256; value++) {
+    let crc = value;
+    for (let bit = 0; bit < 8; bit++) {
+      crc = crc & 1 ? 0xedb88320 ^ (crc >>> 1) : crc >>> 1;
+    }
+    table[value] = crc >>> 0;
+  }
+  return table;
+})();
+
+function crc32(bytes) {
+  let crc = 0xffffffff;
+  for (const byte of bytes) {
+    crc = crcTable[(crc ^ byte) & 255] ^ (crc >>> 8);
+  }
+  return (crc ^ 0xffffffff) >>> 0;
+}
+
+function uint16(value) {
+  return new Uint8Array([value & 255, (value >>> 8) & 255]);
+}
+
+function uint32(value) {
+  return new Uint8Array([
+    value & 255,
+    (value >>> 8) & 255,
+    (value >>> 16) & 255,
+    (value >>> 24) & 255,
+  ]);
+}
+
+function concatenate(parts) {
+  const result = new Uint8Array(parts.reduce((size, part) => size + part.length, 0));
+  let offset = 0;
+
+  for (const part of parts) {
+    result.set(part, offset);
+    offset += part.length;
+  }
+
+  return result;
+}
+
+async function compress(bytes) {
+  const stream = new Blob([bytes]).stream()
+    .pipeThrough(new CompressionStream("deflate-raw"));
+  return new Uint8Array(await new Response(stream).arrayBuffer());
+}
+
+async function decompress(bytes) {
+  const stream = new Blob([bytes]).stream()
+    .pipeThrough(new DecompressionStream("deflate-raw"));
+  return new Uint8Array(await new Response(stream).arrayBuffer());
+}
+
+function getDosTimestamp() {
+  const date = new Date();
+  return {
+    time: (date.getHours() << 11) | (date.getMinutes() << 5) | (date.getSeconds() >> 1),
+    date: ((date.getFullYear() - 1980) << 9) | ((date.getMonth() + 1) << 5) | date.getDate(),
+  };
+}
+
+async function createZip(files) {
+  const localEntries = [];
+  const centralEntries = [];
+  const timestamp = getDosTimestamp();
+  let localOffset = 0;
+
+  for (const file of files) {
+    const name = encoder.encode(file.name);
+    const original = encoder.encode(file.content);
+    const compressed = await compress(original);
+    const checksum = crc32(original);
+
+    const localHeader = concatenate([
+      uint32(0x04034b50),
+      uint16(20),
+      uint16(0x0800),
+      uint16(8),
+      uint16(timestamp.time),
+      uint16(timestamp.date),
+      uint32(checksum),
+      uint32(compressed.length),
+      uint32(original.length),
+      uint16(name.length),
+      uint16(0),
+      name,
+      compressed,
+    ]);
+    localEntries.push(localHeader);
+
+    const centralHeader = concatenate([
+      uint32(0x02014b50),
+      uint16(20),
+      uint16(20),
+      uint16(0x0800),
+      uint16(8),
+      uint16(timestamp.time),
+      uint16(timestamp.date),
+      uint32(checksum),
+      uint32(compressed.length),
+      uint32(original.length),
+      uint16(name.length),
+      uint16(0),
+      uint16(0),
+      uint16(0),
+      uint16(0),
+      uint32(0),
+      uint32(localOffset),
+      name,
+    ]);
+    centralEntries.push(centralHeader);
+    localOffset += localHeader.length;
+  }
+
+  const centralDirectory = concatenate(centralEntries);
+  const endRecord = concatenate([
+    uint32(0x06054b50),
+    uint16(0),
+    uint16(0),
+    uint16(files.length),
+    uint16(files.length),
+    uint32(centralDirectory.length),
+    uint32(localOffset),
+    uint16(0),
+  ]);
+
+  return concatenate([...localEntries, centralDirectory, endRecord]);
+}
+
+function defaultCard(notebook) {
+  return notebook.markdown ??
+    `# ${notebook.title}\n\nStart collecting ideas in this notebook.\n`;
+}
+
+export async function exportMemz(notebooks) {
+  const files = [];
+  const notebookIds = [];
+
+  for (const notebook of notebooks) {
+    if (!/^[\w-]{1,100}$/.test(notebook.id)) {
+      throw new Error("Invalid notebook identifier");
+    }
+
+    notebookIds.push(notebook.id);
+    files.push(
+      {
+        name: `notebooks/${notebook.id}/notebook.json`,
+        content: JSON.stringify({
+          id: notebook.id,
+          title: notebook.title,
+          description: notebook.description,
+          color: notebook.color,
+          chapters: notebook.chapters,
+          cards: notebook.cards,
+          updated: notebook.updated,
+        }, null, 2),
+      },
+      {
+        name: `notebooks/${notebook.id}/cards/first-card.md`,
+        content: defaultCard(notebook),
+      },
+    );
+  }
+
+  files.unshift({
+    name: "manifest.json",
+    content: JSON.stringify({
+      format: "memomaster",
+      version: 1,
+      notebooks: notebookIds,
+    }, null, 2),
+  });
+
+  const archive = await createZip(files);
+  const url = URL.createObjectURL(new Blob([archive], { type: "application/zip" }));
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "memomaster-library.memz";
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+export async function importMemz(buffer) {
+  const bytes = new Uint8Array(buffer);
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+
+  let endOffset = -1;
+  const searchStart = Math.max(0, bytes.length - 65557);
+  for (let offset = bytes.length - 22; offset >= searchStart; offset--) {
+    if (view.getUint32(offset, true) === 0x06054b50) {
+      endOffset = offset;
+      break;
+    }
+  }
+
+  if (endOffset < 0) throw new Error("This file is not a valid ZIP archive");
+
+  const entryCount = view.getUint16(endOffset + 10, true);
+  const directoryOffset = view.getUint32(endOffset + 16, true);
+  if (entryCount > 20000) throw new Error("Archive contains too many entries");
+
+  const files = new Map();
+  let cursor = directoryOffset;
+
+  for (let index = 0; index < entryCount; index++) {
+    if (view.getUint32(cursor, true) !== 0x02014b50) {
+      throw new Error("Invalid ZIP directory");
+    }
+
+    const method = view.getUint16(cursor + 10, true);
+    const checksum = view.getUint32(cursor + 16, true);
+    const compressedSize = view.getUint32(cursor + 20, true);
+    const originalSize = view.getUint32(cursor + 24, true);
+    const nameLength = view.getUint16(cursor + 28, true);
+    const extraLength = view.getUint16(cursor + 30, true);
+    const commentLength = view.getUint16(cursor + 32, true);
+    const localOffset = view.getUint32(cursor + 42, true);
+    const name = decoder.decode(bytes.slice(cursor + 46, cursor + 46 + nameLength));
+
+    if (name.startsWith("/") || name.includes("..") || name.includes("\\")) {
+      throw new Error("Unsafe archive path");
+    }
+    if (originalSize > 20_000_000) throw new Error("An archive entry is too large");
+    if (view.getUint32(localOffset, true) !== 0x04034b50) {
+      throw new Error("Invalid ZIP entry");
+    }
+
+    const localNameLength = view.getUint16(localOffset + 26, true);
+    const localExtraLength = view.getUint16(localOffset + 28, true);
+    const dataOffset = localOffset + 30 + localNameLength + localExtraLength;
+    const compressed = bytes.slice(dataOffset, dataOffset + compressedSize);
+
+    let original;
+    if (method === 8) original = await decompress(compressed);
+    else if (method === 0) original = compressed;
+    else throw new Error("Unsupported ZIP compression method");
+
+    if (original.length !== originalSize || crc32(original) !== checksum) {
+      throw new Error("Archive entry failed integrity validation");
+    }
+
+    files.set(name, decoder.decode(original));
+    cursor += 46 + nameLength + extraLength + commentLength;
+  }
+
+  const manifestText = files.get("manifest.json");
+  if (!manifestText) throw new Error("Missing MemoMaster manifest");
+
+  const manifest = JSON.parse(manifestText);
+  if (
+    manifest.format !== "memomaster" ||
+    manifest.version !== 1 ||
+    !Array.isArray(manifest.notebooks)
+  ) {
+    throw new Error("Unsupported MemoMaster project format");
+  }
+
+  return manifest.notebooks.map((id) => {
+    if (typeof id !== "string" || !/^[\w-]{1,100}$/.test(id)) {
+      throw new Error("Invalid notebook identifier");
+    }
+
+    const metadata = files.get(`notebooks/${id}/notebook.json`);
+    if (!metadata) throw new Error(`Notebook data is missing: ${id}`);
+
+    const notebook = JSON.parse(metadata);
+    if (notebook.id !== id || typeof notebook.title !== "string") {
+      throw new Error("Invalid notebook metadata");
+    }
+
+    return {
+      ...notebook,
+      markdown: files.get(`notebooks/${id}/cards/first-card.md`) ?? "",
+    };
+  });
+}

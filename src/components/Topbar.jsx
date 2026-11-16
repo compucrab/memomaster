@@ -1,1 +1,30 @@
-import {Search,Plus,Command} from "lucide-preact";export default function Topbar({title,query,onQueryChange,onCreate}){return <header class="topbar"><div class="topbar-breadcrumb"><span>MemoMaster</span><b>/</b><strong>{title}</strong></div><div class="topbar-actions"><label class="search-field"><Search size={15}/><input value={query} onInput={e=>onQueryChange(e.currentTarget.value)} placeholder="Find a notebook..."/><kbd><Command size={10}/> K</kbd></label><button class="button-primary" onClick={onCreate}><Plus size={15}/> New notebook</button></div></header>;}
+import { Search, Plus, Command } from "lucide-preact";
+
+export default function Topbar({ title, query, onQueryChange, onCreate }) {
+  return (
+    <header class="topbar">
+      <div class="topbar-breadcrumb">
+        <span>MemoMaster</span>
+        <b>/</b>
+        <strong>{title}</strong>
+      </div>
+
+      <div class="topbar-actions">
+        <label class="search-field">
+          <Search size={15} />
+          <input
+            value={query}
+            onInput={(event) => onQueryChange(event.currentTarget.value)}
+            placeholder="Find a notebook..."
+          />
+          <kbd><Command size={10} /> K</kbd>
+        </label>
+
+        <button class="button-primary" onClick={onCreate}>
+          <Plus size={15} />
+          New notebook
+        </button>
+      </div>
+    </header>
+  );
+}
