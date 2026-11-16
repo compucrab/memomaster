@@ -22,8 +22,9 @@ function streaks(activity, today) {
 export default function StudyStatus({ notebooks, onBack }) {
   const data = useMemo(() => {
     const history = notebooks.flatMap(n => (n.reviewHistory||[]).map(log=>({...log,notebookId:n.id})));
+    const practice = notebooks.flatMap(n => (n.practiceHistory||[]).map(log=>({...log,notebookId:n.id})));
     const activity = new Map();
-    history.forEach(log => { if(log.review){const key=dateKey(log.review);activity.set(key,(activity.get(key)||0)+1);} });
+    [...history, ...practice].forEach(log => { if(log.review){const key=dateKey(log.review);activity.set(key,(activity.get(key)||0)+1);} });
     const today = dayStart(new Date()), cards = notebooks.flatMap(n=>n.flashcards||[]);
     const streak = streaks(activity,today);
     const ratings = history.reduce((a,l)=>{a[l.rating]=(a[l.rating]||0)+1;return a;},{});
@@ -33,7 +34,7 @@ export default function StudyStatus({ notebooks, onBack }) {
     const endOfToday = new Date(today); endOfToday.setDate(endOfToday.getDate() + 1);
     const upcoming=Array.from({length:7},(_,i)=>{const date=new Date(today);date.setDate(date.getDate()+i);return {date,count:cards.filter(c=>{if(!c.fsrs?.due)return i===0;const dueDate=new Date(c.fsrs.due);return i===0?dueDate<endOfToday:dateKey(dueDate)===dateKey(date);}).length};});
     const remembered=(ratings.easy||0)+(ratings.difficult||0);
-    return {history,activity,ratings,days,maxCount,upcoming,cards,streak,remembered,activeDays:activity.size,
+    return {history,practice,activity,ratings,days,maxCount,upcoming,cards,streak,remembered,activeDays:activity.size,
       recall:history.length?Math.round(remembered/history.length*100):0,
       due:cards.filter(c=>!c.fsrs?.due||new Date(c.fsrs.due)<=new Date()).length};
   },[notebooks]);
@@ -49,7 +50,7 @@ export default function StudyStatus({ notebooks, onBack }) {
       <article class="status-stat"><span><Layers3 size={15}/> CARDS REVIEWED</span><strong>{learned}<small> / {data.cards.length}</small></strong><p>{data.due} due now</p></article>
     </div>
     <section class="status-panel consistency-panel">
-      <div class="status-panel-heading"><div><h2>Consistency</h2><p>Daily reviews over the last year</p></div><span>{data.activeDays} active days</span></div>
+      <div class="status-panel-heading"><div><h2>Consistency</h2><p>Scheduled reviews and unscheduled practice over the last year</p></div><span>{data.activeDays} active days</span></div>
       <div class="heatmap-scroll"><div class="heatmap-months">{months.map(m=><span style={{gridColumn:m.offset+1}}>{m.label}</span>)}</div><div class="heatmap">
         {data.days.map(day=>{const level=day.count?Math.min(4,Math.ceil(day.count/data.maxCount*4)):0;return <i key={dateKey(day.date)} class={`heatmap-cell level-${level}`} title={`${day.count} reviews · ${formatDay(day.date)}`}/>;})}
       </div></div>
