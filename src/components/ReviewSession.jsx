@@ -12,7 +12,7 @@ function isDue(card, now) {
 export default function ReviewSession({ cards, mode = "scheduled", onReview, onExit }) {
   const [queue, setQueue] = useState(() => {
     const now = new Date();
-    return cards.filter((card) => isDue(card, now))
+    return cards.filter((card) => mode === "unscheduled" || isDue(card, now))
       .sort((a, b) => new Date(a.fsrs?.due || 0) - new Date(b.fsrs?.due || 0))
       .map((card) => card.id);
   });
