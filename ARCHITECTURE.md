@@ -87,3 +87,9 @@ Preact components → Layout state and serialization services → Tauri IPC comm
 - Local images are embedded as data URLs in the card Markdown. This keeps images self-contained and portable across automatic SQLite persistence and .memz export/import; editor insertion is limited to 12 MB per image.
 - LaTeX is edited as Tiptap mathematics nodes and rendered with KaTeX. Alignment is preserved in Markdown as HTML paragraph/heading attributes.
 - Video cards use the `@[video](URL)` Markdown convention. Read-only rendering creates provider-specific embeds for YouTube, Vimeo, Facebook, or direct MP4/WebM/OGG playback. Providers can refuse third-party embedding; arbitrary sites cannot be forced to play inside MemoMaster.
+
+## Editor interaction details
+
+- Question and answer use separate Tiptap editor instances, each with its own bounded undo/redo history. History actions never operate on notebook/library state.
+- Images are inline Tiptap nodes with width and alignment metadata encoded in Markdown image titles, preserving layout through SQLite and `.memz` persistence. Clipboard image paste and file insertion share the same embedded data-URL representation.
+- Video cards store source URLs and are converted to provider embed URLs only when rendering. Instagram, Facebook, YouTube and Vimeo may restrict playback in embedded desktop webviews.
