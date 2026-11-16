@@ -24,15 +24,15 @@ function videoEmbed(url) {
     const parsed = new URL(url);
     if (parsed.protocol !== "https:" && parsed.protocol !== "http:") return "";
     let source = "";
-    if (parsed.hostname === "youtu.be" || parsed.hostname.endsWith("youtube.com")) {
+    if (parsed.hostname === "youtu.be" || parsed.hostname === "youtube.com" || parsed.hostname.endsWith(".youtube.com")) {
       const id = parsed.hostname === "youtu.be" ? parsed.pathname.slice(1) : parsed.searchParams.get("v") || parsed.pathname.split("/").filter(Boolean).pop();
       if (!/^[\w-]{6,20}$/.test(id || "")) return "";
       source = `https://www.youtube-nocookie.com/embed/${id}`;
-    } else if (parsed.hostname.endsWith("vimeo.com")) {
+    } else if (parsed.hostname === "vimeo.com" || parsed.hostname.endsWith(".vimeo.com")) {
       const id = parsed.pathname.split("/").filter(Boolean).pop();
       if (!/^\d+$/.test(id || "")) return "";
       source = `https://player.vimeo.com/video/${id}`;
-    } else if (parsed.hostname.endsWith("facebook.com") || parsed.hostname.endsWith("fb.watch")) {
+    } else if (parsed.hostname === "facebook.com" || parsed.hostname.endsWith(".facebook.com") || parsed.hostname === "fb.watch" || parsed.hostname.endsWith(".fb.watch")) {
       source = `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(url)}&show_text=0`;
     } else if (/\.(mp4|webm|ogg)$/i.test(parsed.pathname)) {
       return `<video class="study-embedded-video" controls preload="metadata" src="${escapeHtml(url)}"></video>`;
