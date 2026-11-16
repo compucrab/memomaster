@@ -33,7 +33,7 @@ export default function StudyStatus({ notebooks, onBack }) {
     const maxCount=Math.max(1,...days.map(d=>d.count));
     const endOfToday = new Date(today); endOfToday.setDate(endOfToday.getDate() + 1);
     const upcoming=Array.from({length:7},(_,i)=>{const date=new Date(today);date.setDate(date.getDate()+i);return {date,count:cards.filter(c=>{if(!c.fsrs?.due)return i===0;const dueDate=new Date(c.fsrs.due);return i===0?dueDate<endOfToday:dateKey(dueDate)===dateKey(date);}).length};});
-    const remembered=(ratings.easy||0)+(ratings.difficult||0);
+    const remembered=(ratings.good||0)+(ratings.easy||0)+(ratings.difficult||0);
     return {history,practice,activity,ratings,days,maxCount,upcoming,cards,streak,remembered,activeDays:activity.size,
       recall:history.length?Math.round(remembered/history.length*100):0,
       due:cards.filter(c=>!c.fsrs?.due||new Date(c.fsrs.due)<=new Date()).length};
@@ -46,7 +46,7 @@ export default function StudyStatus({ notebooks, onBack }) {
     <div class="status-stats-grid">
       <article class="status-stat"><span><Flame size={15}/> CURRENT STREAK</span><strong>{data.streak.current} <small>days</small></strong><p>Longest: {data.streak.longest} days</p></article>
       <article class="status-stat"><span><CalendarDays size={15}/> REVIEWS</span><strong>{data.history.length.toLocaleString()}</strong><p>{data.activeDays} active days</p></article>
-      <article class="status-stat"><span><Target size={15}/> RECALL RATE</span><strong>{data.recall}<small>%</small></strong><p>Difficult or Easy responses</p></article>
+      <article class="status-stat"><span><Target size={15}/> RECALL RATE</span><strong>{data.recall}<small>%</small></strong><p>Difficult, Good or Easy responses</p></article>
       <article class="status-stat"><span><Layers3 size={15}/> CARDS REVIEWED</span><strong>{learned}<small> / {data.cards.length}</small></strong><p>{data.due} due now</p></article>
     </div>
     <section class="status-panel consistency-panel">
@@ -58,8 +58,8 @@ export default function StudyStatus({ notebooks, onBack }) {
     </section>
     <div class="status-two-column">
       <section class="status-panel"><div class="status-panel-heading"><div><h2>Review outcomes</h2><p>How each review felt</p></div></div>
-        <div class="outcome-list">{[["Easy",data.ratings.easy||0,"easy"],["Difficult",data.ratings.difficult||0,"difficult"],["Forgot",data.ratings.forgot||0,"forgot"]].map(([label,count,kind])=><div class="outcome-row"><span>{label}</span><div><i class={kind} style={{width:`${data.history.length?count/data.history.length*100:0}%`}}/></div><strong>{count}</strong></div>)}</div>
-        <p class="status-footnote">Recall rate counts Difficult and Easy responses as remembered.</p>
+        <div class="outcome-list">{[["Good",data.ratings.good||0,"good"],["Easy",data.ratings.easy||0,"easy"],["Difficult",data.ratings.difficult||0,"difficult"],["Forgot",data.ratings.forgot||0,"forgot"]].map(([label,count,kind])=><div class="outcome-row"><span>{label}</span><div><i class={kind} style={{width:`${data.history.length?count/data.history.length*100:0}%`}}/></div><strong>{count}</strong></div>)}</div>
+        <p class="status-footnote">Recall rate counts Difficult, Good and Easy responses as remembered.</p>
       </section>
       <section class="status-panel"><div class="status-panel-heading"><div><h2>Upcoming reviews</h2><p>Cards scheduled by day</p></div><Clock3 size={16}/></div>
         <div class="upcoming-list">{data.upcoming.map((item,i)=><div class="upcoming-row"><span>{i===0?"Today":i===1?"Tomorrow":formatDay(item.date)}</span><strong>{item.count}</strong></div>)}</div>
