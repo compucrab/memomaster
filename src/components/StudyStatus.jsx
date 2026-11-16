@@ -44,8 +44,9 @@ export default function StudyStatus({ notebooks, settings, onBack, onUndoLastRev
     });
     const workloadIndex = new Map(workload.map((item, index) => [item.key, index]));
     cards.forEach(card => {
-      const due = card.fsrs?.due ? new Date(card.fsrs.due) : now;
-      if (Number.isNaN(due.getTime())) return;
+      if (!card.fsrs || card.fsrs.state === State.New) return;
+      const due = card.fsrs.due ? new Date(card.fsrs.due) : null;
+      if (!due || Number.isNaN(due.getTime())) return;
       const dueKey = studyDayKey(due < now ? now : due, rollover);
       const index = workloadIndex.get(dueKey);
       if (index !== undefined) workload[index].count++;
