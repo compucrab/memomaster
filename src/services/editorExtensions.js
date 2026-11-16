@@ -21,17 +21,10 @@ export const CardImage = Image.extend({
     const attrs = node?.attrs || {};
     const src = safeMediaUrl(attrs.src);
     if (!src) return "";
-    const alt = String(attrs.alt || "").replace(/[\]\\]/g, "\\  renderMarkdown({ node }) {
-    const src = safeMediaUrl(node.attrs.src);
-    if (!src) return "";
-    const alt = String(node.attrs.alt || "").replace(/[\]\\]/g, "\\$&");
-    const width = Math.max(40, Math.min(1600, Number(node.attrs.width) || 420));
-    const align = ["left", "center", "right"].includes(node.attrs.align) ? node.attrs.align : "center";
-    return `![${alt}](${src} "width=${width};align=${align}")`;
-  },");
+    const alt = String(attrs.alt || "").replace(/[\\\]]/g, "\\$&");
     const width = Math.max(40, Math.min(1600, Number(attrs.width) || 420));
     const align = ["left", "center", "right"].includes(attrs.align) ? attrs.align : "center";
-    return `![${alt}](${src} "width=${width};align=${align}")`;
+    return \`![\${alt}](\${src} "width=\${width};align=\${align}")\`;
   },
 });
 export const AlignedParagraph = Paragraph;
