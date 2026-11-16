@@ -2,7 +2,7 @@
 
 ## Product shape
 
-MemoMaster is a desktop-first learning and revision application. Its content hierarchy is Library → Notebook → Chapter → Topic → Flashcard. Each flashcard has Markdown front and back content. Cards belong to a notebook and can optionally reference a chapter and topic. The study UI presents one card at a time. A new installation starts with an empty library; no sample notebooks are seeded.
+MemoMaster is a desktop-first learning and revision application. Its content hierarchy is Library → Notebook → Chapter → Topic → Flashcard. Each flashcard has Markdown front and back content. Cards belong to a notebook and can optionally reference a chapter and topic. The study UI presents one card at a time. Scheduled reviews use FSRS-6; the review UI exposes three choices: Forgot (Again), Difficult (Hard), and Easy (Easy). A new installation starts with an empty library; no sample notebooks are seeded.
 
 ## Technology and runtime
 
@@ -23,7 +23,7 @@ Layout.jsx owns the active Preact state: notebook collection, active view, activ
 
 On startup, Rust opens the SQLite database in Tauri's application-data directory. load_library returns the saved library JSON if one exists. If the database is empty, the frontend starts with an empty library. The frontend debounces state changes and calls save_library. When the native window is closed, the latest state is saved before the window is destroyed.
 
-The database contains an app_state table with one row for the current library. The library is serialized as JSON to keep the initial persistence layer small while the notebook schema is still evolving. This is a deliberate first persistence step, not the final normalized relational model for future FSRS scheduling and review history.
+The database contains an app_state table with one row for the current library. The library is serialized as JSON to keep the initial persistence layer small while the notebook schema is still evolving. This is a deliberate first persistence step. FSRS scheduling state is stored on each card and review history is stored on its notebook as part of the same JSON library document.
 
 Theme selection and the last-used .memz save path remain in localStorage. The path only supports the Save project convenience action; the SQLite library is what restores the active project on relaunch.
 
@@ -37,8 +37,8 @@ SQLite is the automatic local working copy. Notebook, chapter, topic, and card e
 
 A ZIP archive containing:
 - manifest.json: format identifier, archive version, and notebook IDs.
-- notebooks/{notebookId}/notebook.json: notebook metadata and hierarchy.
-- notebooks/{notebookId}/cards/{cardId}.json: individual card records.
+- notebooks/{notebookId}/notebook.json: notebook metadata, hierarchy, and review history.
+- notebooks/{notebookId}/cards/{cardId}.json: individual card records, including FSRS scheduling state.
 
 The importer validates the manifest, IDs, ZIP directory entries, decompressed sizes, and CRC checksums. Version 1 archives remain supported through a legacy Markdown-card migration path; version 2 stores JSON card records.
 
@@ -67,11 +67,12 @@ The Tiptap Markdown extension is currently documented as beta. Keep Markdown as 
 
 ## Current data model
 
-A notebook contains id, title, color, chapters, flashcards, and a cached cards count. Each card contains id, front, back, chapterId, and topicId. Keep cards synchronized when the card collection changes.
+A notebook contains id, title, color, chapters, flashcards, reviewHistory, and a cached cards count. Each card contains id, front, back, chapterId, topicId, and an optional fsrs record. The fsrs record follows ts-fsrs Card fields (due, stability, difficulty, elapsed_days, scheduled_days, reps, lapses, state, and last_review). Review history records each review's rating, card ID, and FSRS log fields. Keep cards synchronized when the card collection changes.
+
+`src/services/fsrs.js` wraps `ts-fsrs` and converts persisted ISO date strings to/from Date objects. `ReviewSession.jsx` builds a due queue, previews all three supported intervals, and records a rating. `StudyStatus.jsx` derives the yearly activity heatmap, streaks, review outcomes, upcoming due counts, recall rate, and notebook progress from saved review history and card state. These reports are local calculations; no analytics are sent externally.
 
 ## Planned boundaries (not implemented)
 
-- FSRS scheduling and review logs.
 - Separate scheduled-study and free-review flows.
 - Media attachments and richer card templates.
 - Anki import/export and optional synchronization.
