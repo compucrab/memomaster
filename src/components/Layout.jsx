@@ -24,20 +24,19 @@ export default function Layout() {
   const [prompt, setPrompt] = useState(null);
   const [notice, setNotice] = useState("");
   const fileRef = useRef(null);
-
   const activeNotebook = notebooks.find((notebook) => notebook.id === activeId);
   const filteredNotebooks = useMemo(
     () => notebooks.filter((notebook) => notebook.title.toLowerCase().includes(query.toLowerCase())),
     [notebooks, query],
   );
 
+  useEffect(() => { try { localStorage.setItem("memomaster-theme", theme); } catch {} }, [theme]);
   useEffect(() => {
-    try { localStorage.setItem("memomaster-theme", theme); } catch {}
-  }, [theme]);
+    if (!notice) return;
+    const timeout = window.setTimeout(() => setNotice(""), 3500);
+    return () => window.clearTimeout(timeout);
+  }, [notice]);
 
-  function showError(message) {
-    setNotice(message);
-  }
   function requestText({ title, value = "", placeholder, onSubmit }) {
     setPrompt({ title, value, placeholder, onSubmit });
   }
@@ -71,10 +70,8 @@ export default function Layout() {
       setActiveId(null);
       setNotice("Project imported.");
     } catch (error) {
-      showError(`Could not import project: ${error.message}`);
-    } finally {
-      input.value = "";
-    }
+      setNotice(`Could not import project: ${error.message}`);
+    } finally { input.value = ""; }
   }
 
   useEffect(() => {
@@ -88,18 +85,12 @@ export default function Layout() {
       if (key === "o") { event.preventDefault(); fileRef.current?.click(); }
       if (key === "e" && event.shiftKey) {
         event.preventDefault();
-        exportMemz(notebooks).catch((error) => showError(error.message));
+        exportMemz(notebooks).catch((error) => setNotice(error.message));
       }
     };
     window.addEventListener("keydown", shortcuts);
     return () => window.removeEventListener("keydown", shortcuts);
   }, [notebooks]);
-
-  useEffect(() => {
-    if (!notice) return;
-    const timeout = window.setTimeout(() => setNotice(""), 3500);
-    return () => window.clearTimeout(timeout);
-  }, [notice]);
 
   return (
     <div class="app-layout" data-theme={theme} onClick={() => menu && setMenu(null)}>
@@ -108,17 +99,11 @@ export default function Layout() {
         <Titlebar
           onNew={createNotebook}
           onOpen={() => fileRef.current?.click()}
-          onExport={() => exportMemz(notebooks).catch((error) => showError(error.message))}
+          onExport={() => exportMemz(notebooks).catch((error) => setNotice(error.message))}
           onPreferences={() => { setView("settings"); setActiveId(null); }}
         />
-        {view !== "notebook" && (
-          <Topbar
-            title={view === "settings" ? "Preferences" : "Your library"}
-            query={query}
-            onQueryChange={setQuery}
-            onCreate={createNotebook}
-            showSearch={view === "library"}
-          />
+        {view === "library" && (
+          <Topbar title="Your library" query={query} onQueryChange={setQuery} onCreate={createNotebook} />
         )}
         <main class="app-main">
           {view === "settings" ? (

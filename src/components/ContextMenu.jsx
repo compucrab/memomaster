@@ -16,7 +16,7 @@ export default function ContextMenu({ x, y, notebook, onClose, onOpen, onRename,
     };
   }, []);
   return (
-    <div ref={menuRef} class="context-menu" style={{ left: Math.min(x, window.innerWidth - 220), top: Math.min(y, window.innerHeight - 170) }} onContextMenu={(event) => event.preventDefault()}>
+    <div ref={menuRef} class="context-menu" style={{ left: Math.min(x, window.innerWidth - 240), top: Math.min(y, window.innerHeight - 170) }} onClick={(event) => event.stopPropagation()} onContextMenu={(event) => event.preventDefault()}>
       <button onClick={onOpen}><ExternalLink size={14} /> Open notebook</button>
       <button onClick={onRename}><Pencil size={14} /> Rename</button>
       <div class="context-divider" />
