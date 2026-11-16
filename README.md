@@ -16,6 +16,7 @@ MemoMaster is a local-first desktop learning and revision app built with Tauri 2
 - Separate undo/redo history for the Question and Answer editors.
 - FSRS-6 scheduled reviews and unscheduled practice for a whole notebook or a chapter.
 - Correct Again/Hard/Good/Easy semantics, timed learning and relearning steps, and due-time-aware review queues.
+- Reversible scheduled review history with an Undo last review action in the retention dashboard.
 - Configurable desired retention, learning/relearning steps, maximum interval, and study-day rollover.
 - Retention dashboard with actual versus desired retention, monthly trend, rating distribution, daily workload forecast, card maturity, and frequently forgotten cards.
 - Light and dark themes.
@@ -41,7 +42,7 @@ Review buttons follow these rules:
 - **Good:** advances a learning step or continues the normal review schedule.
 - **Easy:** graduates a learning card or continues the normal review schedule.
 
-Changing FSRS preferences affects future scheduling. Existing due dates are not silently recalculated. Preferences are shared across notebooks and stored locally in the application webview; they are not currently embedded in .memz archives. Per-notebook presets are a later iteration.
+Changing FSRS preferences affects future scheduling. Existing due dates are not silently recalculated. Each new review stores the before-and-after FSRS state in its review log, allowing the latest scheduled review to be safely undone. Older logs without snapshots remain readable but cannot be undone safely. Preferences are shared across notebooks and stored locally in the application webview; they are not currently embedded in .memz archives. Per-notebook presets are a later iteration.
 
 ## Local storage and backups
 
