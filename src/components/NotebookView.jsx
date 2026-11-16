@@ -1,6 +1,6 @@
 import { useMemo, useState } from "preact/hooks";
 import {
-  ArrowLeft, BookOpen, GraduationCap, Layers3, Plus, Search, PencilLine,
+  ArrowLeft, BookOpen, GraduationCap, Layers3, Plus, Search, PencilLine, Trash2, X,
 } from "lucide-preact";
 import { renderMarkdown } from "../services/markdown";
 import CardEditor from "./CardEditor";
@@ -28,6 +28,9 @@ export default function NotebookView({ notebook, onUpdate, onBack, onRequestText
   const [scopeTopicId, setScopeTopicId] = useState("");
   const [reviewing, setReviewing] = useState(false);
   const [newCard, setNewCard] = useState(null);
+  const [selectedCardIds, setSelectedCardIds] = useState([]);
+  const [cardMenu, setCardMenu] = useState(null);
+  const [confirmAction, setConfirmAction] = useState(null);
 
   const editingCard = cards.find(card => card.id === editingCardId) || (newCard?.id === editingCardId ? newCard : null);
   const filterTopics = chapters.find(chapter => chapter.id === chapterFilter)?.topics || [];
@@ -74,6 +77,37 @@ export default function NotebookView({ notebook, onUpdate, onBack, onRequestText
     setEditingCardId(null);
   }
 
+
+  function askDelete(title, message, action) { setConfirmAction({ title, message, action }); }
+  function deleteCards(ids) {
+    const removing = new Set(ids);
+    const next = cards.filter((card) => !removing.has(card.id));
+    onUpdate({ flashcards: next, cards: next.length });
+    setSelectedCardIds([]);
+    if (removing.has(selectedCardId)) setSelectedCardId(next[0]?.id || null);
+  }
+  function toggleCardSelection(id) {
+    setSelectedCardIds((items) => items.includes(id) ? items.filter((item) => item !== id) : [...items, id]);
+  }
+  function deleteChapter(chapter) {
+    const removedIds = cards.filter((card) => card.chapterId === chapter.id).map((card) => card.id);
+    const nextCards = cards.filter((card) => card.chapterId !== chapter.id);
+    onUpdate({ chapters: chapters.filter((item) => item.id !== chapter.id), flashcards: nextCards, cards: nextCards.length });
+    setSelectedCardIds((items) => items.filter((id) => !removedIds.includes(id)));
+    if (removedIds.includes(selectedCardId)) setSelectedCardId(nextCards[0]?.id || null);
+    if (scopeChapterId === chapter.id) { setScopeChapterId(""); setScopeTopicId(""); setScopeType("notebook"); }
+    if (chapterFilter === chapter.id) { setChapterFilter("all"); setTopicFilter("all"); }
+  }
+  function deleteTopic(chapter, topic) {
+    const removedIds = cards.filter((card) => card.chapterId === chapter.id && card.topicId === topic.id).map((card) => card.id);
+    const nextCards = cards.filter((card) => !(card.chapterId === chapter.id && card.topicId === topic.id));
+    const nextChapters = chapters.map((item) => item.id === chapter.id ? { ...item, topics: (item.topics || []).filter((entry) => entry.id !== topic.id) } : item);
+    onUpdate({ chapters: nextChapters, flashcards: nextCards, cards: nextCards.length });
+    setSelectedCardIds((items) => items.filter((id) => !removedIds.includes(id)));
+    if (removedIds.includes(selectedCardId)) setSelectedCardId(nextCards[0]?.id || null);
+    if (scopeTopicId === topic.id) setScopeTopicId("");
+    if (topicFilter === topic.id) setTopicFilter("all");
+  }
   function addCard() {
     const card = makeCard();
     setNewCard(card);
@@ -152,15 +186,29 @@ export default function NotebookView({ notebook, onUpdate, onBack, onRequestText
                 </select>
               </div>
               <div class="browse-list-count">{visibleCards.length} OF {cards.length} CARDS</div>
+              <div class="browse-structure-actions">
+                {chapterFilter !== "all" && (() => { const chapter = chapters.find((item) => item.id === chapterFilter); return chapter ? <button type="button" onClick={() => askDelete("Delete chapter?", chapter.name + " and all its topics and cards will be permanently deleted.", () => deleteChapter(chapter))}><Trash2 size={12} /> Delete chapter</button> : null; })()}
+                {chapterFilter !== "all" && topicFilter !== "all" && (() => { const chapter = chapters.find((item) => item.id === chapterFilter); const topic = chapter?.topics?.find((item) => item.id === topicFilter); return chapter && topic ? <button type="button" onClick={() => askDelete("Delete topic?", topic.name + " and its cards will be permanently deleted.", () => deleteTopic(chapter, topic))}><Trash2 size={12} /> Delete topic</button> : null; })()}
+              </div>
+              {selectedCardIds.length > 0 && <div class="browse-selection-bar"><span>{selectedCardIds.length} selected</span><button type="button" onClick={() => setSelectedCardIds([])}>Clear</button><button type="button" class="delete-selected" onClick={() => askDelete("Delete selected cards?", "Permanently delete " + selectedCardIds.length + " selected cards?", () => deleteCards(selectedCardIds))}><Trash2 size={12} /> Delete</button></div>}
             </div>
             <div class="browse-card-list">
               {visibleCards.length ? visibleCards.map((card, index) => {
                 const chapter = chapters.find(item => item.id === card.chapterId);
                 const topic = chapter?.topics?.find(item => item.id === card.topicId);
-                return <button key={card.id} class={`browse-card-row ${selectedCard?.id === card.id ? "selected" : ""}`} onClick={() => setSelectedCardId(card.id)}>
-                  <span class="browse-card-index">{String(index + 1).padStart(2, "0")}</span>
-                  <span class="browse-card-copy"><strong>{String(card.front || "").replace(/[#>*_\x60]/g, "").trim().split("\n")[0] || "Untitled question"}</strong><small>{topic?.name || chapter?.name || "Unassigned"}</small></span>
-                </button>;
+                return (
+                  <div key={card.id} class={`browse-card-row ${selectedCard?.id === card.id ? "selected" : ""} ${selectedCardIds.includes(card.id) ? "checked" : ""}`} onContextMenu={(event) => {
+                    event.preventDefault();
+                    if (!selectedCardIds.includes(card.id)) setSelectedCardIds([card.id]);
+                    setCardMenu({ x: event.clientX, y: event.clientY });
+                  }}>
+                    <input class="browse-card-checkbox" type="checkbox" aria-label="Select card" checked={selectedCardIds.includes(card.id)} onChange={() => toggleCardSelection(card.id)} />
+                    <button type="button" class="browse-card-select" onClick={() => setSelectedCardId(card.id)}>
+                      <span class="browse-card-index">{String(index + 1).padStart(2, "0")}</span>
+                      <span class="browse-card-copy"><strong>{String(card.front || "").replace(/[#>*_\x60]/g, "").trim().split("\n")[0] || "Untitled question"}</strong><small>{topic?.name || chapter?.name || "Unassigned"}</small></span>
+                    </button>
+                  </div>
+                );
               }) : <div class="browse-list-empty">{cards.length ? "No cards match your search." : "No cards in this notebook yet."}</div>}
             </div>
           </aside>
@@ -223,6 +271,16 @@ export default function NotebookView({ notebook, onUpdate, onBack, onRequestText
           </div>
         </div>
       )}
+      {cardMenu && <div class="context-menu browse-card-context" style={{ left: Math.min(cardMenu.x, window.innerWidth - 240), top: Math.min(cardMenu.y, window.innerHeight - 100) }} onContextMenu={(event) => event.preventDefault()}>
+        <button type="button" class="context-danger" onClick={() => { setCardMenu(null); askDelete("Delete selected cards?", "Permanently delete " + selectedCardIds.length + " selected card(s)?", () => deleteCards(selectedCardIds)); }}><Trash2 size={14} /> Delete selected cards</button>
+      </div>}
+      {confirmAction && <div class="prompt-backdrop" onMouseDown={(event) => event.target === event.currentTarget && setConfirmAction(null)}>
+        <section class="prompt-panel" role="alertdialog" aria-modal="true">
+          <div class="prompt-heading"><h2>{confirmAction.title}</h2><button type="button" aria-label="Close" onClick={() => setConfirmAction(null)}><X size={16} /></button></div>
+          <p>{confirmAction.message}</p>
+          <div class="prompt-actions"><button type="button" class="prompt-cancel" onClick={() => setConfirmAction(null)}>Cancel</button><button type="button" class="prompt-confirm prompt-danger" onClick={() => { confirmAction.action(); setConfirmAction(null); }}>Delete</button></div>
+        </section>
+      </div>}
     </section>
   );
 }
