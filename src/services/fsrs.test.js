@@ -162,3 +162,18 @@ test("legacy review logs without snapshots are not undone destructively", () => 
   assert.equal(undone.undone, false);
   assert.equal(undone.notebooks, notebooks);
 });
+
+test("undo refuses to overwrite a schedule changed after the recorded review", () => {
+  const now = new Date("2026-01-10T12:00:00.000Z");
+  const result = scheduleReview(matureCard(now), "good", now);
+  const changedFsrs = { ...result.fsrs, due: new Date("2026-02-01T04:00:00.000Z").toISOString() };
+  const notebooks = [{
+    id: "notebook-a",
+    flashcards: [{ id: "fsrs-test-card", fsrs: changedFsrs }],
+    reviewHistory: [result.log],
+  }];
+  const undone = undoLatestReview(notebooks);
+  assert.equal(undone.undone, false);
+  assert.match(undone.reason, /schedule changed/);
+  assert.equal(undone.notebooks, notebooks);
+});
