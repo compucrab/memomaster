@@ -1,6 +1,44 @@
+import { useEffect, useState } from "preact/hooks";
 import { BookOpen, Plus } from "lucide-preact";
 
 function validColor(value) { return /^#[0-9a-fA-F]{6}$/.test(value); }
+
+function StripColorPicker({ notebook, onUpdate }) {
+  const [value, setValue] = useState(notebook.color || "#477dbb");
+
+  useEffect(() => setValue(notebook.color || "#477dbb"), [notebook.color]);
+
+  function applyColor() {
+    if (validColor(value)) onUpdate(notebook.id, { color: value });
+    else setValue(notebook.color || "#477dbb");
+  }
+
+  return (
+    <label class="strip-picker" title="Set cover strip colour using a hex value">
+      <span>STRIP COLOUR</span>
+      <input
+        type="text"
+        value={value}
+        maxLength={7}
+        spellCheck={false}
+        aria-label={`Strip colour for ${notebook.title}`}
+        onInput={(event) => setValue(event.currentTarget.value)}
+        onBlur={applyColor}
+        onKeyDown={(event) => {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            applyColor();
+            event.currentTarget.blur();
+          }
+          if (event.key === "Escape") {
+            setValue(notebook.color || "#477dbb");
+            event.currentTarget.blur();
+          }
+        }}
+      />
+    </label>
+  );
+}
 
 export default function NotebookGrid({ notebooks, onOpen, onContextMenu, onCreate, onUpdate }) {
   return (
@@ -26,10 +64,7 @@ export default function NotebookGrid({ notebooks, onOpen, onContextMenu, onCreat
                     <footer><span>{chapterCount} CHAPTERS</span><span>{notebook.cards} CARDS</span></footer>
                   </div>
                 </button>
-                <label class="strip-picker" title="Set cover strip colour using a hex value">
-                  <span>STRIP COLOUR</span>
-                  <input type="text" value={notebook.color} maxLength={7} aria-label={`Strip colour for ${notebook.title}`} onInput={(event) => validColor(event.currentTarget.value) && onUpdate(notebook.id, { color: event.currentTarget.value })} />
-                </label>
+                <StripColorPicker notebook={notebook} onUpdate={onUpdate} />
               </article>
             );
           })}
