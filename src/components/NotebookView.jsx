@@ -181,6 +181,8 @@ export default function NotebookView({ notebook, onUpdate, onBack, onRequestText
                     : card);
                   onUpdate({ flashcards: next, cards: next.length });
                   setSelectedCardIds([]);
+                  setSelectedCardId(selectedCardIds[0] || selectedCardId);
+                  setChapterFilter(targetChapterId === "__unassigned" ? "all" : targetChapterId);
                   setTargetChapterId("");
                 }}>Move</button>
                 <button type="button" onClick={() => setSelectedCardIds([])}>Clear</button>
