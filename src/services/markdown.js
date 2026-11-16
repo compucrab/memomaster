@@ -43,7 +43,7 @@ export function renderMarkdown(source = "") {
   function flushList() {
     if (list) {
       const items = list.items.map((item) => "<li>" + renderInline(item) + "</li>").join("");
-      output.push("<" + list.tag + ">" + items + "</" + list.tag + ">");
+      output.push("<" + list.tag + (list.tag === "ol" && list.start > 1 ? ' start="' + list.start + '"' : "") + ">" + items + "</" + list.tag + ">");
     }
     list = null;
   }

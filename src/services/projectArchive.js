@@ -80,7 +80,7 @@ export async function exportMemz(notebooks) {
   for (const notebook of notebooks) {
     if (!/^[\w-]{1,100}$/.test(notebook.id)) throw new Error("Invalid notebook identifier");
     notebookIds.push(notebook.id);
-    const { markdown, ...metadata } = notebook;
+    const { markdown, description, ...metadata } = notebook;
     const cards = notebook.flashcards ?? (markdown ? [{ id: "legacy-card", front: "What is this note about?", back: markdown }] : []);
     files.push({
       name: `notebooks/${notebook.id}/notebook.json`,
@@ -174,6 +174,7 @@ export async function importMemz(buffer) {
         .filter(([path]) => path.startsWith(`notebooks/${id}/cards/`) && path.endsWith(".json"))
         .map(([, content]) => JSON.parse(content));
     }
-    return { ...notebook, chapters: Array.isArray(notebook.chapters) ? notebook.chapters : [], flashcards, cards: flashcards.length };
+    const { description, ...cleanNotebook } = notebook;
+    return { ...cleanNotebook, chapters: Array.isArray(notebook.chapters) ? notebook.chapters : [], flashcards, cards: flashcards.length };
   });
 }
