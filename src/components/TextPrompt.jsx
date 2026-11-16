@@ -15,7 +15,7 @@ export default function TextPrompt({ title, value = "", placeholder, submitLabel
     <div class="prompt-backdrop" onMouseDown={(event) => event.target === event.currentTarget && onCancel()}>
       <form class="prompt-panel" onSubmit={(event) => { event.preventDefault(); setError(onSubmit(text) || ""); }}>
         <div class="prompt-heading"><h2>{title}</h2><button type="button" aria-label="Close" onClick={onCancel}><X size={16} /></button></div>
-        <input ref={inputRef} value={text} onInput={(event) => setText(event.currentTarget.value)} placeholder={placeholder} />
+        <input ref={inputRef} value={text} onInput={(event) => { setText(event.currentTarget.value); setError(""); }} placeholder={placeholder} />
         {error && <p class="prompt-error" role="alert">{error}</p>}
         <div class="prompt-actions">
           <button type="button" class="prompt-cancel" onClick={onCancel}>Cancel</button>
