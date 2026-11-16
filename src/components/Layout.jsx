@@ -30,6 +30,7 @@ export default function Layout() {
   const [menu, setMenu] = useState(null);
   const [theme, setTheme] = useState(savedTheme);
   const [prompt, setPrompt] = useState(null);
+  const [confirmNewProject, setConfirmNewProject] = useState(false);
   const [notice, setNotice] = useState("");
   const [ready, setReady] = useState(false);
   const [projectPath, setProjectPath] = useState(savedProjectPath);
@@ -118,6 +119,15 @@ export default function Layout() {
     setActiveId(id);
     setView("notebook");
   }
+  function startNewProject() {
+    setNotebooks([]);
+    setActiveId(null);
+    setView("library");
+    setQuery("");
+    setProjectPath(null);
+    setConfirmNewProject(false);
+    setNotice("New empty project created.");
+  }
   function openNotebook(id) {
     setActiveId(id);
     setView("notebook");
@@ -171,7 +181,8 @@ export default function Layout() {
     const shortcuts = (event) => {
       if (!(event.ctrlKey || event.metaKey)) return;
       const key = event.key.toLowerCase();
-      if (key === "n" && !event.shiftKey) { event.preventDefault(); createNotebook(); }
+      if (key === "n" && event.shiftKey) { event.preventDefault(); setConfirmNewProject(true); }
+      else if (key === "n") { event.preventDefault(); createNotebook(); }
       else if (key === "o" && !event.shiftKey) { event.preventDefault(); openProjectFile(); }
       else if (key === "s" && event.shiftKey) { event.preventDefault(); saveProjectAs(); }
       else if (key === "s") { event.preventDefault(); saveProject(); }
@@ -185,6 +196,7 @@ export default function Layout() {
       <div class="app-frame">
         <Titlebar
           onNew={createNotebook}
+          onNewProject={() => setConfirmNewProject(true)}
           onOpenProject={openProjectFile}
           onSaveProject={saveProject}
           onSaveProjectAs={saveProjectAs}
@@ -233,6 +245,21 @@ export default function Layout() {
           }}
           onColorChange={(color) => updateNotebook(menu.notebook.id, { color })}
         />
+      )}
+      {confirmNewProject && (
+        <div class="prompt-backdrop" onMouseDown={(event) => event.target === event.currentTarget && setConfirmNewProject(false)}>
+          <section class="prompt-panel" role="dialog" aria-modal="true" aria-labelledby="new-project-title">
+            <div class="prompt-heading">
+              <h2 id="new-project-title">Start a new project?</h2>
+              <button type="button" aria-label="Close" onClick={() => setConfirmNewProject(false)}>×</button>
+            </div>
+            <p>This will replace the current project with an empty library. Make a .memz backup first if you want to keep its contents.</p>
+            <div class="prompt-actions">
+              <button type="button" class="prompt-cancel" onClick={() => setConfirmNewProject(false)}>Cancel</button>
+              <button type="button" class="prompt-confirm" onClick={startNewProject}>Create empty project</button>
+            </div>
+          </section>
+        </div>
       )}
       {prompt && (
         <TextPrompt
