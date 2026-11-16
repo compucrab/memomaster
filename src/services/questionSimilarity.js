@@ -9,7 +9,7 @@ export function normalizeQuestion(value = "") {
     .replace(/<[^>]*>/g, " ")
     .replace(/[!#*_>`~]/g, " ")
     .toLocaleLowerCase()
-    .replace(/[^\\p{L}\\p{N}]+/gu, " ")
+    .replace(/[^\p{L}\p{N}]+/gu, " ")
     .trim()
     .replace(/ +/g, " ");
 }
