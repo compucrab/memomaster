@@ -10,6 +10,7 @@ function isDue(card, now) {
 }
 
 export default function ReviewSession({ cards, mode = "scheduled", onReview, onExit }) {
+  const [sessionCards, setSessionCards] = useState(() => cards.map((card) => ({ ...card })));
   const [queue, setQueue] = useState(() => {
     const now = new Date();
     return cards.filter((card) => mode === "unscheduled" || isDue(card, now))
@@ -20,7 +21,7 @@ export default function ReviewSession({ cards, mode = "scheduled", onReview, onE
   const [reviewed, setReviewed] = useState(0);
   const [processing, setProcessing] = useState(false);
   const [reviewError, setReviewError] = useState("");
-  const activeCard = cards.find((card) => card.id === queue[0]);
+  const activeCard = sessionCards.find((card) => card.id === queue[0]);
   const now = new Date();
   const options = useMemo(
     () => activeCard && mode === "scheduled" ? getReviewOptions(activeCard, now) : null,
@@ -40,6 +41,7 @@ export default function ReviewSession({ cards, mode = "scheduled", onReview, onE
       if (mode === "scheduled") {
         const result = scheduleReview(activeCard, choice, new Date());
         onReview(activeCard.id, result.fsrs, result.log, mode);
+        setSessionCards((items) => items.map((card) => card.id === activeCard.id ? { ...card, fsrs: result.fsrs } : card));
         setReviewed((count) => count + 1);
         if (choice === "forgot" || choice === "difficult") {
           setQueue((items) => [...items.slice(1), activeCard.id]);
