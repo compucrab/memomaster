@@ -52,7 +52,7 @@ function videoEmbed(url) {
 
 function renderInline(source) {
   let value = escapeHtml(normalizeText(source));
-  value = value.replace(/!\[([^\]]*)\]\((https?:\/\/[^\s)]+|data:image\/(?:png|jpe?g|gif|webp);base64,[^\s)]+)(?:\s+&quot;([^&]*?)&quot;]*)")?\)/gi, (_, alt, src, title) => {
+  value = value.replace(/!\[([^\]]*)\]\((https?:\/\/[^\s)]+|data:image\/(?:png|jpe?g|gif|webp);base64,[^\s)]+)(?:\s+&quot;([^&]*?)&quot;)?\)/gi, (_, alt, src, title) => {
     const safe = safeImageSource(src.replaceAll("&amp;", "&"));
     const metadata = String(title || "").match(/width=(\d+);align=(left|center|right)/);
     const width = metadata ? Math.max(40, Math.min(1600, Number(metadata[1]))) : 420;
