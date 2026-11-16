@@ -24,7 +24,7 @@ export const CardImage = Image.extend({
     const alt = String(attrs.alt || "").replace(/[\\\]]/g, "\\$&");
     const width = Math.max(40, Math.min(1600, Number(attrs.width) || 420));
     const align = ["left", "center", "right"].includes(attrs.align) ? attrs.align : "center";
-    return \`![\${alt}](\${src} "width=\${width};align=\${align}")\`;
+    return "![" + alt + "](" + src + ' "width=' + width + ";align=" + align + '")';
   },
 });
 export const AlignedParagraph = Paragraph;
