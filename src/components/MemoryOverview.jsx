@@ -5,7 +5,7 @@ function point(value, max, width, height) {
 }
 
 export default function MemoryOverview({ card, settings }) {
-  const memory = getMemoryOverview(card);
+  const memory = getMemoryOverview(card, new Date(), settings);
   if (!memory) return null;
   const width = 320, height = 90;
   const points = memory.curve.map((item) => point(item.probability, 1, width, height)).join(" ");
