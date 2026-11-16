@@ -56,7 +56,7 @@ export default function SettingsPanel({ theme, onThemeChange, fsrsSettings, onFs
           </label>
           <label>DAY ROLLOVER
             <select value={draft.rolloverHour} onChange={event => update("rolloverHour", Number(event.currentTarget.value))}>
-              {[0,1,2,3,4,5,6,7,8,9,10,11,12].map(hour => <option value={hour}>{String(hour).padStart(2,"0")}:00</option>)}
+              {Array.from({ length: 24 }, (_, hour) => hour).map(hour => <option value={hour}>{String(hour).padStart(2,"0")}:00</option>)}
             </select>
             <small>Defines when a new study day begins for scheduling and workload statistics.</small>
           </label>
