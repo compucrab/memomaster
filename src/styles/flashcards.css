@@ -132,7 +132,6 @@
 .browse-selection-bar { padding-top: 8px; border-top: 1px solid var(--line); }
 .browse-selection-bar span { margin-right: auto; color: var(--ink); font: 9px var(--mono); }
 .browse-selection-bar button.delete-selected { color: #d45f5f; border-color: color-mix(in srgb, #d45f5f 45%, var(--line)); }
-.browse-card-context { z-index: 120; }
 
 .browse-selection-bar select { min-width: 150px; height: 27px; padding: 0 7px; border: 1px solid var(--line); background: var(--paper-card); color: var(--ink); font: 9px var(--sans); }
 .browse-selection-bar button:disabled { opacity: .4; cursor: default; }
