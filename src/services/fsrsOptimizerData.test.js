@@ -44,7 +44,7 @@ test("optimizer dataset safely quotes card IDs containing CSV delimiters", () =>
     reviewHistory: [{
       cardId: 'card,"quoted"',
       review: "2026-01-01T00:00:00.000Z",
-      rating: "hard",
+      rating: "difficult",
       previousState: 1,
     }],
   }], {}, "UTC");
