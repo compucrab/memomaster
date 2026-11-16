@@ -18,6 +18,8 @@ export default function ReviewSession({ cards, mode = "scheduled", onReview, onE
   });
   const [revealed, setRevealed] = useState(false);
   const [reviewed, setReviewed] = useState(0);
+  const [repeatDelay, setRepeatDelay] = useState("3");
+  const [pendingRepeats, setPendingRepeats] = useState(0);
   const activeCard = cards.find((card) => card.id === queue[0]);
   const now = new Date();
   const options = useMemo(
@@ -25,28 +27,59 @@ export default function ReviewSession({ cards, mode = "scheduled", onReview, onE
     [activeCard?.id, activeCard?.fsrs, queue.length],
   );
 
-  function rate(choice) {
+  function finishCard(choice) {
     if (!activeCard) return;
     if (mode === "scheduled") {
       const result = scheduleReview(activeCard, choice, new Date());
       onReview(activeCard.id, result.fsrs, result.log, mode);
     } else {
-      onReview(activeCard.id, null, { cardId: activeCard.id, rating: choice, review: new Date().toISOString() }, mode);
+      onReview(activeCard.id, null, {
+        cardId: activeCard.id,
+        rating: "done",
+        review: new Date().toISOString(),
+      }, mode);
     }
     setReviewed((count) => count + 1);
     setQueue((items) => items.slice(1));
     setRevealed(false);
   }
 
-  if (!queue.length) {
+  function repeatCard() {
+    if (!activeCard) return;
+    const cardId = activeCard.id;
+    const delay = Number(repeatDelay) * 60 * 1000;
+    setQueue((items) => items.slice(1));
+    setPendingRepeats((count) => count + 1);
+    setRevealed(false);
+    setTimeout(() => {
+      setQueue((items) => [...items, cardId]);
+      setPendingRepeats((count) => Math.max(0, count - 1));
+    }, delay);
+  }
+
+  if (!queue.length && pendingRepeats === 0) {
     return (
       <section class="review-session">
         <header class="review-session-header"><button class="back-link" onClick={onExit}>← BACK TO NOTEBOOK</button></header>
         <div class="review-complete">
           <Check size={30} />
           <h1>{reviewed ? "Review complete" : "Nothing due right now"}</h1>
-          <p>{reviewed ? `You reviewed ${reviewed} ${reviewed === 1 ? "card" : "cards"}.` : "All caught up. New cards and due reviews will appear here."}</p>
+          <p>{reviewed ? `You marked ${reviewed} ${reviewed === 1 ? "card" : "cards"} as done.` : "All caught up. New cards and due reviews will appear here."}</p>
           <button class="study-primary" onClick={onExit}>Back to notebook</button>
+        </div>
+      </section>
+    );
+  }
+
+  if (!activeCard) {
+    return (
+      <section class="review-session">
+        <header class="review-session-header"><button class="back-link" onClick={onExit}>← EXIT REVIEW</button><span>UNSCHEDULED · WAITING</span></header>
+        <div class="review-complete">
+          <Clock3 size={30} />
+          <h1>Repeat queued</h1>
+          <p>{pendingRepeats} {pendingRepeats === 1 ? "card will" : "cards will"} return when the repeat timer {pendingRepeats === 1 ? "ends" : "ends"}.</p>
+          <button class="study-secondary" onClick={onExit}>Exit review</button>
         </div>
       </section>
     );
@@ -56,9 +89,9 @@ export default function ReviewSession({ cards, mode = "scheduled", onReview, onE
     <section class="review-session">
       <header class="review-session-header">
         <button class="back-link" onClick={onExit}>← EXIT REVIEW</button>
-        <span>{mode === "scheduled" ? "SCHEDULED" : "UNSCHEDULED"} · {reviewed} DONE · {queue.length} LEFT</span>
+        <span>{mode === "scheduled" ? "SCHEDULED" : "UNSCHEDULED"} · {reviewed} DONE · {queue.length + pendingRepeats} LEFT</span>
       </header>
-      <div class="review-progress"><i style={{ width: `${(reviewed / (reviewed + queue.length)) * 100}%` }} /></div>
+      <div class="review-progress"><i style={{ width: `${(reviewed / (reviewed + queue.length + pendingRepeats)) * 100}%` }} /></div>
       <div class="review-card">
         <div class="review-card-content">
           <p class="study-side-label">{revealed ? "ANSWER" : "QUESTION"}</p>
@@ -68,13 +101,27 @@ export default function ReviewSession({ cards, mode = "scheduled", onReview, onE
           <div class="study-card-actions">
             <button class="study-primary" onClick={() => setRevealed(true)}><RotateCw size={15} /> Reveal answer</button>
           </div>
-        ) : (
+        ) : mode === "scheduled" ? (
           <div class="review-ratings">
             <p>How well did you remember?</p>
             <div class="review-rating-options">
-              <button class="review-rating forgot" onClick={() => rate("forgot")}><strong>Forgot</strong><span>{mode === "scheduled" ? options.forgot.interval : "No schedule change"}</span></button>
-              <button class="review-rating difficult" onClick={() => rate("difficult")}><strong>Difficult</strong><span>{mode === "scheduled" ? options.difficult.interval : "No schedule change"}</span></button>
-              <button class="review-rating easy" onClick={() => rate("easy")}><strong>Easy</strong><span>{mode === "scheduled" ? options.easy.interval : "No schedule change"}</span></button>
+              <button class="review-rating forgot" onClick={() => finishCard("forgot")}><strong>Forgot</strong><span>{options.forgot.interval}</span></button>
+              <button class="review-rating difficult" onClick={() => finishCard("difficult")}><strong>Difficult</strong><span>{options.difficult.interval}</span></button>
+              <button class="review-rating easy" onClick={() => finishCard("easy")}><strong>Easy</strong><span>{options.easy.interval}</span></button>
+            </div>
+          </div>
+        ) : (
+          <div class="review-ratings unscheduled-actions">
+            <p>What would you like to do with this card?</p>
+            <div class="unscheduled-review-options">
+              <label class="repeat-delay-control">Repeat after
+                <select value={repeatDelay} onChange={(event) => setRepeatDelay(event.currentTarget.value)}>
+                  <option value="3">3 minutes</option>
+                  <option value="5">5 minutes</option>
+                </select>
+              </label>
+              <button class="review-rating difficult" onClick={repeatCard}><strong>Repeat</strong><span>Show again in {repeatDelay} min</span></button>
+              <button class="review-rating easy" onClick={() => finishCard("done")}><strong>Done</strong><span>Mark as reviewed</span></button>
             </div>
           </div>
         )}
