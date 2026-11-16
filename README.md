@@ -80,3 +80,6 @@ Vite uses port 1420; the Tauri configuration expects that fixed development port
 - Anki import/export, cloud sync, and multi-device synchronization are future work.
 - FSRS scheduling and review history are stored with notebook/card data and included in .memz backups.
 - Preserve backward compatibility with supported .memz archive versions when changing the archive format.
+
+- The card editor supports pasted images, inline image placement, left/centre/right image alignment and size controls. Image sizing/alignment is preserved in card Markdown. Undo/redo history is isolated to each question or answer editor.
+- Video embeds accept YouTube, Vimeo, Instagram public posts/reels, Facebook links and direct MP4/WebM/OGG URLs. Embedding still depends on each provider allowing playback in an external desktop webview.
