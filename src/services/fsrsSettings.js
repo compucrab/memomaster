@@ -2,7 +2,7 @@ export const DEFAULT_FSRS_SETTINGS = Object.freeze({
   desiredRetention: 0.9,
   learningSteps: ["10m"],
   relearningSteps: ["10m"],
-  maximumInterval: 36500,
+  maximumInterval: 180,
   rolloverHour: 4,
 });
 

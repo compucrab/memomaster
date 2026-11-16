@@ -17,7 +17,6 @@ MemoMaster is a local-first desktop learning and revision app built with Tauri 2
 - FSRS-6 scheduled reviews and unscheduled practice for a whole notebook or a chapter.
 - Correct Again/Hard/Good/Easy semantics, timed learning and relearning steps, and due-time-aware review queues.
 - Configurable desired retention, learning/relearning steps, maximum interval, and study-day rollover.
-- Per-card memory overview with stability, difficulty, retrievability, and a memory-decay curve.
 - Retention dashboard with actual versus desired retention, monthly trend, rating distribution, daily workload forecast, card maturity, and frequently forgotten cards.
 - Light and dark themes.
 - Automatic SQLite persistence and automatic .memz backup on application close.
@@ -32,7 +31,7 @@ The scheduler uses `ts-fsrs` (FSRS-6). Default preferences:
 | Desired retention | 90% |
 | Learning steps | 10 minutes |
 | Relearning steps | 10 minutes |
-| Maximum interval | 36,500 days |
+| Maximum interval | 180 days |
 | Study-day rollover | 04:00 local time |
 
 Review buttons follow these rules:
