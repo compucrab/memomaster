@@ -19,7 +19,6 @@ export default function ReviewSession({ cards, mode = "scheduled", onReview, onE
   const [pendingCards, setPendingCards] = useState([]);
   const [revealed, setRevealed] = useState(false);
   const [reviewed, setReviewed] = useState(0);
-  const [repeatDelay, setRepeatDelay] = useState("3");
   const activeCard = cards.find((card) => card.id === queue[0]);
   const now = new Date();
   const options = useMemo(
@@ -72,11 +71,8 @@ export default function ReviewSession({ cards, mode = "scheduled", onReview, onE
 
   function repeatCard() {
     if (!activeCard) return;
-    setPendingCards((items) => [...items, {
-      id: activeCard.id,
-      dueAt: Date.now() + Number(repeatDelay) * 60 * 1000,
-    }]);
-    removeActiveCard();
+    setQueue((items) => [...items.slice(1), activeCard.id]);
+    setRevealed(false);
   }
 
   if (!queue.length && !pendingCards.length) {
@@ -136,13 +132,7 @@ export default function ReviewSession({ cards, mode = "scheduled", onReview, onE
           <div class="review-ratings unscheduled-actions">
             <p>What would you like to do with this card?</p>
             <div class="unscheduled-review-options">
-              <label class="repeat-delay-control">Repeat after
-                <select value={repeatDelay} onChange={(event) => setRepeatDelay(event.currentTarget.value)}>
-                  <option value="3">3 minutes</option>
-                  <option value="5">5 minutes</option>
-                </select>
-              </label>
-              <button class="review-rating difficult" onClick={repeatCard}><strong>Repeat</strong><span>Show again in {repeatDelay} min</span></button>
+              <button class="review-rating difficult" onClick={repeatCard}><strong>Repeat</strong><span>Show again after this queue</span></button>
               <button class="review-rating easy" onClick={() => finishCard("done")}><strong>Done</strong><span>Mark as reviewed</span></button>
             </div>
           </div>
