@@ -1,116 +1,218 @@
-import { useEffect, useState } from "preact/hooks";
-import { ArrowLeft, ChevronLeft, ChevronRight, Layers3, Plus } from "lucide-preact";
-import Flashcard from "./Flashcard";
+import { useMemo, useState } from "preact/hooks";
+import {
+  ArrowLeft, BookOpen, GraduationCap, Layers3, Plus, Search, PencilLine,
+} from "lucide-preact";
+import { renderMarkdown } from "../services/markdown";
 import CardEditor from "./CardEditor";
 import ReviewSession from "./ReviewSession";
 
 function makeCard() {
   return { id: crypto.randomUUID(), front: "## Your question\n\nWrite a prompt here.", back: "Write the answer here.", chapterId: "", topicId: "" };
 }
-function makeId() { return crypto.randomUUID(); }
+const makeId = () => crypto.randomUUID();
 
 export default function NotebookView({ notebook, onUpdate, onBack, onRequestText }) {
   const cards = notebook.flashcards ?? (notebook.markdown ? [{ id: "legacy-card", front: "What is this note about?", back: notebook.markdown }] : []);
   const chapters = Array.isArray(notebook.chapters) ? notebook.chapters : [];
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [showBack, setShowBack] = useState(false);
-  const [editing, setEditing] = useState(false);
+  const [tab, setTab] = useState("browse");
+  const [selectedCardId, setSelectedCardId] = useState(cards[0]?.id || null);
+  const [search, setSearch] = useState("");
+  const [chapterFilter, setChapterFilter] = useState("all");
+  const [topicFilter, setTopicFilter] = useState("all");
+  const [editingCardId, setEditingCardId] = useState(null);
+  const [studyType, setStudyType] = useState("scheduled");
+  const [scopeType, setScopeType] = useState("notebook");
+  const [scopeChapterId, setScopeChapterId] = useState(chapters[0]?.id || "");
+  const [scopeTopicId, setScopeTopicId] = useState("");
   const [reviewing, setReviewing] = useState(false);
-  const activeCard = cards[activeIndex];
-  const dueCount = cards.filter((card) => !card.fsrs?.due || new Date(card.fsrs.due) <= new Date()).length;
 
-  useEffect(() => {
-    if (activeIndex >= cards.length) setActiveIndex(Math.max(0, cards.length - 1));
-  }, [cards.length, activeIndex]);
+  const selectedCard = cards.find(card => card.id === selectedCardId) || null;
+  const editingCard = cards.find(card => card.id === editingCardId) || null;
+  const filterTopics = chapters.find(chapter => chapter.id === chapterFilter)?.topics || [];
+  const scopeTopics = chapters.find(chapter => chapter.id === scopeChapterId)?.topics || [];
 
-  function handleReview(cardId, fsrs, log) {
-    const next = cards.map((card) => card.id === cardId ? { ...card, fsrs } : card);
-    onUpdate({ flashcards: next, cards: next.length, reviewHistory: [...(notebook.reviewHistory || []), log] });
+  const visibleCards = useMemo(() => {
+    const needle = search.trim().toLocaleLowerCase();
+    return cards.filter(card => {
+      const chapter = chapters.find(item => item.id === card.chapterId);
+      const topic = chapter?.topics?.find(item => item.id === card.topicId);
+      const matchesSearch = !needle || [card.front, card.back, chapter?.name, topic?.name]
+        .some(value => String(value || "").toLocaleLowerCase().includes(needle));
+      const matchesChapter = chapterFilter === "all" || card.chapterId === chapterFilter;
+      const matchesTopic = topicFilter === "all" || card.topicId === topicFilter;
+      return matchesSearch && matchesChapter && matchesTopic;
+    });
+  }, [cards, chapters, search, chapterFilter, topicFilter]);
+
+  const scopedCards = useMemo(() => cards.filter(card => {
+    if (scopeType === "chapter") return card.chapterId === scopeChapterId;
+    if (scopeType === "topic") return card.chapterId === scopeChapterId && card.topicId === scopeTopicId;
+    return true;
+  }), [cards, scopeType, scopeChapterId, scopeTopicId]);
+  const dueCards = scopedCards.filter(card => !card.fsrs?.due || new Date(card.fsrs.due) <= new Date());
+  const studyCards = studyType === "scheduled" ? dueCards : scopedCards;
+
+  function handleReview(cardId, fsrs, log, mode) {
+    const next = cards.map(card => card.id === cardId && mode === "scheduled" ? { ...card, fsrs } : card);
+    const changes = { flashcards: next, cards: next.length };
+    if (mode === "scheduled") changes.reviewHistory = [...(notebook.reviewHistory || []), log];
+    else changes.practiceHistory = [...(notebook.practiceHistory || []), log];
+    onUpdate(changes);
   }
-  function updateCard(changes) {
-    const next = cards.map((card, index) => index === activeIndex ? { ...card, ...changes } : card);
+
+  function saveCard(draft) {
+    const next = cards.some(card => card.id === draft.id)
+      ? cards.map(card => card.id === draft.id ? { ...card, ...draft } : card)
+      : [...cards, draft];
     onUpdate({ flashcards: next, cards: next.length, markdown: undefined });
+    setSelectedCardId(draft.id);
+    setEditingCardId(null);
   }
+
   function addCard() {
-    const next = [...cards, makeCard()];
+    const card = makeCard();
+    const next = [...cards, card];
     onUpdate({ flashcards: next, cards: next.length });
-    setActiveIndex(next.length - 1);
-    setShowBack(false);
-    setEditing(true);
+    setSelectedCardId(card.id);
+    setEditingCardId(card.id);
+    setTab("browse");
   }
+
   function addChapter() {
     onRequestText({
-      title: "New chapter",
-      placeholder: "Chapter name",
-      onSubmit: (name) => {
+      title: "New chapter", placeholder: "Chapter name", submitLabel: "Create chapter",
+      onSubmit: name => {
         if (!name.trim()) return;
-        onUpdate({ chapters: [...chapters, { id: makeId(), name: name.trim(), topics: [] }] });
+        const chapter = { id: makeId(), name: name.trim(), topics: [] };
+        onUpdate({ chapters: [...chapters, chapter] });
+        setScopeChapterId(chapter.id);
       },
     });
   }
+
   function addTopic(chapterId) {
     onRequestText({
-      title: "New topic",
-      placeholder: "Topic name",
-      onSubmit: (name) => {
+      title: "New topic", placeholder: "Topic name", submitLabel: "Create topic",
+      onSubmit: name => {
         if (!name.trim()) return;
-        const next = chapters.map((chapter) => chapter.id === chapterId
+        const next = chapters.map(chapter => chapter.id === chapterId
           ? { ...chapter, topics: [...(chapter.topics || []), { id: makeId(), name: name.trim() }] }
           : chapter);
         onUpdate({ chapters: next });
       },
     });
   }
-  function move(offset) {
-    setActiveIndex((index) => Math.min(Math.max(index + offset, 0), cards.length - 1));
-    setShowBack(false);
+
+  if (editingCard) {
+    return <CardEditor key={editingCard.id} card={editingCard} chapters={chapters}
+      onSave={saveCard} onCancel={() => setEditingCardId(null)}
+      onAddChapter={addChapter} onAddTopic={addTopic} />;
   }
 
   if (reviewing) {
-    return <ReviewSession cards={cards} onReview={handleReview} onExit={() => setReviewing(false)} />;
-  }
-
-  if (editing && activeCard) {
-    return (
-      <CardEditor
-        key={activeCard.id}
-        card={activeCard}
-        chapters={chapters}
-        onSave={(draft) => { updateCard(draft); setEditing(false); }}
-        onCancel={() => setEditing(false)}
-        onAddChapter={addChapter}
-        onAddTopic={addTopic}
-      />
-    );
+    return <ReviewSession key={`${studyType}-${scopeType}-${scopeChapterId}-${scopeTopicId}`}
+      cards={studyCards} mode={studyType}
+      onReview={handleReview} onExit={() => setReviewing(false)} />;
   }
 
   return (
-    <section class="workspace study-workspace">
-      <header class="study-header">
+    <section class="workspace notebook-workspace">
+      <header class="notebook-workspace-header">
         <button class="back-link" onClick={onBack}><ArrowLeft size={14} /> LIBRARY</button>
-        <div class="study-notebook-name"><span>{notebook.title}</span><span>{cards.length} CARDS</span></div>
-        <div class="study-header-actions"><button class="study-add" onClick={() => setReviewing(true)} disabled={!dueCount}><span>Study due</span><b>{dueCount}</b></button><button class="study-add" onClick={addCard}><Plus size={14} /> Add card</button></div>
+        <div class="notebook-workspace-title"><h1>{notebook.title}</h1><span>{cards.length} CARDS</span></div>
+        <button class="study-add" onClick={addCard}><Plus size={14} /> Add card</button>
       </header>
-      {activeCard ? (
-        <div class="study-stage">
-          <Flashcard
-            card={activeCard}
-            showBack={showBack}
-            onFlip={() => setShowBack((value) => !value)}
-            onEdit={() => setEditing(true)}
-          />
-          <footer class="study-navigation">
-            <button class="study-nav-button" onClick={() => move(-1)} disabled={activeIndex === 0}><ChevronLeft size={17} /> Previous</button>
-            <small class="study-count">{activeIndex + 1} / {cards.length}</small>
-            <button class="study-nav-button" onClick={() => move(1)} disabled={activeIndex === cards.length - 1}>Next <ChevronRight size={17} /></button>
-          </footer>
+
+      <nav class="notebook-tabs" role="tablist" aria-label="Notebook workspace">
+        <button role="tab" aria-selected={tab === "browse"} class={tab === "browse" ? "active" : ""} onClick={() => setTab("browse")}><BookOpen size={15} /> Browse</button>
+        <button role="tab" aria-selected={tab === "study"} class={tab === "study" ? "active" : ""} onClick={() => setTab("study")}><GraduationCap size={16} /> Study</button>
+      </nav>
+
+      {tab === "browse" ? (
+        <div class="browse-workspace">
+          <aside class="browse-list-panel">
+            <div class="browse-tools">
+              <label class="browse-search"><Search size={14} /><input value={search} onInput={event => setSearch(event.currentTarget.value)} placeholder="Search question or answer..." /></label>
+              <div class="browse-filters">
+                <select value={chapterFilter} onChange={event => { setChapterFilter(event.currentTarget.value); setTopicFilter("all"); }}>
+                  <option value="all">All chapters</option>
+                  {chapters.map(chapter => <option value={chapter.id}>{chapter.name}</option>)}
+                </select>
+                <select value={topicFilter} onChange={event => setTopicFilter(event.currentTarget.value)} disabled={chapterFilter === "all" || !filterTopics.length}>
+                  <option value="all">All topics</option>
+                  {filterTopics.map(topic => <option value={topic.id}>{topic.name}</option>)}
+                </select>
+              </div>
+              <div class="browse-list-count">{visibleCards.length} OF {cards.length} CARDS</div>
+            </div>
+            <div class="browse-card-list">
+              {visibleCards.length ? visibleCards.map((card, index) => {
+                const chapter = chapters.find(item => item.id === card.chapterId);
+                const topic = chapter?.topics?.find(item => item.id === card.topicId);
+                return <button key={card.id} class={`browse-card-row ${selectedCardId === card.id ? "selected" : ""}`} onClick={() => setSelectedCardId(card.id)}>
+                  <span class="browse-card-index">{String(index + 1).padStart(2, "0")}</span>
+                  <span class="browse-card-copy"><strong>{card.front.replace(/[#>*_\x60]/g, "").trim().split("\n")[0] || "Untitled question"}</strong><small>{topic?.name || chapter?.name || "Unassigned"}</small></span>
+                </button>;
+              }) : <div class="browse-list-empty">{cards.length ? "No cards match your search." : "No cards in this notebook yet."}</div>}
+            </div>
+          </aside>
+
+          <section class="browse-preview-panel">
+            {selectedCard ? (
+              <>
+                <header class="browse-preview-header"><span>CARD PREVIEW</span><button class="study-secondary" onClick={() => setEditingCardId(selectedCard.id)}><PencilLine size={13} /> Edit card</button></header>
+                <div class="browse-preview-content">
+                  <section><p>QUESTION</p><div class="study-card-prose" dangerouslySetInnerHTML={{ __html: renderMarkdown(selectedCard.front) }} /></section>
+                  <div class="browse-preview-divider" />
+                  <section><p>ANSWER</p><div class="study-card-prose" dangerouslySetInnerHTML={{ __html: renderMarkdown(selectedCard.back) }} /></section>
+                </div>
+                <footer class="browse-preview-meta">
+                  {chapters.find(item => item.id === selectedCard.chapterId)?.name || "No chapter"}
+                  <span>·</span>
+                  {chapters.find(item => item.id === selectedCard.chapterId)?.topics?.find(item => item.id === selectedCard.topicId)?.name || "No topic"}
+                </footer>
+              </>
+            ) : <div class="browse-preview-empty"><Layers3 size={26} /><p>Select a card to preview it.</p></div>}
+          </section>
         </div>
       ) : (
-        <div class="study-empty">
-          <Layers3 size={30} />
-          <h1>A fresh page.</h1>
-          <p>This notebook has no flashcards yet. Create one to begin studying.</p>
-          <button class="study-primary" onClick={addCard}><Plus size={15} /> Create first card</button>
+        <div class="study-setup">
+          <div class="study-setup-intro"><GraduationCap size={25} /><h2>Choose what to study</h2><p>Scheduled reviews keep your FSRS timeline up to date. Unscheduled practice is for a quick refresh.</p></div>
+          <div class="study-mode-options">
+            <button class={`study-mode-option ${studyType === "scheduled" ? "selected" : ""}`} onClick={() => setStudyType("scheduled")}>
+              <span class="study-mode-radio" /><strong>Scheduled</strong><small>Review cards that are due. Updates FSRS scheduling.</small><b>{dueCards.length} due</b>
+            </button>
+            <button class={`study-mode-option ${studyType === "unscheduled" ? "selected" : ""}`} onClick={() => setStudyType("unscheduled")}>
+              <span class="study-mode-radio" /><strong>Unscheduled</strong><small>Practice any cards without changing their due dates.</small><b>{scopedCards.length} cards</b>
+            </button>
+          </div>
+          <div class="study-scope-panel">
+            <h3>Study scope</h3>
+            <div class="study-scope-controls">
+              <label>CONTENT
+                <select value={scopeType} onChange={event => setScopeType(event.currentTarget.value)}>
+                  <option value="notebook">Whole notebook</option>
+                  <option value="chapter" disabled={!chapters.length}>Chapter</option>
+                  <option value="topic" disabled={!chapters.some(chapter => chapter.topics?.length)}>Topic</option>
+                </select>
+              </label>
+              {scopeType !== "notebook" && <label>CHAPTER
+                <select value={scopeChapterId} onChange={event => { setScopeChapterId(event.currentTarget.value); setScopeTopicId(""); }}>
+                  {chapters.map(chapter => <option value={chapter.id}>{chapter.name}</option>)}
+                </select>
+              </label>}
+              {scopeType === "topic" && <label>TOPIC
+                <select value={scopeTopicId} onChange={event => setScopeTopicId(event.currentTarget.value)}>
+                  <option value="">Choose a topic</option>
+                  {scopeTopics.map(topic => <option value={topic.id}>{topic.name}</option>)}
+                </select>
+              </label>}
+            </div>
+            <div class="study-scope-summary"><span>{studyCards.length} cards in this session</span><span>{studyType === "scheduled" ? "Due cards only" : "All cards · timeline unchanged"}</span></div>
+            <button class="study-primary study-start-button" disabled={!studyCards.length || (scopeType === "topic" && !scopeTopicId)} onClick={() => setReviewing(true)}>
+              <GraduationCap size={15} /> {studyCards.length ? "Start studying" : "No cards to study"}
+            </button>
+          </div>
         </div>
       )}
     </section>
