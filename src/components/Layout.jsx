@@ -20,7 +20,6 @@ const savedProjectPath = () => {
   catch { return null; }
 };
 const projectFilter = [{ name: "MemoMaster project", extensions: ["memz"] }];
-const safeFilename = (name) => name.replace(/[<>:"/\\|?*]/g, "-").trim() || "Untitled";
 const ensureExtension = (path) => path.toLowerCase().endsWith(".memz") ? path : path + ".memz";
 
 export default function Layout() {
