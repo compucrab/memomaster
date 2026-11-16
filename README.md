@@ -9,6 +9,10 @@ MemoMaster is a desktop-first, local learning workspace built with Tauri 2, Prea
 - Notebook hierarchy: chapters, with cards optionally assigned to a chapter.
 - Notebook workspace with separate Browse and Study tabs.
 - Two-column card browsing with question/answer search, chapter filters, card multi-selection, bulk deletion, and bulk chapter reassignment.
+- Rich card editor: local image insertion (stored with card content), inline and display LaTeX equations, left/centre/right alignment, and embedded video cards for supported providers.
+- Video embeds support YouTube, Vimeo, Facebook's public embed player, and direct MP4/WebM/OGG URLs. Other providers may block embedding through browser security or provider policy.
+- Images are embedded as data URLs inside card Markdown so they remain available offline and travel with SQLite and .memz backups. Keep image files reasonably small; images are limited to 12 MB each.
+
 - Scheduled FSRS reviews and unscheduled practice for a whole notebook or chapter. Unscheduled practice never changes due dates.
 - FSRS-6 spaced repetition with Forgot, Difficult, and Easy review choices and visible next-review intervals.
 - Study status dashboard with a GitHub-style yearly consistency graph, streaks, recall rate, review outcomes, upcoming reviews, and notebook progress.
