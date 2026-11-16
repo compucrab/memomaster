@@ -1,4 +1,5 @@
-import { ArrowLeft, BookOpen, Plus, Layers3 } from "lucide-preact";
+import { useEffect, useState } from "preact/hooks";
+import { ArrowLeft, ChevronLeft, ChevronRight, Layers3, Plus } from "lucide-preact";
 import Flashcard from "./Flashcard";
 
 function makeCard() {
@@ -7,52 +8,75 @@ function makeCard() {
 
 export default function NotebookView({ notebook, onUpdate, onBack }) {
   const cards = notebook.flashcards ?? (notebook.markdown ? [{ id: "legacy-card", front: "What is this note about?", back: notebook.markdown }] : []);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [showBack, setShowBack] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const activeCard = cards[activeIndex];
 
-  function updateCard(id, changes) {
-    const next = cards.map((card) => card.id === id ? { ...card, ...changes } : card);
+  useEffect(() => {
+    if (activeIndex >= cards.length) setActiveIndex(Math.max(0, cards.length - 1));
+  }, [cards.length, activeIndex]);
+
+  function updateCard(changes) {
+    const next = cards.map((card, index) => index === activeIndex ? { ...card, ...changes } : card);
     onUpdate({ flashcards: next, cards: next.length, markdown: undefined });
   }
   function addCard() {
     const next = [...cards, makeCard()];
     onUpdate({ flashcards: next, cards: next.length });
+    setActiveIndex(next.length - 1);
+    setShowBack(false);
+    setEditing(true);
   }
-  function deleteCard(id) {
-    const next = cards.filter((card) => card.id !== id);
-    onUpdate({ flashcards: next, cards: next.length });
+  function move(offset) {
+    setActiveIndex((index) => Math.min(Math.max(index + offset, 0), cards.length - 1));
+    setShowBack(false);
+    setEditing(false);
   }
 
   return (
-    <section class="workspace notebook-workspace">
-      <button class="back-link" onClick={onBack}><ArrowLeft size={14} /> ALL NOTEBOOKS</button>
-      <div class="notebook-detail-head">
-        <i style={{ backgroundColor: notebook.color }} />
-        <div>
-          <p class="eyebrow">NOTEBOOK / COLLECTION</p>
-          <h1>{notebook.title}</h1>
-          <input value={notebook.description} onInput={(event) => onUpdate({ description: event.currentTarget.value })} aria-label="Notebook description" />
-        </div>
-      </div>
-      <div class="notebook-detail-meta">
-        <span><BookOpen size={14} /> {notebook.chapters} CHAPTERS</span>
-        <span><Layers3 size={14} /> {cards.length} FLASHCARDS</span>
-      </div>
-      <div class="cards-heading">
-        <div><p class="eyebrow">ACTIVE COLLECTION</p><h2>Knowledge, one card at a time.</h2></div>
-        <button class="button-primary" onClick={addCard}><Plus size={15} /> Add flashcard</button>
-      </div>
-      <div class="flashcard-list">
-        {cards.length ? cards.map((card, index) => (
-          <Flashcard key={card.id} card={card} index={index}
-            onChange={(changes) => updateCard(card.id, changes)}
-            onDelete={() => deleteCard(card.id)} />
-        )) : (
-          <div class="empty-cards">
-            <Layers3 size={26} /><h3>Your first flashcard is waiting.</h3>
-            <p>Add a question on the front and its answer on the back.</p>
-            <button class="button-primary" onClick={addCard}><Plus size={15} /> Create flashcard</button>
+    <section class="workspace study-workspace">
+      <header class="study-header">
+        <button class="back-link" onClick={onBack}><ArrowLeft size={14} /> LIBRARY</button>
+        <div class="study-notebook-name"><span>{notebook.title}</span><i /> <span>{cards.length} CARDS</span></div>
+        <button class="study-add" onClick={addCard}><Plus size={14} /> Add card</button>
+      </header>
+
+      {activeCard ? (
+        <div class="study-stage">
+          <div class="study-stage-heading">
+            <p class="eyebrow">FOCUS SESSION</p>
+            <h1>One thought at a time<span>.</span></h1>
+            <p>Take a moment. Recall the answer before revealing it.</p>
           </div>
-        )}
-      </div>
+          <Flashcard
+            card={activeCard}
+            index={activeIndex}
+            total={cards.length}
+            showBack={showBack}
+            editing={editing}
+            onFlip={() => setShowBack((value) => !value)}
+            onEdit={() => setEditing(true)}
+            onChange={updateCard}
+            onDone={() => setEditing(false)}
+          />
+          <footer class="study-navigation">
+            <button class="study-nav-button" onClick={() => move(-1)} disabled={activeIndex === 0}><ChevronLeft size={17} /> Previous</button>
+            <div class="study-progress" aria-label={`Card ${activeIndex + 1} of ${cards.length}`}>
+              <div><span style={{ width: `${((activeIndex + 1) / cards.length) * 100}%` }} /></div>
+              <small>{activeIndex + 1} OF {cards.length}</small>
+            </div>
+            <button class="study-nav-button" onClick={() => move(1)} disabled={activeIndex === cards.length - 1}>Next <ChevronRight size={17} /></button>
+          </footer>
+        </div>
+      ) : (
+        <div class="study-empty">
+          <Layers3 size={30} />
+          <h1>A fresh page.</h1>
+          <p>This notebook has no flashcards yet. Create one to begin studying.</p>
+          <button class="study-primary" onClick={addCard}><Plus size={15} /> Create first card</button>
+        </div>
+      )}
     </section>
   );
 }
