@@ -1,5 +1,7 @@
+import katex from "katex";
+
 function escapeHtml(value) {
-  return value
+  return String(value)
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;")
@@ -13,18 +15,54 @@ function normalizeText(value) {
     .replace(/\u00a0/g, " ");
 }
 
+function safeImageSource(value) {
+  return /^(https?:\/\/|data:image\/(png|jpe?g|gif|webp);base64,)/i.test(value) ? value : "";
+}
+
+function videoEmbed(url) {
+  try {
+    const parsed = new URL(url);
+    if (parsed.protocol !== "https:" && parsed.protocol !== "http:") return "";
+    let source = "";
+    if (parsed.hostname === "youtu.be" || parsed.hostname.endsWith("youtube.com")) {
+      const id = parsed.hostname === "youtu.be" ? parsed.pathname.slice(1) : parsed.searchParams.get("v") || parsed.pathname.split("/").filter(Boolean).pop();
+      if (!/^[\w-]{6,20}$/.test(id || "")) return "";
+      source = `https://www.youtube-nocookie.com/embed/${id}`;
+    } else if (parsed.hostname.endsWith("vimeo.com")) {
+      const id = parsed.pathname.split("/").filter(Boolean).pop();
+      if (!/^\d+$/.test(id || "")) return "";
+      source = `https://player.vimeo.com/video/${id}`;
+    } else if (parsed.hostname.endsWith("facebook.com") || parsed.hostname.endsWith("fb.watch")) {
+      source = `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(url)}&show_text=0`;
+    } else if (/\.(mp4|webm|ogg)$/i.test(parsed.pathname)) {
+      return `<video class="study-embedded-video" controls preload="metadata" src="${escapeHtml(url)}"></video>`;
+    } else {
+      return "";
+    }
+    return `<div class="study-video-frame"><iframe src="${escapeHtml(source)}" title="Embedded video" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div>`;
+  } catch {
+    return "";
+  }
+}
+
 function renderInline(source) {
-  return escapeHtml(normalizeText(source))
+  let value = escapeHtml(normalizeText(source));
+  value = value.replace(/!\[([^\]]*)\]\((https?:\/\/[^\s)]+|data:image\/(?:png|jpe?g|gif|webp);base64,[^\s)]+)(?:\s+"([^"]*)")?\)/gi, (_, alt, src, title) => {
+    const safe = safeImageSource(src);
+    return safe ? `<img class="study-card-image" src="${safe}" alt="${alt}"${title ? ` title="${title}"` : ""} loading="lazy">` : "";
+  });
+  value = value
     .replace(/\x60([^\x60]+)\x60/g, "<code>$1</code>")
     .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
     .replace(/__(.+?)__/g, "<strong>$1</strong>")
     .replace(/\*(.+?)\*/g, "<em>$1</em>")
     .replace(/_(.+?)_/g, "<em>$1</em>")
-    .replace(/~~(.+?)~~/g, "<del>$1</del>")
-    .replace(
-      /\[(.+?)\]\((https?:\/\/[^\s)]+)\)/g,
-      '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>',
-    );
+    .replace(/~~(.+?)~~/g, "<del>$1</del>");
+  value = value.replace(/\$([^$\n]+)\$/g, (_, latex) => katex.renderToString(latex, { throwOnError: false, strict: "ignore" }));
+  return value.replace(
+    /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,
+    '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>',
+  );
 }
 
 export function renderMarkdown(source = "") {
@@ -34,6 +72,8 @@ export function renderMarkdown(source = "") {
   let quote = [];
   let code = [];
   let inCode = false;
+  let mathBlock = [];
+  let inMath = false;
   const fence = String.fromCharCode(96).repeat(3);
 
   function flushParagraph() {
@@ -56,9 +96,24 @@ export function renderMarkdown(source = "") {
     code = [];
     inCode = false;
   }
+  function flushMath() {
+    const latex = mathBlock.join("\n");
+    output.push('<div class="study-math-block">' + katex.renderToString(latex, { displayMode: true, throwOnError: false, strict: "ignore" }) + "</div>");
+    mathBlock = [];
+    inMath = false;
+  }
 
   const lines = normalizeText(source).replaceAll("\r\n", "\n").split("\n");
   for (const line of lines) {
+    if (line.trim() === "$$") {
+      if (inMath) flushMath();
+      else {
+        flushParagraph(); flushList(); flushQuote();
+        inMath = true;
+      }
+      continue;
+    }
+    if (inMath) { mathBlock.push(line); continue; }
     if (line.startsWith(fence)) {
       if (inCode) flushCode();
       else {
@@ -68,6 +123,13 @@ export function renderMarkdown(source = "") {
       continue;
     }
     if (inCode) { code.push(line); continue; }
+
+    const video = line.match(/^\s*@\[video\]\((https?:\/\/[^\s)]+)\)\s*$/);
+    if (video) {
+      flushParagraph(); flushList(); flushQuote();
+      output.push(videoEmbed(video[1]) || '<p class="study-embed-unavailable">This video cannot be embedded by its source.</p>');
+      continue;
+    }
 
     const heading = line.match(/^(#{1,3})\s+(.+)$/);
     const bullet = line.match(/^\s*[-*+]\s+(.+)$/);
@@ -101,6 +163,7 @@ export function renderMarkdown(source = "") {
   }
 
   if (inCode) flushCode();
+  if (inMath) flushMath();
   flushParagraph(); flushList(); flushQuote();
   return output.join("\n");
 }
