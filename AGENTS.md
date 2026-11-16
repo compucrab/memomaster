@@ -18,15 +18,13 @@ This document is the working contract for coding agents contributing to MemoMast
 
 The intended hierarchy is:
 
-`Notebook → Chapter → Topic → Flashcard`
+`Notebook → Chapter → Flashcard`
 
 - A notebook contains chapters and flashcards.
-- A chapter contains topics.
 - A flashcard has Markdown front and back content.
-- A flashcard may be assigned to a chapter and topic.
-- A topic assignment must belong to the selected chapter.
-- Notebook view has separate Browse and Study tabs. Browse is a two-column card list/preview with question+answer search and chapter/topic filters.
-- Study sessions can target the whole notebook, a chapter, or a topic.
+- A flashcard may optionally be assigned to a chapter.
+- Notebook view has separate Browse and Study tabs. Browse is a two-column card list/preview with question+answer search and chapter filters.
+- Study sessions can target the whole notebook, a chapter.
 - Scheduled sessions include only due cards and update FSRS scheduling. Unscheduled practice can use any cards, stores activity in `practiceHistory`, and must never change card FSRS state or due dates.
 - The study interface presents one card at a time.
 - Scheduled review uses `ts-fsrs` (FSRS-6). The user-facing choices are Forgot → Rating.Again, Difficult → Rating.Hard, and Easy → Rating.Easy. Do not add a fourth rating without a product decision.
@@ -75,7 +73,7 @@ Do not claim or implement against assumptions that are not true:
 - Use immutable updates for arrays and nested records.
 - Use stable record IDs. Do not use array indexes as persisted IDs.
 - When changing cards, keep the notebook's cached `cards` count in sync with `flashcards.length`.
-- When changing chapter/topic assignments, prevent a card from retaining a topic that belongs to another chapter.
+- When moving cards between chapters, update every selected card's chapter assignment together.
 - Clean up event listeners and effects on unmount.
 - Do not use browser APIs unavailable in the Tauri webview without checking platform support and fallback behavior.
 
