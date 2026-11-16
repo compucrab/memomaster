@@ -4,7 +4,6 @@ export default function SettingsPanel({ theme, onThemeChange, onBack }) {
   return (
     <section class="workspace settings-workspace">
       <button class="settings-back" onClick={onBack}><ArrowLeft size={14} /> BACK TO LIBRARY</button>
-      <div class="page-intro"><div><p class="eyebrow">MAKE IT YOURS</p><h1>Preferences<span>.</span></h1><p class="page-description">A few thoughtful controls for your learning space.</p></div></div>
       <div class="settings-list">
         <section class="settings-row">
           <i><Palette size={18} /></i>
