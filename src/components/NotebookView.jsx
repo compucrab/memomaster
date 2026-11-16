@@ -2,7 +2,7 @@ import { useMemo, useState } from "preact/hooks";
 import {
   ArrowLeft, BookOpen, GraduationCap, Layers3, Plus, Search, PencilLine, Trash2, X,
 } from "lucide-preact";
-import { renderMarkdown } from "../services/markdown";
+import CardContent from "./CardContent";
 import CardEditor from "./CardEditor";
 import ReviewSession from "./ReviewSession";
 
@@ -239,9 +239,9 @@ export default function NotebookView({ notebook, onUpdate, onBack, onRequestText
               <>
                 <header class="browse-preview-header"><span>CARD PREVIEW</span><button class="study-secondary" onClick={() => setEditingCardId(selectedCard.id)}><PencilLine size={13} /> Edit card</button></header>
                 <div class="browse-preview-content">
-                  <section><p>QUESTION</p><div class="study-card-prose" dangerouslySetInnerHTML={{ __html: renderMarkdown(selectedCard.front) }} /></section>
+                  <section><p>QUESTION</p><CardContent content={selectedCard.front} /></section>
                   <div class="browse-preview-divider" />
-                  <section><p>ANSWER</p><div class="study-card-prose" dangerouslySetInnerHTML={{ __html: renderMarkdown(selectedCard.back) }} /></section>
+                  <section><p>ANSWER</p><CardContent content={selectedCard.back} /></section>
                 </div>
                 <footer class="browse-preview-meta">
                   <span>{chapters.find(item => item.id === selectedCard.chapterId)?.name || "Unassigned"}</span>
