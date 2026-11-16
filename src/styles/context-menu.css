@@ -1,9 +1,9 @@
 @reference "tailwindcss";
 
-.context-menu { @apply fixed z-50 w-[205px] border p-[6px]; border-color: var(--line); background: var(--surface); box-shadow: 0 12px 35px #0002; }
+.context-menu { @apply fixed z-50 w-[230px] border p-[6px]; border-color: var(--line); background: var(--surface); box-shadow: 0 12px 35px #0002; }
 .context-menu > button { @apply flex h-[34px] w-full items-center gap-2 border-0 bg-transparent px-[9px] text-left; color: var(--ink); cursor: pointer; font-size: 11px; }
 .context-menu > button:hover { background: var(--hover); }
 .context-divider { height: 1px; margin: 5px 0; background: var(--line); }
 .context-color-picker { @apply flex items-center justify-between gap-2 px-[9px] py-2; color: var(--muted); font: 8px var(--mono); letter-spacing: .1em; }
 .context-color-picker span { @apply flex items-center gap-2; }
-.context-color-picker input { width: 27px; height: 22px; padding: 0; border: 1px solid var(--line); background: transparent; cursor: pointer; }
+.context-color-picker input { width: 76px; padding: 4px 6px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); font: 10px var(--mono); }
