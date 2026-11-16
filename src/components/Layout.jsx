@@ -11,6 +11,7 @@ import ContextMenu from "./ContextMenu";
 import TextPrompt from "./TextPrompt";
 import StudyStatus from "./StudyStatus";
 import { createMemz, importMemz } from "../services/projectArchive";
+import { loadFsrsSettings, saveFsrsSettings } from "../services/fsrsSettings";
 
 const savedTheme = () => {
   try { return localStorage.getItem("memomaster-theme") || "light"; }
@@ -35,6 +36,7 @@ export default function Layout() {
   const [query, setQuery] = useState("");
   const [menu, setMenu] = useState(null);
   const [theme, setTheme] = useState(savedTheme);
+  const [fsrsSettings, setFsrsSettings] = useState(loadFsrsSettings);
   const [prompt, setPrompt] = useState(null);
   const [confirmNewProject, setConfirmNewProject] = useState(false);
   const [deleteNotebook, setDeleteNotebook] = useState(null);
@@ -59,6 +61,7 @@ export default function Layout() {
   );
 
   useEffect(() => { try { localStorage.setItem("memomaster-theme", theme); } catch {} }, [theme]);
+  useEffect(() => { saveFsrsSettings(fsrsSettings); }, [fsrsSettings]);
   useEffect(() => { try { projectPath ? localStorage.setItem("memomaster-project-path", projectPath) : localStorage.removeItem("memomaster-project-path"); } catch {} }, [projectPath]);
 
   useEffect(() => {
@@ -184,7 +187,6 @@ export default function Layout() {
     }
   }
 
-
   async function saveProject() {
     try {
       const archive = await createMemz(notebooks);
@@ -227,12 +229,13 @@ export default function Layout() {
         )}
         <main class="app-main">
           {view === "settings" ? (
-            <SettingsPanel theme={theme} onThemeChange={setTheme} onBack={() => setView("library")} />
+            <SettingsPanel theme={theme} onThemeChange={setTheme} fsrsSettings={fsrsSettings} onFsrsSettingsChange={setFsrsSettings} onBack={() => setView("library")} />
           ) : view === "status" ? (
-            <StudyStatus notebooks={notebooks} onBack={() => setView("library")} />
+            <StudyStatus notebooks={notebooks} settings={fsrsSettings} onBack={() => setView("library")} />
           ) : view === "notebook" && activeNotebook ? (
             <NotebookView
               notebook={activeNotebook}
+              fsrsSettings={fsrsSettings}
               onUpdate={(changes) => updateNotebook(activeNotebook.id, changes)}
               onBack={() => setView("library")}
               onRequestText={requestText}
