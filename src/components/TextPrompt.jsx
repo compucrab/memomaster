@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "preact/hooks";
 import { Check, X } from "lucide-preact";
 
-export default function TextPrompt({ title, value = "", placeholder, onCancel, onSubmit }) {
+export default function TextPrompt({ title, value = "", placeholder, submitLabel = "Save", onCancel, onSubmit }) {
   const [text, setText] = useState(value);
   const inputRef = useRef(null);
   useEffect(() => { inputRef.current?.focus(); inputRef.current?.select(); }, []);
@@ -17,7 +17,7 @@ export default function TextPrompt({ title, value = "", placeholder, onCancel, o
         <input ref={inputRef} value={text} onInput={(event) => setText(event.currentTarget.value)} placeholder={placeholder} />
         <div class="prompt-actions">
           <button type="button" class="prompt-cancel" onClick={onCancel}>Cancel</button>
-          <button type="submit" class="prompt-confirm" disabled={!text.trim()}><Check size={14} /> Save</button>
+          <button type="submit" class="prompt-confirm" disabled={!text.trim()}><Check size={14} /> {submitLabel}</button>
         </div>
       </form>
     </div>
