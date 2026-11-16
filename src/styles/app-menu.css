@@ -4,8 +4,9 @@
 .app-menu-group { @apply relative flex h-full items-center; }
 .app-menu-trigger { @apply inline-flex h-[30px] items-center gap-1 rounded-sm border-0 bg-transparent px-3; color: var(--muted); cursor: pointer; font: 11px var(--sans); }
 .app-menu-trigger:hover, .app-menu-trigger.is-open { background: var(--hover); color: var(--ink); }
-.app-menu-popover { @apply absolute left-0 top-[37px] z-50 w-[245px] border p-1; border-color: var(--line); background: var(--surface); box-shadow: 0 12px 35px #0002; }
+.app-menu-popover { @apply absolute left-0 top-[37px] z-50 w-[260px] border p-1; border-color: var(--line); background: var(--surface); box-shadow: 0 12px 35px #0002; }
 .app-menu-popover button { @apply flex h-[36px] w-full items-center gap-2 border-0 bg-transparent px-2 text-left; color: var(--ink); cursor: pointer; font: 11px var(--sans); }
-.app-menu-popover button:hover { background: var(--hover); }
+.app-menu-popover button:hover:not(:disabled) { background: var(--hover); }
+.app-menu-popover button:disabled { opacity: .38; cursor: not-allowed; }
 .app-menu-popover kbd { @apply ml-auto; color: var(--muted); font: 9px var(--mono); }
 .app-menu-separator { height: 1px; margin: 4px 3px; background: var(--line); }

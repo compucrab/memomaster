@@ -1,21 +1,30 @@
 import { useEffect, useRef, useState } from "preact/hooks";
-import { ChevronDown, FilePlus2, FolderOpen, Download, Settings2, Scissors, Copy, Clipboard, ClipboardCheck } from "lucide-preact";
+import {
+  ChevronDown, FilePlus2, FolderOpen, Save, SaveAll, FileOutput,
+  Download, Settings2,
+} from "lucide-preact";
 
 const groups = [
   { name: "File", items: [
     { label: "New notebook", shortcut: "Ctrl N", Icon: FilePlus2, action: "new" },
-    { label: "Open project", shortcut: "Ctrl O", Icon: FolderOpen, action: "open" },
-    { label: "Export project", shortcut: "Ctrl Shift E", Icon: Download, action: "export" },
+    { label: "Open notebook…", shortcut: "Ctrl Shift O", Icon: FolderOpen, action: "openNotebook" },
+    { label: "Save notebook", shortcut: "Ctrl S", Icon: Save, action: "saveNotebook", needsNotebook: true },
+    { label: "Save notebook as…", Icon: FileOutput, action: "saveNotebookAs", needsNotebook: true },
+    { separator: true },
+    { label: "Open project…", shortcut: "Ctrl O", Icon: FolderOpen, action: "openProject" },
+    { label: "Save project", Icon: SaveAll, action: "saveProject" },
+    { label: "Save project as…", shortcut: "Ctrl Shift S", Icon: Download, action: "saveProjectAs" },
   ] },
   { name: "Edit", items: [
     { label: "Preferences", Icon: Settings2, action: "preferences" },
-    { separator: true },
-    { label: "Theme", Icon: Settings2, action: "preferences" },
-
   ] },
 ];
 
-export default function AppMenu({ onNew, onOpen, onExport, onPreferences }) {
+export default function AppMenu({
+  onNew, onOpenNotebook, onSaveNotebook, onSaveNotebookAs,
+  onOpenProject, onSaveProject, onSaveProjectAs, onPreferences,
+  hasNotebook = false,
+}) {
   const [active, setActive] = useState(null);
   const root = useRef(null);
   useEffect(() => {
@@ -33,7 +42,14 @@ export default function AppMenu({ onNew, onOpen, onExport, onPreferences }) {
   function run(action) {
     setActive(null);
     const actions = {
-      new: onNew, open: onOpen, export: onExport, preferences: onPreferences
+      new: onNew,
+      openNotebook: onOpenNotebook,
+      saveNotebook: onSaveNotebook,
+      saveNotebookAs: onSaveNotebookAs,
+      openProject: onOpenProject,
+      saveProject: onSaveProject,
+      saveProjectAs: onSaveProjectAs,
+      preferences: onPreferences,
     };
     actions[action]?.();
   }
@@ -49,7 +65,7 @@ export default function AppMenu({ onNew, onOpen, onExport, onPreferences }) {
               {group.items.map((item, index) => item.separator ? (
                 <div class="app-menu-separator" key={index} />
               ) : (
-                <button key={item.label} onClick={() => run(item.action)}>
+                <button key={item.label} disabled={item.needsNotebook && !hasNotebook} onClick={() => run(item.action)}>
                   <item.Icon size={14} /> {item.label} {item.shortcut && <kbd>{item.shortcut}</kbd>}
                 </button>
               ))}

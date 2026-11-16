@@ -74,29 +74,40 @@ async function createZip(files) {
   return concatenate([...localEntries, centralDirectory, endRecord]);
 }
 
-export async function exportMemz(notebooks) {
+function cleanNotebook(notebook) {
+  const { description, markdown, ...metadata } = notebook;
+  const cards = notebook.flashcards ?? (markdown ? [{ id: "legacy-card", front: "What is this note about?", back: markdown }] : []);
+  return {
+    ...metadata,
+    chapters: Array.isArray(notebook.chapters) ? notebook.chapters : [],
+    flashcards: cards.map((card, index) => ({
+      id: card.id || `card-${index + 1}`,
+      front: card.front ?? "",
+      back: card.back ?? "",
+      chapterId: card.chapterId ?? "",
+      topicId: card.topicId ?? "",
+    })),
+    cards: cards.length,
+  };
+}
+
+export async function createMemz(notebooks) {
   const files = [];
   const notebookIds = [];
-  for (const notebook of notebooks) {
+  for (const source of notebooks) {
+    const notebook = cleanNotebook(source);
     if (!/^[\w-]{1,100}$/.test(notebook.id)) throw new Error("Invalid notebook identifier");
     notebookIds.push(notebook.id);
-    const { markdown, description, ...metadata } = notebook;
-    const cards = notebook.flashcards ?? (markdown ? [{ id: "legacy-card", front: "What is this note about?", back: markdown }] : []);
+    const { flashcards, ...metadata } = notebook;
     files.push({
       name: `notebooks/${notebook.id}/notebook.json`,
-      content: JSON.stringify({ ...metadata, cards: cards.length, flashcards: undefined }, null, 2),
+      content: JSON.stringify(metadata, null, 2),
     });
-    cards.forEach((card, index) => {
-      const cardId = /^[\w-]{1,100}$/.test(card.id ?? "") ? card.id : `card-${index + 1}`;
+    flashcards.forEach((card, index) => {
+      const cardId = /^[\w-]{1,100}$/.test(card.id) ? card.id : `card-${index + 1}`;
       files.push({
         name: `notebooks/${notebook.id}/cards/${cardId}.json`,
-        content: JSON.stringify({
-          id: cardId,
-          front: card.front ?? "",
-          back: card.back ?? "",
-          chapterId: card.chapterId ?? "",
-          topicId: card.topicId ?? "",
-        }, null, 2),
+        content: JSON.stringify({ ...card, id: cardId }, null, 2),
       });
     });
   }
@@ -104,31 +115,46 @@ export async function exportMemz(notebooks) {
     name: "manifest.json",
     content: JSON.stringify({ format: "memomaster", version: 2, notebooks: notebookIds }, null, 2),
   });
-  const archive = await createZip(files);
-  const url = URL.createObjectURL(new Blob([archive], { type: "application/zip" }));
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = "memomaster-library.memz";
-  link.click();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  return createZip(files);
 }
 
-export async function importMemz(buffer) {
-  const bytes = new Uint8Array(buffer);
+export function createMemn(notebook) {
+  return encoder.encode(JSON.stringify({
+    format: "memomaster-notebook",
+    version: 1,
+    notebook: cleanNotebook(notebook),
+  }, null, 2));
+}
+
+export function importMemn(input) {
+  const bytes = input instanceof Uint8Array ? input : new Uint8Array(input);
+  const payload = JSON.parse(decoder.decode(bytes));
+  if (payload.format !== "memomaster-notebook" || payload.version !== 1 || !payload.notebook) {
+    throw new Error("Unsupported MemoMaster notebook file");
+  }
+  if (typeof payload.notebook.title !== "string" || typeof payload.notebook.id !== "string") {
+    throw new Error("Invalid notebook data");
+  }
+  return cleanNotebook(payload.notebook);
+}
+
+export async function importMemz(input) {
+  const bytes = input instanceof Uint8Array ? input : new Uint8Array(input);
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
   let endOffset = -1;
   const searchStart = Math.max(0, bytes.length - 65557);
   for (let offset = bytes.length - 22; offset >= searchStart; offset--) {
-    if (view.getUint32(offset, true) === 0x06054b50) { endOffset = offset; break; }
+    if (offset >= 0 && view.getUint32(offset, true) === 0x06054b50) { endOffset = offset; break; }
   }
-  if (endOffset < 0) throw new Error("This file is not a valid ZIP archive");
+  if (endOffset < 0) throw new Error("This file is not a valid MemoMaster project");
   const entryCount = view.getUint16(endOffset + 10, true);
   const directoryOffset = view.getUint32(endOffset + 16, true);
-  if (entryCount > 20000) throw new Error("Archive contains too many entries");
+  if (entryCount > 20000 || directoryOffset >= bytes.length) throw new Error("Invalid project archive");
   const files = new Map();
   let cursor = directoryOffset;
+  let totalSize = 0;
   for (let index = 0; index < entryCount; index++) {
-    if (view.getUint32(cursor, true) !== 0x02014b50) throw new Error("Invalid ZIP directory");
+    if (cursor + 46 > bytes.length || view.getUint32(cursor, true) !== 0x02014b50) throw new Error("Invalid ZIP directory");
     const method = view.getUint16(cursor + 10, true);
     const checksum = view.getUint32(cursor + 16, true);
     const compressedSize = view.getUint32(cursor + 20, true);
@@ -139,7 +165,10 @@ export async function importMemz(buffer) {
     const localOffset = view.getUint32(cursor + 42, true);
     const name = decoder.decode(bytes.slice(cursor + 46, cursor + 46 + nameLength));
     if (name.startsWith("/") || name.includes("..") || name.includes("\\")) throw new Error("Unsafe archive path");
-    if (originalSize > 20_000_000) throw new Error("An archive entry is too large");
+    totalSize += originalSize;
+    if (originalSize > 20_000_000 || totalSize > 200_000_000 || localOffset + 30 > bytes.length) {
+      throw new Error("An archive entry is invalid or too large");
+    }
     if (view.getUint32(localOffset, true) !== 0x04034b50) throw new Error("Invalid ZIP entry");
     const localNameLength = view.getUint16(localOffset + 26, true);
     const localExtraLength = view.getUint16(localOffset + 28, true);
@@ -172,9 +201,8 @@ export async function importMemz(buffer) {
     } else {
       flashcards = [...files.entries()]
         .filter(([path]) => path.startsWith(`notebooks/${id}/cards/`) && path.endsWith(".json"))
-        .map(([, content]) => JSON.parse(content));
+        .map(([, value]) => JSON.parse(value));
     }
-    const { description, ...cleanNotebook } = notebook;
-    return { ...cleanNotebook, chapters: Array.isArray(notebook.chapters) ? notebook.chapters : [], flashcards, cards: flashcards.length };
+    return cleanNotebook({ ...notebook, flashcards });
   });
 }
