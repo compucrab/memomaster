@@ -7,7 +7,7 @@ function makeCard() {
 }
 function makeId() { return crypto.randomUUID(); }
 
-export default function NotebookView({ notebook, onUpdate, onBack }) {
+export default function NotebookView({ notebook, onUpdate, onBack, onRequestText }) {
   const cards = notebook.flashcards ?? (notebook.markdown ? [{ id: "legacy-card", front: "What is this note about?", back: notebook.markdown }] : []);
   const chapters = Array.isArray(notebook.chapters) ? notebook.chapters : [];
   const [activeIndex, setActiveIndex] = useState(0);
@@ -31,18 +31,27 @@ export default function NotebookView({ notebook, onUpdate, onBack }) {
     setEditing(true);
   }
   function addChapter() {
-    const name = window.prompt("Chapter name");
-    if (!name?.trim()) return;
-    const chapter = { id: makeId(), name: name.trim(), topics: [] };
-    onUpdate({ chapters: [...chapters, chapter] });
+    onRequestText({
+      title: "New chapter",
+      placeholder: "Chapter name",
+      onSubmit: (name) => {
+        if (!name.trim()) return;
+        onUpdate({ chapters: [...chapters, { id: makeId(), name: name.trim(), topics: [] }] });
+      },
+    });
   }
   function addTopic(chapterId) {
-    const name = window.prompt("Topic name");
-    if (!name?.trim()) return;
-    const next = chapters.map((chapter) => chapter.id === chapterId
-      ? { ...chapter, topics: [...(chapter.topics || []), { id: makeId(), name: name.trim() }] }
-      : chapter);
-    onUpdate({ chapters: next });
+    onRequestText({
+      title: "New topic",
+      placeholder: "Topic name",
+      onSubmit: (name) => {
+        if (!name.trim()) return;
+        const next = chapters.map((chapter) => chapter.id === chapterId
+          ? { ...chapter, topics: [...(chapter.topics || []), { id: makeId(), name: name.trim() }] }
+          : chapter);
+        onUpdate({ chapters: next });
+      },
+    });
   }
   function move(offset) {
     setActiveIndex((index) => Math.min(Math.max(index + offset, 0), cards.length - 1));
@@ -57,7 +66,6 @@ export default function NotebookView({ notebook, onUpdate, onBack }) {
         <div class="study-notebook-name"><span>{notebook.title}</span><span>{cards.length} CARDS</span></div>
         <button class="study-add" onClick={addCard}><Plus size={14} /> Add card</button>
       </header>
-
       {activeCard ? (
         <div class="study-stage">
           <Flashcard

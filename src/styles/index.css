@@ -5,11 +5,11 @@
 @import "./layout.css";
 @import "./titlebar.css";
 @import "./app-menu.css";
-@import "./sidebar.css";
 @import "./topbar.css";
 @import "./notebooks.css";
 @import "./markdown.css";
 @import "./flashcards.css";
 @import "./context-menu.css";
 @import "./settings.css";
+@import "./overlays.css";
 @import "./dark-theme.css";

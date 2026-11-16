@@ -8,4 +8,4 @@
 .app-menu-popover button { @apply flex h-[36px] w-full items-center gap-2 border-0 bg-transparent px-2 text-left; color: var(--ink); cursor: pointer; font: 11px var(--sans); }
 .app-menu-popover button:hover { background: var(--hover); }
 .app-menu-popover kbd { @apply ml-auto; color: var(--muted); font: 9px var(--mono); }
-.app-menu-popover > div { height: 1px; margin: 4px 3px; background: var(--line); }
+.app-menu-separator { height: 1px; margin: 4px 3px; background: var(--line); }

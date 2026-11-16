@@ -1,5 +1,7 @@
 import { BookOpen, Plus, ArrowUpRight } from "lucide-preact";
 
+function validColor(value) { return /^#[0-9a-fA-F]{6}$/.test(value); }
+
 export default function NotebookGrid({ notebooks, onOpen, onContextMenu, onCreate, onUpdate }) {
   return (
     <section class="workspace library-workspace">
@@ -31,9 +33,9 @@ export default function NotebookGrid({ notebooks, onOpen, onContextMenu, onCreat
                     <footer><span>{chapterCount} CHAPTERS</span><span>{notebook.cards} CARDS</span><span>{notebook.updated.toUpperCase()}</span></footer>
                   </div>
                 </button>
-                <label class="strip-picker" title="Choose any cover strip colour">
+                <label class="strip-picker" title="Set cover strip colour using a hex value">
                   <span>STRIP COLOUR</span>
-                  <input type="color" value={notebook.color} aria-label={`Choose strip colour for ${notebook.title}`} onInput={(event) => onUpdate(notebook.id, { color: event.currentTarget.value })} />
+                  <input type="text" value={notebook.color} maxLength={7} aria-label={`Strip colour for ${notebook.title}`} onInput={(event) => validColor(event.currentTarget.value) && onUpdate(notebook.id, { color: event.currentTarget.value })} />
                 </label>
               </article>
             );

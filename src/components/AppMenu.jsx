@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "preact/hooks";
-import { ChevronDown, FilePlus2, FolderOpen, Download, Settings2, Info, Scissors, Copy, Clipboard, ClipboardCheck } from "lucide-preact";
+import { ChevronDown, FilePlus2, FolderOpen, Download, Settings2, Scissors, Copy, Clipboard, ClipboardCheck } from "lucide-preact";
 
 const groups = [
   { name: "File", items: [
@@ -8,14 +8,12 @@ const groups = [
     { label: "Export project", shortcut: "Ctrl Shift E", Icon: Download, action: "export" },
   ] },
   { name: "Edit", items: [
+    { label: "Preferences", Icon: Settings2, action: "preferences" },
+    { separator: true },
     { label: "Cut", shortcut: "Ctrl X", Icon: Scissors, action: "cut" },
     { label: "Copy", shortcut: "Ctrl C", Icon: Copy, action: "copy" },
     { label: "Paste", shortcut: "Ctrl V", Icon: Clipboard, action: "paste" },
     { label: "Select all", shortcut: "Ctrl A", Icon: ClipboardCheck, action: "selectAll" },
-  ] },
-  { name: "Help", items: [
-    { label: "Preferences", Icon: Settings2, action: "preferences" },
-    { label: "About MemoMaster", Icon: Info, action: "preferences" },
   ] },
 ];
 
@@ -54,9 +52,11 @@ export default function AppMenu({ onNew, onOpen, onExport, onPreferences }) {
           </button>
           {active === group.name && (
             <div class="app-menu-popover">
-              {group.items.map(({ label, shortcut, Icon, action }) => (
-                <button key={label} onClick={() => run(action)}>
-                  <Icon size={14} /> {label} {shortcut && <kbd>{shortcut}</kbd>}
+              {group.items.map((item, index) => item.separator ? (
+                <div class="app-menu-separator" key={index} />
+              ) : (
+                <button key={item.label} onClick={() => run(item.action)}>
+                  <item.Icon size={14} /> {item.label} {item.shortcut && <kbd>{item.shortcut}</kbd>}
                 </button>
               ))}
             </div>
