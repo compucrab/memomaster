@@ -79,15 +79,19 @@ function cleanNotebook(notebook) {
   const cards = notebook.flashcards ?? (markdown ? [{ id: "legacy-card", front: "What is this note about?", back: markdown }] : []);
   return {
     ...metadata,
-    chapters: Array.isArray(notebook.chapters) ? notebook.chapters : [],
-    flashcards: cards.map((card, index) => ({
-      ...card,
-      id: card.id || `card-${index + 1}`,
-      front: card.front ?? "",
-      back: card.back ?? "",
-      chapterId: card.chapterId ?? "",
-      topicId: card.topicId ?? "",
-    })),
+    chapters: Array.isArray(notebook.chapters)
+      ? notebook.chapters.map(({ topics, ...chapter }) => chapter)
+      : [],
+    flashcards: cards.map((card, index) => {
+      const { topicId, ...cleanCard } = card;
+      return {
+        ...cleanCard,
+        id: card.id || `card-${index + 1}`,
+        front: card.front ?? "",
+        back: card.back ?? "",
+        chapterId: card.chapterId ?? "",
+      };
+    }),
     cards: cards.length,
   };
 }
