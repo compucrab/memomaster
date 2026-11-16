@@ -58,3 +58,7 @@
 .review-waiting small { margin:4px 0 18px; color:var(--muted); font:10px var(--sans); }
 @media(max-width:700px) { .fsrs-settings-grid,.maturity-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } .workload-chart { gap:2px; } }
 @media(max-width:460px) { .fsrs-settings-grid { grid-template-columns:1fr; } .memory-metrics { gap:6px; } .memory-metrics strong { font-size:9px; } }
+
+.memory-curve line.memory-current-marker { stroke:var(--warning); stroke-width:1.5; stroke-dasharray:4 3; }
+.memory-curve > div { gap:8px; }
+.memory-curve > div span:nth-child(2) { color:var(--warning); }
