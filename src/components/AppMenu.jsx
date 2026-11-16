@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from "preact/hooks";
 import {
-  ChevronDown, FilePlus2, FolderOpen, SaveAll, Download, Settings2,
+  ChevronDown, FilePlus2, FolderPlus, FolderOpen, SaveAll, Download, Settings2,
 } from "lucide-preact";
 
 const groups = [
   { name: "File", items: [
+    { label: "New project", shortcut: "Ctrl Shift N", Icon: FolderPlus, action: "newProject" },
     { label: "New notebook", shortcut: "Ctrl N", Icon: FilePlus2, action: "new" },
     { separator: true },
     { label: "Open project…", shortcut: "Ctrl O", Icon: FolderOpen, action: "openProject" },
@@ -15,7 +16,7 @@ const groups = [
   ] },
 ];
 
-export default function AppMenu({ onNew, onOpenProject, onSaveProject, onSaveProjectAs, onPreferences }) {
+export default function AppMenu({ onNew, onNewProject, onOpenProject, onSaveProject, onSaveProjectAs, onPreferences }) {
   const [active, setActive] = useState(null);
   const root = useRef(null);
   useEffect(() => {
@@ -34,6 +35,7 @@ export default function AppMenu({ onNew, onOpenProject, onSaveProject, onSavePro
     setActive(null);
     const actions = {
       new: onNew,
+      newProject: onNewProject,
       openProject: onOpenProject,
       saveProject: onSaveProject,
       saveProjectAs: onSaveProjectAs,
