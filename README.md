@@ -8,6 +8,8 @@ MemoMaster is a desktop-first, local learning workspace built with Tauri 2, Prea
 - Create a new empty project at any time.
 - Notebook hierarchy: chapters and topics, with cards assignable to both.
 - Focused flashcard view with question/answer reveal and a live WYSIWYG editor.
+- FSRS-6 spaced repetition with Forgot, Difficult, and Easy review choices and visible next-review intervals.
+- Study status dashboard with a GitHub-style yearly consistency graph, streaks, recall rate, review outcomes, upcoming reviews, and notebook progress.
 - Rich-text formatting with keyboard shortcuts; card content remains stored as Markdown.
 - Light and dark themes.
 - Automatic local library persistence using SQLite.
@@ -69,5 +71,6 @@ Vite uses port 1420; the Tauri configuration expects that fixed development port
 - Use JavaScript for frontend code. Do not introduce TypeScript without an explicit project decision.
 - Keep the app desktop-first; do not add mobile navigation.
 - Keep Rust responsible for native integration and local persistence.
-- FSRS, Anki import/export, cloud sync, and multi-device synchronization are future work.
+- Anki import/export, cloud sync, and multi-device synchronization are future work.
+- FSRS scheduling and review history are stored with notebook/card data and included in .memz backups.
 - Preserve backward compatibility with supported .memz archive versions when changing the archive format.
