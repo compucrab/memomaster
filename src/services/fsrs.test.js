@@ -72,7 +72,10 @@ test("desired retention changes future intervals and maximum interval caps them"
   assert.ok(new Date(high.fsrs.due) < new Date(low.fsrs.due));
 
   const capped = scheduleReview(card, "good", now, { ...DEFAULT_FSRS_SETTINGS, maximumInterval: 3 });
-  assert.ok(new Date(capped.fsrs.due).getTime() - now.getTime() <= 3 * DAY + 1000);
+  // maximumInterval caps FSRS study-day intervals. The due timestamp is then
+  // aligned to the configured day rollover, so wall-clock elapsed time can
+  // differ from the interval by the time-of-day offset.
+  assert.ok(capped.fsrs.scheduled_days <= 3, `expected at most 3 scheduled days, got ${capped.fsrs.scheduled_days}`);
 });
 
 test("memory overview exposes recall probability and a decaying curve", () => {
