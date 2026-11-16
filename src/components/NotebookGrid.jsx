@@ -1,19 +1,6 @@
 import { BookOpen, Plus } from "lucide-preact";
 
-function StripColorPicker({ notebook, onUpdate }) {
-  return (
-    <label class="strip-picker" title="Change notebook strip colour">
-      <input
-        type="color"
-        value={notebook.color || "#477dbb"}
-        aria-label={`Strip colour for ${notebook.title}`}
-        onInput={(event) => onUpdate(notebook.id, { color: event.currentTarget.value })}
-      />
-    </label>
-  );
-}
-
-export default function NotebookGrid({ notebooks, onOpen, onContextMenu, onCreate, onUpdate }) {
+export default function NotebookGrid({ notebooks, onOpen, onContextMenu, onCreate }) {
   return (
     <section class="workspace library-workspace">
       <header class="library-heading">
@@ -37,7 +24,6 @@ export default function NotebookGrid({ notebooks, onOpen, onContextMenu, onCreat
                     <footer><span>{chapterCount} CHAPTERS</span><span>{notebook.cards} CARDS</span></footer>
                   </div>
                 </button>
-                <StripColorPicker notebook={notebook} onUpdate={onUpdate} />
               </article>
             );
           })}

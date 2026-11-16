@@ -4,6 +4,9 @@
 .context-menu > button { @apply flex h-[34px] w-full items-center gap-2 border-0 bg-transparent px-[9px] text-left; color: var(--ink); cursor: pointer; font-size: 11px; }
 .context-menu > button:hover { background: var(--hover); }
 .context-divider { height: 1px; margin: 5px 0; background: var(--line); }
-.context-color-picker { @apply flex items-center justify-between gap-2 px-[9px] py-2; color: var(--muted); font: 8px var(--mono); letter-spacing: .1em; }
+.context-color-picker { @apply flex items-center justify-between gap-2 px-[9px] py-2; color: var(--muted); font: 8px var(--mono); letter-spacing: .1em; cursor: pointer; }
 .context-color-picker span { @apply flex items-center gap-2; }
-.context-color-picker input { width: 76px; padding: 4px 6px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); font: 10px var(--mono); }
+.context-color-picker input { width: 30px; height: 22px; padding: 2px; border: 1px solid var(--line); border-radius: 4px; background: var(--paper); cursor: pointer; }
+.context-color-picker input::-webkit-color-swatch-wrapper { padding: 0; }
+.context-color-picker input::-webkit-color-swatch { border: 0; border-radius: 2px; }
+.context-color-picker input::-moz-color-swatch { border: 0; border-radius: 2px; }

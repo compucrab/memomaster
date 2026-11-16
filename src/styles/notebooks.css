@@ -10,10 +10,6 @@
 .notebook-info h2 { overflow: hidden; margin: 0; color: var(--ink); font: 650 15px var(--display); letter-spacing: -.035em; text-overflow: ellipsis; white-space: nowrap; }
 .notebook-info p { min-height: 32px; margin: 6px 0 11px; color: var(--muted); font-size: 11px; line-height: 1.55; }
 .notebook-info footer { @apply flex flex-wrap gap-x-3 gap-y-1 border-t pt-[9px]; border-color: var(--line); color: var(--muted); font: 8px var(--mono); letter-spacing: .05em; }
-.strip-picker { @apply absolute left-3 top-[14px] z-10 flex items-center gap-2 rounded-sm px-2 py-1; background: var(--surface); color: var(--muted); opacity: 0; pointer-events: none; transition: opacity .15s; font: 7px var(--mono); letter-spacing: .08em; }
-.notebook-card:hover .strip-picker, .strip-picker:focus-within { opacity: 1; pointer-events: auto; }
-.strip-picker input { min-width: 76px; }
-.strip-picker input, .context-color-picker input { width: 76px; height: auto; padding: 3px 5px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); font: 9px var(--mono); }
 .new-notebook-card { @apply flex min-h-[170px] flex-col items-center justify-center gap-3 border border-dashed; border-color: var(--line); background: transparent; color: var(--muted); cursor: pointer; }
 .new-notebook-card:hover { border-color: var(--accent); background: var(--hover); color: var(--accent); }
 .new-notebook-card i { @apply grid h-[36px] w-[36px] place-items-center rounded-full border; border-color: var(--line); }
