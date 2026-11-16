@@ -55,7 +55,7 @@ fn create_automatic_backup(app: AppHandle, bytes: Vec<u8>) -> Result<String, Str
     let timestamp = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .map_err(|error| error.to_string())?
-        .as_secs();
+        .as_millis();
     let filename = format!("MemoMaster-{timestamp}.memz");
     let backup_path = backup_directory.join(filename);
     fs::write(&backup_path, bytes).map_err(|error| error.to_string())?;
