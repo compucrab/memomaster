@@ -31,7 +31,7 @@ export default function NotebookGrid({ notebooks, onOpen, onContextMenu, onCreat
           </button>
         </div>
       ) : (
-        <div class="empty-library"><BookOpen size={26} /><h2>No notebooks found</h2><p>Try another search or create a notebook.</p><button class="button-primary" onClick={onCreate}><Plus size={15} /> Create notebook</button></div>
+        <div class="empty-library"><BookOpen size={26} /><h2>{notebooks.length === 0 ? "No notebooks yet" : "No notebooks found"}</h2><p>{notebooks.length === 0 ? "Create a notebook to get started." : "Try another search or create a notebook."}</p><button class="button-primary" onClick={onCreate}><Plus size={15} /> Create notebook</button></div>
       )}
     </section>
   );
