@@ -4,14 +4,21 @@ import { DEFAULT_FSRS_SETTINGS, normalizeFsrsSettings } from "../services/fsrsSe
 
 export default function SettingsPanel({ theme, onThemeChange, fsrsSettings, onFsrsSettingsChange, onBack }) {
   const [draft, setDraft] = useState(() => normalizeFsrsSettings(fsrsSettings || DEFAULT_FSRS_SETTINGS));
-  useEffect(() => setDraft(normalizeFsrsSettings(fsrsSettings || DEFAULT_FSRS_SETTINGS)), [fsrsSettings]);
+  const [learningText, setLearningText] = useState(draft.learningSteps.join(", "));
+  const [relearningText, setRelearningText] = useState(draft.relearningSteps.join(", "));
+  const [maximumText, setMaximumText] = useState(String(draft.maximumInterval));
+  useEffect(() => {
+    const next = normalizeFsrsSettings(fsrsSettings || DEFAULT_FSRS_SETTINGS);
+    setDraft(next);
+    setLearningText(next.learningSteps.join(", "));
+    setRelearningText(next.relearningSteps.join(", "));
+    setMaximumText(String(next.maximumInterval));
+  }, [fsrsSettings]);
   function update(key, value) {
     const next = normalizeFsrsSettings({ ...draft, [key]: value });
     setDraft(next);
     onFsrsSettingsChange(next);
   }
-  const learningText = draft.learningSteps.join(", ");
-  const relearningText = draft.relearningSteps.join(", ");
   return (
     <section class="workspace settings-workspace">
       <button class="settings-back" onClick={onBack}><ArrowLeft size={14} /> BACK TO LIBRARY</button>
@@ -36,15 +43,15 @@ export default function SettingsPanel({ theme, onThemeChange, fsrsSettings, onFs
             <small>Higher retention means more frequent reviews. Default: 90%.</small>
           </label>
           <label>MAXIMUM INTERVAL
-            <div class="fsrs-input-suffix"><input type="number" min="1" max="36500" value={draft.maximumInterval} onChange={event => update("maximumInterval", event.currentTarget.value)}/><span>days</span></div>
+            <div class="fsrs-input-suffix"><input type="number" min="1" max="36500" value={maximumText} onInput={event => setMaximumText(event.currentTarget.value)} onBlur={() => update("maximumInterval", maximumText)}/><span>days</span></div>
             <small>Maximum time between scheduled reviews.</small>
           </label>
           <label>LEARNING STEPS
-            <input value={learningText} onChange={event => update("learningSteps", event.currentTarget.value)} placeholder="10m, 1h"/>
+            <input value={learningText} onInput={event => setLearningText(event.currentTarget.value)} onBlur={() => update("learningSteps", learningText)} placeholder="10m, 1h"/>
             <small>Comma-separated steps, e.g. 10m, 1h.</small>
           </label>
           <label>RELEARNING STEPS
-            <input value={relearningText} onChange={event => update("relearningSteps", event.currentTarget.value)} placeholder="10m"/>
+            <input value={relearningText} onInput={event => setRelearningText(event.currentTarget.value)} onBlur={() => update("relearningSteps", relearningText)} placeholder="10m"/>
             <small>Steps used after a failed review.</small>
           </label>
           <label>DAY ROLLOVER
