@@ -5,7 +5,7 @@ import { Markdown } from "@tiptap/markdown";
 import Placeholder from "@tiptap/extension-placeholder";
 import TextAlign from "@tiptap/extension-text-align";
 import { AlignCenter, AlignRight, Bold, Italic, Heading1, Heading2, List, ListOrdered, Quote, Code, Undo2, Redo2, ImagePlus, Sigma, Video, X } from "lucide-preact";
-import { CardImage, CardVideo, CardMath } from "../services/editorExtensions";
+import { CardImage, CardVideo, CardMath, AlignedParagraph, AlignedHeading } from "../services/editorExtensions";
 import "katex/dist/katex.min.css";
 
 const tools = [
@@ -34,7 +34,7 @@ export default function RichTextEditor({ label, value = "", placeholder, onChang
     const editor = new Editor({
       element: hostRef.current,
       extensions: [
-        StarterKit, Markdown, Placeholder.configure({ placeholder: placeholder || "" }),
+        StarterKit.configure({ paragraph: false, heading: false }), AlignedParagraph, AlignedHeading, Markdown, Placeholder.configure({ placeholder: placeholder || "" }),
         CardImage.configure({ inline: false, allowBase64: true }),
         TextAlign.configure({ types: ["heading", "paragraph"], alignments: ["left", "center", "right"] }),
         CardMath, CardVideo,
