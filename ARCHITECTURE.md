@@ -10,7 +10,7 @@ A notebook contains chapters, flashcards, scheduled review history, and unschedu
 
 Notebook view has two tabs:
 
-- **Browse:** searchable card list with next due date/time, chapter filter, preview, per-card FSRS memory overview, editing, multi-selection, bulk deletion, chapter reassignment, and schedule reset.
+- **Browse:** searchable card list with next due date/time, chapter filter, preview, editing, multi-selection, bulk deletion, chapter reassignment, and schedule reset.
 - **Study:** Scheduled or Unscheduled sessions scoped to a whole notebook or one chapter.
 
 A new installation starts with an empty library.
@@ -69,7 +69,7 @@ Default scheduling preferences:
 | Desired retention | 0.90 |
 | Learning steps | `10m` |
 | Relearning steps | `10m` |
-| Maximum interval | 36,500 days |
+| Maximum interval | 180 days |
 | Study-day rollover | 04:00 local time |
 
 The scheduler uses deterministic intervals (`enable_fuzz: false`) so the interval shown before a rating matches the due date saved after that rating. Existing due dates are not rescheduled when preferences change; the new preferences apply on subsequent reviews.
@@ -102,14 +102,7 @@ FSRS v5 measures elapsed time in fixed 24-hour blocks. MemoMaster normalizes sch
 - New, Learning/Relearning, Young, and Mature card breakdown. Mature uses a 21-day-or-longer review interval.
 - Frequently forgotten cards ranked by FSRS lapse count.
 
-Browse's `MemoryOverview` shows:
-
-- **Stability:** the FSRS interval at which predicted recall is approximately 90% for FSRS-6.
-- **Difficulty:** the model's difficulty estimate on a 1–10 scale.
-- **Retrievability:** estimated probability of recall at the current study day.
-- **Memory curve:** the FSRS forgetting curve, with a marker for the current position.
-
-These are model estimates, not direct measurements of a person's memory. FSRS parameter optimization from review history is not implemented yet.
+FSRS parameter optimization from review history is not implemented yet.
 
 ## Card editor and content formats
 
@@ -137,7 +130,6 @@ Image insertion supports file selection and clipboard paste. Inserted images are
 | RichTextEditor.jsx | Tiptap setup, formatting toolbar, media/math insertion, editor history |
 | ReviewSession.jsx | Timed scheduled learning/relearning queue and unscheduled practice queue |
 | StudyStatus.jsx | Retention, rating, workload, maturity, and lapse analytics |
-| MemoryOverview.jsx | Per-card FSRS memory metrics and forgetting curve |
 | projectArchive.js | .memz ZIP export/import and legacy migration |
 | fsrs.js | FSRS scheduling, study-day rollover, memory estimates, interval calculation |
 | fsrsSettings.js | Default and validated app-wide FSRS preferences |
