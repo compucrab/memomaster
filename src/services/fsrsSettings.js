@@ -20,7 +20,7 @@ export function normalizeFsrsSettings(value = {}) {
     learningSteps: parseSteps(value.learningSteps, DEFAULT_FSRS_SETTINGS.learningSteps),
     relearningSteps: parseSteps(value.relearningSteps, DEFAULT_FSRS_SETTINGS.relearningSteps),
     maximumInterval: Number.isFinite(maximumInterval) ? Math.min(36500, Math.max(1, Math.round(maximumInterval))) : DEFAULT_FSRS_SETTINGS.maximumInterval,
-    rolloverHour: Number.isFinite(rolloverHour) ? Math.min(12, Math.max(0, Math.round(rolloverHour))) : DEFAULT_FSRS_SETTINGS.rolloverHour,
+    rolloverHour: Number.isFinite(rolloverHour) ? Math.min(23, Math.max(0, Math.round(rolloverHour))) : DEFAULT_FSRS_SETTINGS.rolloverHour,
   };
 }
 
