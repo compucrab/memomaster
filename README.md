@@ -14,13 +14,35 @@ MemoMaster is a local-first desktop learning and revision app built with Tauri 2
 - Inline and display LaTeX equations rendered with KaTeX.
 - Video embeds for YouTube, Vimeo, Instagram public posts/reels, Facebook, and direct MP4/WebM/OGG URLs. Playback depends on the provider's embedding policy.
 - Separate undo/redo history for the Question and Answer editors.
-- Scheduled FSRS-6 reviews and unscheduled practice for a whole notebook or a chapter.
-- Scheduled ratings: Forgot, Difficult, Good, and Easy. Forgot and Difficult repeat the card in the current session; Good and Easy complete it.
-- Next-review intervals during review, and next due date/time in Browse card information.
-- Study status dashboard with activity heatmap, streaks, scheduled review outcomes, recall rate, upcoming reviews, and notebook progress.
+- FSRS-6 scheduled reviews and unscheduled practice for a whole notebook or a chapter.
+- Correct Again/Hard/Good/Easy semantics, timed learning and relearning steps, and due-time-aware review queues.
+- Configurable desired retention, learning/relearning steps, maximum interval, and study-day rollover.
+- Per-card memory overview with stability, difficulty, retrievability, and a memory-decay curve.
+- Retention dashboard with actual versus desired retention, monthly trend, rating distribution, daily workload forecast, card maturity, and frequently forgotten cards.
 - Light and dark themes.
 - Automatic SQLite persistence and automatic .memz backup on application close.
 - Portable .memz project open/save support and a custom desktop titlebar.
+
+## FSRS scheduling
+
+The scheduler uses `ts-fsrs` (FSRS-6). Default preferences:
+
+| Setting | Default |
+| --- | --- |
+| Desired retention | 90% |
+| Learning steps | 10 minutes |
+| Relearning steps | 10 minutes |
+| Maximum interval | 36,500 days |
+| Study-day rollover | 04:00 local time |
+
+Review buttons follow these rules:
+
+- **Forgot / Again:** failed recall. Enters a learning or relearning step and returns to the queue only when that step is due.
+- **Difficult / Hard:** successful recall with effort. It does not automatically repeat; if the card is still in a learning step, it can return when its actual step becomes due.
+- **Good:** advances a learning step or continues the normal review schedule.
+- **Easy:** graduates a learning card or continues the normal review schedule.
+
+Changing FSRS preferences affects future scheduling. Existing due dates are not silently recalculated. Preferences are shared across notebooks and stored locally in the application webview; they are not currently embedded in .memz archives. Per-notebook presets are a later iteration.
 
 ## Local storage and backups
 
@@ -66,9 +88,10 @@ Install dependencies and run the desktop app:
     npm install
     npm run tauri dev
 
-Build checks:
+Build and regression checks:
 
     npm run build
+    npm test
     npm run tauri build
 
 Vite uses port 1420; the Tauri configuration expects that fixed development port.
