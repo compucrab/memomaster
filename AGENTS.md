@@ -36,7 +36,8 @@ Do not claim or implement against assumptions that are not true:
 - Theme selection is persisted in `localStorage`; notebook data is not.
 - The Rust side currently only builds the Tauri application and registers the opener plugin. It does not yet own notebook persistence or scheduling.
 - `.memz` import/export is implemented in `src/services/projectArchive.js`.
-- The Markdown renderer is a small custom subset in `src/services/markdown.js`.
+- Card front/back editing uses Tiptap (`@tiptap/core`, `@tiptap/starter-kit`, `@tiptap/markdown`) through `src/components/RichTextEditor.jsx`; the editor serializes content to Markdown strings.
+- `src/services/markdown.js` renders saved Markdown for read-only study mode.
 - SQLite, FSRS, Anki import, cloud sync, and durable notebook persistence are not implemented.
 - Do not add placeholder Rust commands or pretend that an architectural target already exists.
 
