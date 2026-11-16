@@ -1,11 +1,1 @@
-import "../styles/sidebar.css";
-
-function Sidebar() {
-  return (
-    <aside class="sidebar">
-      <h2>MemoMaster</h2>
-    </aside>
-  );
-}
-
-export default Sidebar;
+import {BookOpen,Library,Settings2,ChevronRight} from "lucide-preact";export default function Sidebar({activeView,onNavigate,notebooks,onOpenNotebook}){return <aside class="sidebar"><button class="brand" onClick={()=>onNavigate("library")}><span class="brand-mark">m</span><span>memo<span class="brand-dot">.</span>master</span></button><div class="sidebar-section"><p class="sidebar-label">WORKSPACE</p><button class={`nav-item ${activeView==="library"?"is-active":""}`} onClick={()=>onNavigate("library")}><Library size={17}/><span>Library</span><span class="nav-count">{notebooks.length}</span></button></div><div class="sidebar-section notebook-nav"><div class="sidebar-heading"><p class="sidebar-label">RECENT NOTEBOOKS</p><span>{String(notebooks.length).padStart(2,"0")}</span></div>{notebooks.slice(0,6).map(n=><button class="recent-item" key={n.id} onClick={()=>onOpenNotebook(n.id)}><i style={{backgroundColor:n.color}}/><span>{n.title}</span><ChevronRight size={13}/></button>)}</div><div class="sidebar-bottom"><div class="sidebar-note"><BookOpen size={17}/><p>Good notes become<br/><em>lasting knowledge.</em></p></div><button class={`nav-item ${activeView==="settings"?"is-active":""}`} onClick={()=>onNavigate("settings")}><Settings2 size={17}/><span>Preferences</span></button><div class="sidebar-version">MEMOMASTER <span>0.1.0</span></div></div></aside>;}
