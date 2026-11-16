@@ -43,6 +43,14 @@ export default function Layout() {
   const [projectPath, setProjectPath] = useState(savedProjectPath);
   const notebooksRef = useRef(notebooks);
   notebooksRef.current = notebooks;
+  const saveQueueRef = useRef(Promise.resolve());
+
+  function persistLibrary(snapshot) {
+    const data = JSON.stringify(snapshot);
+    const save = saveQueueRef.current.catch(() => {}).then(() => invoke("save_library", { data }));
+    saveQueueRef.current = save;
+    return save;
+  }
 
   const activeNotebook = notebooks.find((notebook) => notebook.id === activeId);
   const filteredNotebooks = useMemo(
@@ -80,7 +88,7 @@ export default function Layout() {
   useEffect(() => {
     if (!ready) return;
     const timeout = window.setTimeout(() => {
-      invoke("save_library", { data: JSON.stringify(notebooks) })
+      persistLibrary(notebooks)
         .catch((error) => setNotice(`Could not save local changes: ${error}`));
     }, 250);
     return () => window.clearTimeout(timeout);
@@ -101,7 +109,7 @@ export default function Layout() {
           setNotice("The library is still loading. Try closing again in a moment.");
           return;
         }
-        await invoke("save_library", { data: JSON.stringify(notebooksRef.current) });
+        await persistLibrary(notebooksRef.current);
         const archive = await createMemz(notebooksRef.current);
         const backupPath = await invoke("create_automatic_backup", { bytes: Array.from(archive) });
         console.info("Automatic project backup created:", backupPath);
