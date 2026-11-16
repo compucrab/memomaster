@@ -26,12 +26,8 @@ export const CardImage = Image.extend({
     return `![${alt}](${src} "width=${width};align=${align}")`;
   },
 });
-export const AlignedParagraph = Paragraph.extend({
-  renderMarkdown: ({ node, helpers }) => { const content = helpers.renderChildren(node.content || []); const align = node.attrs?.textAlign; return align && align !== "left" ? `<p style="text-align:${align}">${content}</p>` : content; },
-});
-export const AlignedHeading = Heading.extend({
-  renderMarkdown: ({ node, helpers }) => { const content = helpers.renderChildren(node.content || []); const level = node.attrs?.level || 1; const align = node.attrs?.textAlign; return align && align !== "left" ? `<h${level} style="text-align:${align}">${content}</h${level}>` : `${"#".repeat(level)} ${content}`; },
-});
+export const AlignedParagraph = Paragraph;
+export const AlignedHeading = Heading;
 export const CardVideo = Node.create({
   name: "cardVideo", group: "block", atom: true, selectable: true,
   addAttributes() { return { url: { default: "" }, provider: { default: "video" } }; },
