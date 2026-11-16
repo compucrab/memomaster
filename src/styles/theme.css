@@ -1,13 +1,1 @@
-:root {
-  color-scheme: dark;
-
-  --color-bg: #101216;
-  --color-surface: #17191e;
-  --color-surface-hover: #202329;
-  --color-border: #303339;
-
-  --color-text: #f1f2ef;
-  --color-muted: #8d939a;
-  --color-accent: #d8ff64;
-  --color-danger: #ff7777;
-}
+:root{color-scheme:light;--paper:#f4f1e7;--paper-deep:#ebe7d9;--paper-card:#faf8f1;--ink:#171814;--muted:#77776d;--line:#d7d3c5;--olive:#87934a;--acid:#c6d56a;--serif:Georgia,"Times New Roman",serif;--sans:"DM Sans",sans-serif;--display:"Manrope",sans-serif;--mono:"DM Mono",monospace}

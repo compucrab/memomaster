@@ -1,22 +1,2 @@
-import Sidebar from "./Sidebar";
-import Topbar from "./Topbar";
-import "../styles/layout.css";
-
-function Layout() {
-  return (
-    <div class="app-layout">
-      <Sidebar />
-      <main class="app-main">
-        <Topbar />
-        <section class="workspace">
-          <div class="workspace-placeholder">
-            <h1>Your learning space</h1>
-            <p>Your notebooks and study activity will appear here.</p>
-          </div>
-        </section>
-      </main>
-    </div>
-  );
-}
-
-export default Layout;
+import {useMemo,useState} from "preact/hooks";import Sidebar from "./Sidebar";import Topbar from "./Topbar";import NotebookGrid from "./NotebookGrid";import NotebookView from "./NotebookView";import SettingsPanel from "./SettingsPanel";import ContextMenu from "./ContextMenu";import {initialNotebooks} from "../data/notebooks";
+export default function Layout(){const[notebooks,setNotebooks]=useState(initialNotebooks),[view,setView]=useState("library"),[activeId,setActiveId]=useState(null),[query,setQuery]=useState(""),[menu,setMenu]=useState(null);const active=notebooks.find(n=>n.id===activeId);const filtered=useMemo(()=>notebooks.filter(n=>n.title.toLowerCase().includes(query.toLowerCase())),[notebooks,query]);const update=(id,changes)=>setNotebooks(items=>items.map(n=>n.id===id?{...n,...changes}:n));function create(){const id=crypto.randomUUID();setNotebooks(items=>[{id,title:"Untitled notebook",description:"A quiet place for your notes and ideas.",color:"#c6d56a",chapters:0,cards:0,updated:"Just created"},...items]);setActiveId(id);setView("notebook");}function open(id){setActiveId(id);setView("notebook");}return <div class="app-layout" onClick={()=>menu&&setMenu(null)}><Sidebar activeView={view} onNavigate={v=>{setView(v);setActiveId(null);}} notebooks={notebooks} onOpenNotebook={open}/><main class="app-main"><Topbar title={view==="settings"?"Preferences":view==="notebook"?active?.title||"Notebook":"Your library"} query={query} onQueryChange={setQuery} onCreate={create}/>{view==="settings"?<SettingsPanel/>:view==="notebook"&&active?<NotebookView notebook={active} onUpdate={changes=>update(active.id,changes)} onBack={()=>setView("library")}/>:<NotebookGrid notebooks={filtered} onOpen={open} onContextMenu={(e,n)=>{e.preventDefault();setMenu({x:e.clientX,y:e.clientY,notebook:n});}} onCreate={create} onUpdate={update}/>}</main>{menu&&<ContextMenu {...menu} onClose={()=>setMenu(null)} onOpen={()=>{open(menu.notebook.id);setMenu(null);}} onRename={title=>update(menu.notebook.id,{title})} onColorChange={color=>update(menu.notebook.id,{color})}/>}</div>;}
