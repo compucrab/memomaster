@@ -92,7 +92,12 @@ export default function RichTextEditor({ label, value = "", placeholder, onChang
     if (!editor || !dialogValue.trim()) { setDialog({ type: "notice", title: "Nothing to insert", message: "Enter an expression or video link first." }); return; }
     if (dialog.type === "inlineMath") editor.chain().focus().insertInlineMath({ latex: dialogValue.trim() }).run();
     if (dialog.type === "blockMath") editor.chain().focus().insertBlockMath({ latex: dialogValue.trim() }).run();
-    if (dialog.type === "link") {\n      let url; try { url = new URL(dialogValue.trim()); } catch { setDialog({ type: "notice", title: "Invalid link", message: "Enter a complete link beginning with https:// or http://." }); return; }\n      if (!["http:", "https:"].includes(url.protocol)) { setDialog({ type: "notice", title: "Invalid link", message: "Only http and https links are supported." }); return; }\n      editor.chain().focus().setLink({ href: url.href }).run();\n    }\n    if (dialog.type === "video") {
+    if (dialog.type === "link") {
+      let url; try { url = new URL(dialogValue.trim()); } catch { setDialog({ type: "notice", title: "Invalid link", message: "Enter a complete link beginning with https:// or http://." }); return; }
+      if (!["http:", "https:"].includes(url.protocol)) { setDialog({ type: "notice", title: "Invalid link", message: "Only http and https links are supported." }); return; }
+      editor.chain().focus().setLink({ href: url.href }).run();
+    }
+    if (dialog.type === "video") {
       const target = videoTarget(dialogValue);
       if (target.error) { setDialog({ type: "notice", title: "Unable to embed video", message: target.error }); return; }
       editor.chain().focus().insertContent({ type: "cardVideo", attrs: target }).run();
