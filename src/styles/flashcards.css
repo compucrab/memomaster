@@ -137,79 +137,74 @@
 .study-card-prose .study-card-image { max-width: 100%; max-height: 560px; height: auto; }
 
 
-.review-rating-options { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 9px; }
-.review-rating.good { border-color: color-mix(in srgb, var(--accent) 55%, var(--line)); background: color-mix(in srgb, var(--accent) 8%, var(--surface)); color: var(--ink); }
-.review-rating.good:hover { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, var(--surface)); }
-@media (max-width: 700px) { .review-rating-options { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 
-
-/* Compact, single-row scheduled review ratings */
+/* Review controls */
+.review-ratings {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  padding: 14px 20px 18px;
+}
+.review-ratings > p { margin: 0 0 11px; color: var(--muted); font-size: 10px; }
 .review-rating-options {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  width: 100%;
-  gap: 7px;
+  width: min(100%, 560px);
+  gap: 8px;
 }
 .review-rating-options .review-rating {
   display: flex;
-  min-width: 0;
-  min-height: 58px;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  width: 100%;
+  min-width: 0;
+  min-height: 54px;
   gap: 5px;
-  padding: 9px 5px;
-  white-space: nowrap;
+  padding: 8px 5px;
+  white-space: normal;
 }
-.review-rating-options .review-rating strong {
-  font-size: 10px;
-  line-height: 1.2;
-}
+.review-rating-options .review-rating strong { font-size: 10px; line-height: 1.2; }
 .review-rating-options .review-rating span {
   max-width: 100%;
-  overflow: hidden;
+  color: var(--muted);
   font-size: 8px;
-  line-height: 1.2;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  line-height: 1.25;
+  text-align: center;
+  overflow-wrap: anywhere;
 }
-.review-rating-options .review-rating:disabled {
-  cursor: wait;
-  opacity: .65;
+.review-rating.good { border-color: color-mix(in srgb, var(--accent) 55%, var(--line)); background: color-mix(in srgb, var(--accent) 8%, var(--surface)); color: var(--ink); }
+.review-rating.good:hover { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, var(--surface)); }
+.review-rating:disabled { cursor: wait; opacity: .65; }
+.review-error { color: var(--danger); font-size: 11px; }
+.study-card-actions { padding: 16px 20px 20px; }
+.study-card-actions .study-primary,
+.study-card-actions .study-secondary {
+  flex: 0 0 auto;
+  width: auto;
+  min-width: 148px;
+  min-height: 38px;
+  padding: 9px 16px;
+  font-size: 10px;
 }
-.review-error {
-  color: var(--danger);
-  font-size: 11px;
+.unscheduled-review-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  width: min(100%, 420px);
+  gap: 8px;
 }
-
-
-/* Compact study controls */
-.study-card-actions { padding: 14px 16px 18px; }
-.study-primary, .study-secondary {
-  min-height: 34px;
-  padding: 8px 12px;
-  font-size: 9px;
-}
-.study-primary svg, .study-secondary svg { width: 13px; height: 13px; }
-.review-ratings { display: flex; flex-direction: column; align-items: center; padding: 10px 16px 16px; }
-.review-ratings > p { margin: 0 0 9px; font-size: 9px; }
-.review-rating-options {
-  width: min(100%, 460px);
-  gap: 6px;
-}
-.review-rating-options .review-rating {
-  min-height: 43px;
-  padding: 6px 4px;
-  gap: 3px;
-}
-.review-rating-options .review-rating strong { font-size: 9px; }
-.review-rating-options .review-rating span { font-size: 7px; }
-.unscheduled-review-options { width: min(100%, 360px); gap: 6px; }
 .unscheduled-review-options .review-rating {
   min-width: 0;
-  min-height: 43px;
-  flex: 1;
-  padding: 7px 10px;
+  min-height: 52px;
+  padding: 8px 10px;
 }
-.unscheduled-review-options .review-rating strong { font-size: 9px; }
+.unscheduled-review-options .review-rating strong { font-size: 10px; }
 .unscheduled-review-options .review-rating span { font-size: 8px; }
+@media (max-width: 420px) {
+  .review-ratings { padding-inline: 10px; }
+  .review-rating-options { gap: 5px; }
+  .review-rating-options .review-rating { padding-inline: 2px; }
+  .review-rating-options .review-rating strong { font-size: 9px; }
+  .review-rating-options .review-rating span { font-size: 7px; }
+}
