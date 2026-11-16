@@ -1,0 +1,16 @@
+@reference "tailwindcss";
+
+.prompt-backdrop { @apply fixed inset-0 z-[100] flex items-center justify-center; padding: 24px; background: #1118; }
+.prompt-panel { width: min(100%, 390px); padding: 22px; border: 1px solid var(--line); background: var(--surface); box-shadow: 0 20px 70px #0003; }
+.prompt-heading { @apply flex items-center justify-between; margin-bottom: 18px; }
+.prompt-heading h2 { margin: 0; color: var(--ink); font: 700 17px var(--display); }
+.prompt-heading button { @apply grid h-7 w-7 place-items-center border-0 bg-transparent; color: var(--muted); cursor: pointer; }
+.prompt-panel > input { width: 100%; padding: 11px 12px; border: 1px solid var(--line); outline: none; background: var(--paper); color: var(--ink); font: 12px var(--sans); }
+.prompt-panel > input:focus { border-color: var(--accent); }
+.prompt-actions { @apply flex justify-end gap-2; margin-top: 20px; }
+.prompt-actions button { @apply inline-flex items-center gap-2 border px-4 py-2; cursor: pointer; font: 10px var(--sans); }
+.prompt-cancel { border-color: var(--line); background: transparent; color: var(--muted); }
+.prompt-confirm { border-color: var(--accent); background: var(--accent); color: #fff; }
+.prompt-confirm:hover { background: var(--accent-hover); }
+.prompt-confirm:disabled { opacity: .4; cursor: default; }
+.app-notice { @apply fixed bottom-5 left-1/2 z-[110] -translate-x-1/2; max-width: min(90vw, 560px); padding: 11px 16px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); box-shadow: 0 8px 30px #0002; font: 11px var(--sans); }

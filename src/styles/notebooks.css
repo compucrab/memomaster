@@ -1,0 +1,35 @@
+@reference "tailwindcss";
+
+.notebook-grid { @apply grid; grid-template-columns: repeat(auto-fill, minmax(225px, 1fr)); gap: 28px 20px; }
+.notebook-card { @apply relative min-w-0; }
+.notebook-open { @apply block w-full border-0 bg-transparent p-0 text-left; cursor: pointer; }
+.notebook-cover { @apply relative flex h-[170px] items-center justify-center overflow-hidden; border: 1px solid var(--line); background: var(--paper-deep); color: var(--accent); transition: border-color .18s, background .18s; }
+.notebook-open:hover .notebook-cover { border-color: var(--accent); background: var(--hover); }
+.cover-strip { position: absolute; inset: 0 0 auto; height: 6px; }
+.notebook-info { padding: 13px 1px 0; }
+.notebook-info h2 { overflow: hidden; margin: 0; color: var(--ink); font: 650 15px var(--display); letter-spacing: -.035em; text-overflow: ellipsis; white-space: nowrap; }
+.notebook-info p { min-height: 32px; margin: 6px 0 11px; color: var(--muted); font-size: 11px; line-height: 1.55; }
+.notebook-info footer { @apply flex flex-wrap gap-x-3 gap-y-1 border-t pt-[9px]; border-color: var(--line); color: var(--muted); font: 8px var(--mono); letter-spacing: .05em; }
+.new-notebook-card { @apply flex min-h-[170px] flex-col items-center justify-center gap-3 border border-dashed; border-color: var(--line); background: transparent; color: var(--muted); cursor: pointer; }
+.new-notebook-card:hover { border-color: var(--accent); background: var(--hover); color: var(--accent); }
+.new-notebook-card i { @apply grid h-[36px] w-[36px] place-items-center rounded-full border; border-color: var(--line); }
+.new-notebook-card strong { color: var(--ink); font: 600 12px var(--display); }
+.empty-library { @apply flex min-h-[280px] flex-col items-center justify-center; color: var(--muted); text-align: center; }
+.empty-library h2 { margin: 15px 0 5px; color: var(--ink); font: 700 20px var(--display); }
+.empty-library p { margin: 0 0 20px; font-size: 12px; }
+.notebook-workspace { padding-top: 28px; }
+.back-link { @apply inline-flex items-center gap-2 border-0 bg-transparent p-0; color: var(--muted); cursor: pointer; font: 9px var(--mono); letter-spacing: .1em; }
+.notebook-detail-head { @apply relative mt-[38px] flex items-start gap-5 border-b pb-[27px]; border-color: var(--line); }
+.notebook-detail-head > i { width: 9px; height: 93px; flex-shrink: 0; }
+.notebook-detail-head > div { flex: 1; }
+.notebook-detail-head .eyebrow { margin: 0 0 8px; }
+.notebook-detail-head h1 { margin: 0; color: var(--ink); font: 800 36px var(--display); letter-spacing: -.07em; }
+.notebook-detail-head input { width: min(100%, 600px); margin-top: 8px; padding: 0; border: 0; outline: 0; background: transparent; color: var(--muted); font-size: 12px; }
+.notebook-detail-meta { @apply flex items-center gap-6 py-[17px] pb-[30px]; color: var(--muted); font: 9px var(--mono); letter-spacing: .07em; }
+.notebook-detail-meta span { @apply inline-flex items-center gap-2; }
+.notebook-content-grid { @apply grid; grid-template-columns: minmax(0, 1fr) 220px; gap: 35px; }
+.notebook-aside { padding: 17px 0; border-top: 1px solid var(--line); }
+.notebook-aside h3 { margin: 0 0 10px; color: var(--ink); font: 700 17px/1.3 var(--display); }
+.notebook-aside > p:not(.eyebrow) { color: var(--muted); font-size: 11px; line-height: 1.8; }
+.coming-soon { color: var(--muted); font: 8px var(--mono); letter-spacing: .08em; }
+@media (max-width: 900px) { .notebook-content-grid { grid-template-columns: minmax(0, 1fr); } .notebook-aside { display: none; } }

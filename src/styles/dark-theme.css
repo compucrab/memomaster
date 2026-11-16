@@ -1,0 +1,43 @@
+/* Dark palette overrides. */
+[data-theme="dark"] {
+  color-scheme: dark;
+  --paper: #151b24;
+  --paper-deep: #1c2633;
+  --paper-card: #202c3a;
+  --surface: #1d2937;
+  --bar: #192330;
+  --hover: #29394d;
+  --ink: #e9f0f8;
+  --muted: #9baabd;
+  --line: #35465a;
+  --accent: #79a9e5;
+  --accent-hover: #8bb8ed;
+  --olive: var(--accent);
+  --acid: #79a9e5;
+}
+[data-theme="dark"] .topbar { background: var(--bar); border-color: var(--line); }
+[data-theme="dark"] .topbar-breadcrumb strong { color: var(--ink); }
+[data-theme="dark"] .topbar-breadcrumb b,
+[data-theme="dark"] .topbar-breadcrumb,
+[data-theme="dark"] .search-field { color: var(--muted); }
+[data-theme="dark"] .notebook-cover { background: #202c3a; border-color: var(--line); }
+[data-theme="dark"] .notebook-info p,
+[data-theme="dark"] .notebook-info footer,
+[data-theme="dark"] .notebook-detail-head input,
+[data-theme="dark"] .notebook-detail-meta,
+[data-theme="dark"] .notebook-aside > p:not(.eyebrow) { color: var(--muted); }
+[data-theme="dark"] .new-notebook-card { background: transparent; border-color: var(--line); color: var(--muted); }
+[data-theme="dark"] .new-notebook-card:hover { background: var(--hover); border-color: var(--accent); }
+[data-theme="dark"] .new-notebook-card strong { color: var(--ink); }
+[data-theme="dark"] .settings-row p,
+[data-theme="dark"] .settings-row > span { color: var(--muted); }
+[data-theme="dark"] .settings-row > i { border-color: var(--line); }
+[data-theme="dark"] .context-menu { background: var(--surface); border-color: var(--line); }
+[data-theme="dark"] .context-menu > button { color: var(--ink); }
+[data-theme="dark"] .context-menu > button:hover { background: var(--hover); }
+[data-theme="dark"] .context-divider { background: var(--line); }
+[data-theme="dark"] .context-color-picker { color: var(--muted); }
+[data-theme="dark"] .button-primary { border-color: var(--accent); background: var(--accent); color: #fff; }
+[data-theme="dark"] .button-primary:hover { background: var(--accent-hover); }
+[data-theme="dark"] .titlebar-mark { background: var(--ink); color: var(--paper); }
+[data-theme="dark"] .theme-switch { background: var(--paper-deep); }

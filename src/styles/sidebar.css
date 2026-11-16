@@ -1,7 +1,0 @@
-@reference "tailwindcss";
-
-.sidebar {
-  @apply flex h-full w-60 shrink-0 flex-col p-5;
-  background: var(--color-surface);
-  border-right: 1px solid var(--color-border);
-}
