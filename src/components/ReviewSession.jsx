@@ -21,7 +21,7 @@ export default function ReviewSession({ cards, mode = "scheduled", onReview, onE
   const activeCard = cards.find((card) => card.id === queue[0]);
   const now = new Date();
   const options = useMemo(
-    () => activeCard ? getReviewOptions(activeCard, now) : null,
+    () => activeCard && mode === "scheduled" ? getReviewOptions(activeCard, now) : null,
     [activeCard?.id, activeCard?.fsrs, queue.length],
   );
 
@@ -72,9 +72,9 @@ export default function ReviewSession({ cards, mode = "scheduled", onReview, onE
           <div class="review-ratings">
             <p>How well did you remember?</p>
             <div class="review-rating-options">
-              <button class="review-rating forgot" onClick={() => rate("forgot")}><strong>Forgot</strong><span>{options.forgot.interval}</span></button>
-              <button class="review-rating difficult" onClick={() => rate("difficult")}><strong>Difficult</strong><span>{options.difficult.interval}</span></button>
-              <button class="review-rating easy" onClick={() => rate("easy")}><strong>Easy</strong><span>{options.easy.interval}</span></button>
+              <button class="review-rating forgot" onClick={() => rate("forgot")}><strong>Forgot</strong><span>{mode === "scheduled" ? options.forgot.interval : "No schedule change"}</span></button>
+              <button class="review-rating difficult" onClick={() => rate("difficult")}><strong>Difficult</strong><span>{mode === "scheduled" ? options.difficult.interval : "No schedule change"}</span></button>
+              <button class="review-rating easy" onClick={() => rate("easy")}><strong>Easy</strong><span>{mode === "scheduled" ? options.easy.interval : "No schedule change"}</span></button>
             </div>
           </div>
         )}
