@@ -135,3 +135,13 @@
 
 .browse-selection-bar select { min-width: 150px; height: 27px; padding: 0 7px; border: 1px solid var(--line); background: var(--paper-card); color: var(--ink); font: 9px var(--sans); }
 .browse-selection-bar button:disabled { opacity: .4; cursor: default; }
+
+.study-card-prose img { display: block; max-width: min(100%, 760px); max-height: 520px; height: auto; margin: 18px auto; object-fit: contain; }
+.study-card-prose .katex-display { max-width: 100%; overflow-x: auto; overflow-y: hidden; margin: 18px 0; padding: 4px 0; }
+.study-card-prose .study-math-block { max-width: 100%; overflow-x: auto; margin: 20px 0; text-align: center; }
+.study-video-frame { position: relative; width: min(100%, 800px); aspect-ratio: 16 / 9; margin: 20px auto; overflow: hidden; background: #08090b; }
+.study-video-frame iframe, .study-embedded-video { display: block; width: 100%; height: 100%; border: 0; }
+.study-embedded-video { max-width: 100%; max-height: 520px; margin: 18px auto; background: #08090b; }
+.study-embed-unavailable { padding: 14px; border: 1px solid var(--line); color: var(--muted); font-size: 11px; text-align: center; }
+.study-card-prose p[style*="text-align:center"], .study-card-prose h1[style*="text-align:center"], .study-card-prose h2[style*="text-align:center"], .study-card-prose h3[style*="text-align:center"] { text-align: center; }
+.study-card-prose p[style*="text-align:right"], .study-card-prose h1[style*="text-align:right"], .study-card-prose h2[style*="text-align:right"], .study-card-prose h3[style*="text-align:right"] { text-align: right; }
