@@ -149,8 +149,8 @@ export default function ReviewSession({ cards, mode = "scheduled", settings, onR
           <div class="review-ratings">
             <p>How well did you remember?</p>
             <div class="review-rating-options">
-              <button disabled={processing} class="review-rating forgot" onClick={() => finishCard("forgot")}><strong>Forgot</strong><span>{options.forgot.interval} · relearn</span></button>
-              <button disabled={processing} class="review-rating difficult" onClick={() => finishCard("difficult")}><strong>Difficult</strong><span>{options.difficult.interval}</span></button>
+              <button disabled={processing} class="review-rating forgot" onClick={() => finishCard("forgot")}><strong>Again</strong><span>{options.forgot.interval}</span></button>
+              <button disabled={processing} class="review-rating difficult" onClick={() => finishCard("difficult")}><strong>Hard</strong><span>{options.difficult.interval}</span></button>
               <button disabled={processing} class="review-rating good" onClick={() => finishCard("good")}><strong>Good</strong><span>{options.good.interval}</span></button>
               <button disabled={processing} class="review-rating easy" onClick={() => finishCard("easy")}><strong>Easy</strong><span>{options.easy.interval}</span></button>
             </div>
@@ -166,7 +166,7 @@ export default function ReviewSession({ cards, mode = "scheduled", settings, onR
         )}
       </div>
       {reviewError && <p class="review-error" role="alert">{reviewError}</p>}
-      <footer class="review-session-footer"><Clock3 size={13} /> {mode === "scheduled" ? "Forgot enters a timed relearning step; Hard is a successful recall and does not repeat automatically." : "Practice only · scheduled due dates remain unchanged"}</footer>
+      <footer class="review-session-footer"><Clock3 size={13} /> {mode === "scheduled" ? "Again enters a timed relearning step; Hard is a successful recall and does not repeat automatically." : "Practice only · scheduled due dates remain unchanged"}</footer>
     </section>
   );
 }
