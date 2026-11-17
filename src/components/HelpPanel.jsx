@@ -19,11 +19,13 @@ const pages = {
     intro: "Shortcuts are available when the relevant notebook, editor, or review screen is active. Text-entry fields keep their normal typing behaviour.",
     sections: [
       ["Notebook", `A — Add a new card
+E — Edit the selected card in Browse
 S — Open Study
 B — Open Browse
 Ctrl + Enter — Save the current card and continue with a new card while editing
 Ctrl + D — Open the chapter picker while editing a card`],
-      ["Scheduled review", `1 — Again
+      ["Scheduled review", `E — Edit the active card and return to Browse
+1 — Again
 2 — Hard (difficult)
 3 — Good
 4 — Easy
