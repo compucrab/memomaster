@@ -51,7 +51,7 @@ export const CardTextStyle = TextStyle.extend({
         parseHTML: element => element.style.fontSize || null,
         renderHTML: attributes => {
           const size = String(attributes.fontSize || "");
-          return /^\\d{1,2}(?:px|pt|rem|em)$/.test(size) ? { style: `font-size:${size}` } : {};
+          return /^\d{1,2}(?:px|pt|rem|em)$/.test(size) ? { style: `font-size:${size}` } : {};
         },
       },
     };
@@ -62,7 +62,7 @@ export const CardTextStyle = TextStyle.extend({
     const color = String(attrs.color || "");
     const size = String(attrs.fontSize || "");
     if (/^#[0-9a-f]{3,8}$/i.test(color)) styles.push("color:" + color);
-    if (/^\\d{1,2}(?:px|pt|rem|em)$/.test(size)) styles.push("font-size:" + size);
+    if (/^\d{1,2}(?:px|pt|rem|em)$/.test(size)) styles.push("font-size:" + size);
     const content = helpers.renderChildren(mark.content);
     return styles.length ? '<span style="' + styles.join(";") + '">' + content + "</span>" : content;
   },
