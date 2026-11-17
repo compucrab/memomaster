@@ -19,7 +19,7 @@ function isDue(card, now) {
   return Number.isNaN(due.getTime()) || due <= now;
 }
 
-export default function ReviewSession({ cards, mode = "scheduled", settings, onReview, onExit }) {
+export default function ReviewSession({ cards, mode = "scheduled", settings, onReview, onComplete, scopeType, scopeChapterId, onExit }) {
   const [sessionCards, setSessionCards] = useState(() => cards.map((card) => ({ ...card })));
   const [queue, setQueue] = useState(() => {
     const now = new Date();
@@ -72,6 +72,14 @@ export default function ReviewSession({ cards, mode = "scheduled", settings, onR
           review: new Date().toISOString(),
         }, mode);
         setReviewed((count) => count + 1);
+      }
+      if (mode === "scheduled" && queue.length === 1) {
+        onComplete?.({
+          completedAt: new Date().toISOString(),
+          reviewedCards: reviewed + 1,
+          scopeType,
+          chapterId: scopeType === "chapter" ? scopeChapterId : null,
+        });
       }
       removeActiveCard();
     } catch (error) {
