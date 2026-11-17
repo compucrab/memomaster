@@ -42,7 +42,24 @@ function videoEmbed(url) {
 }
 
 function renderInline(source) {
-  let value = escapeHtml(normalizeText(source));
+  const styledSpans = [];
+  const prepared = normalizeText(source).replace(/<span\s+style=["']([^"']*)["']>([\s\S]*?)<\/span>/gi, (match, rawStyle, inner) => {
+    const safeStyles = [];
+    String(rawStyle).split(";").forEach(declaration => {
+      const separator = declaration.indexOf(":");
+      if (separator < 0) return;
+      const property = declaration.slice(0, separator).trim().toLowerCase();
+      const styleValue = declaration.slice(separator + 1).trim();
+      if (property === "color" && /^(#[0-9a-f]{3,8}|rgba?\([\d.% ,]+\)|hsla?\([\d.% ,]+\)|[a-z]{3,20})$/i.test(styleValue)) safeStyles.push("color:" + styleValue);
+      if (property === "font-size" && /^\d{1,2}(?:px|pt|rem|em)$/.test(styleValue)) safeStyles.push("font-size:" + styleValue);
+    });
+    if (!safeStyles.length) return inner;
+    const token = "\u0000STYLE" + styledSpans.length + "\u0000";
+    styledSpans.push({ token, html: '<span style="' + safeStyles.join(";") + '">' + renderInline(inner) + "</span>" });
+    return token;
+  });
+  let value = escapeHtml(prepared);
+  styledSpans.forEach(({ token, html }) => { value = value.replace(token, html); });
   value = value.replace(/!\[([^\]]*)\]\(((?:https?:\/\/|data:image\/(?:png|jpe?g|gif|webp);base64,)[^\s)]+)(?:\s+&quot;([^&]*?)&quot;)?\)/gi, (_, alt, src, title) => {
     const safe = safeImageSource(src.replaceAll("&amp;", "&"));
     const metadata = String(title || "").match(/width=(\d+);align=(left|center|right)/);
