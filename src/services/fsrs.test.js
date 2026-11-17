@@ -133,9 +133,9 @@ test("review logs retain reversible before-and-after FSRS snapshots", () => {
   const now = new Date("2026-01-10T12:00:00.000Z");
   const result = scheduleReview({ id: "new-card" }, "good", now);
   assert.equal(result.log.previousFsrs, null);
-  assert.equal(result.log.nextFsrs.state, State.Review);
+  assert.equal(result.log.nextFsrs.state, State.Learning);
   assert.equal(result.log.previousState, State.New);
-  assert.equal(result.log.nextState, State.Review);
+  assert.equal(result.log.nextState, State.Learning);
   assert.equal(typeof result.log.nextFsrs.due, "string");
 });
 
