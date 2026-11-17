@@ -128,7 +128,7 @@ Image insertion supports file selection and clipboard paste. Inserted images are
 | NotebookView.jsx | Browse, card selection, chapter operations, study setup |
 | CardEditor.jsx | Card metadata, Question/Answer tabs, duplicate warning, schedule reset |
 | RichTextEditor.jsx | Tiptap setup, formatting toolbar, media/math insertion, editor history |
-| ReviewSession.jsx | Anki-style scheduled learning/relearning queue with New/Learning/Review counts, plus unscheduled practice queue |
+| ReviewSession.jsx | Continuous FSRS review queue, four rating controls, and unscheduled practice queue |
 | StudyStatus.jsx | Retention, rating, workload, maturity, and lapse analytics |
 | projectArchive.js | .memz ZIP export/import and legacy migration |
 | fsrs.js | FSRS scheduling, study-day rollover, interval calculation, review undo |
