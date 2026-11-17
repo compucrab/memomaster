@@ -7,7 +7,7 @@ import TextAlign from "@tiptap/extension-text-align";
 import Underline from "@tiptap/extension-underline";
 import Color from "@tiptap/extension-color";
 import Link from "@tiptap/extension-link";
-import { AlignCenter, AlignLeft, AlignRight, Bold, Italic, Underline as UnderlineIcon, Link as LinkIcon, Heading1, Heading2, List, ListOrdered, Quote, Code, Undo2, Redo2, ImagePlus, Sigma, Video, X, Minus, Plus } from "lucide-preact";
+import { AlignCenter, AlignLeft, AlignRight, Bold, Italic, Underline as UnderlineIcon, Link as LinkIcon, Heading1, Heading2, Heading3, Heading4, Heading5, List, ListOrdered, Quote, Code, Undo2, Redo2, ImagePlus, Sigma, Video, X, Minus, Plus } from "lucide-preact";
 import { CardImage, CardVideo, CardMath, CardTextStyle, AlignedParagraph, AlignedHeading } from "../services/editorExtensions";
 import "katex/dist/katex.min.css";
 const tools = [
@@ -16,9 +16,9 @@ const tools = [
   { label: "Underline", icon: UnderlineIcon, run: e => e.chain().focus().toggleUnderline().run(), active: e => e.isActive("underline") },
   { label: "Heading 1", icon: Heading1, run: e => e.chain().focus().toggleHeading({ level: 1 }).run(), active: e => e.isActive("heading", { level: 1 }) },
   { label: "Heading 2", icon: Heading2, run: e => e.chain().focus().toggleHeading({ level: 2 }).run(), active: e => e.isActive("heading", { level: 2 }) },
-  { label: "Heading 3", icon: Heading2, run: e => e.chain().focus().toggleHeading({ level: 3 }).run(), active: e => e.isActive("heading", { level: 3 }) },
-  { label: "Heading 4", icon: Heading2, run: e => e.chain().focus().toggleHeading({ level: 4 }).run(), active: e => e.isActive("heading", { level: 4 }) },
-  { label: "Heading 5", icon: Heading2, run: e => e.chain().focus().toggleHeading({ level: 5 }).run(), active: e => e.isActive("heading", { level: 5 }) },
+  { label: "Heading 3", icon: Heading3, run: e => e.chain().focus().toggleHeading({ level: 3 }).run(), active: e => e.isActive("heading", { level: 3 }) },
+  { label: "Heading 4", icon: Heading4, run: e => e.chain().focus().toggleHeading({ level: 4 }).run(), active: e => e.isActive("heading", { level: 4 }) },
+  { label: "Heading 5", icon: Heading5, run: e => e.chain().focus().toggleHeading({ level: 5 }).run(), active: e => e.isActive("heading", { level: 5 }) },
   { label: "Bullet list", icon: List, run: e => e.chain().focus().toggleBulletList().run(), active: e => e.isActive("bulletList") },
   { label: "Numbered list", icon: ListOrdered, run: e => e.chain().focus().toggleOrderedList().run(), active: e => e.isActive("orderedList") },
   { label: "Quote", icon: Quote, run: e => e.chain().focus().toggleBlockquote().run(), active: e => e.isActive("blockquote") },
