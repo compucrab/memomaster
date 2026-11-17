@@ -21,7 +21,7 @@ MemoMaster is a local-first desktop learning and revision app built with Tauri 2
 - Configurable desired retention, learning/relearning steps, maximum interval, and study-day rollover.
 - Retention dashboard with actual versus desired retention, monthly trend, rating distribution, daily workload forecast, card maturity, and frequently forgotten cards. Dashboard review metrics count only reviews that schedule the card beyond one day; short learning/relearning repetitions are excluded.
 - Light and dark themes.
-- Automatic SQLite persistence and automatic .memz backup on application close.
+- Transactional SQLite persistence, verified automatic .memz snapshots, ten-backup retention, and an in-app backup recovery manager.
 - Portable .memz project open/save support and a custom desktop titlebar.
 
 ## Keyboard shortcuts
