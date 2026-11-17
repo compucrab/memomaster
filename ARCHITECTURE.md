@@ -35,7 +35,7 @@ Notebook shortcuts are documented in the in-app Help → Shortcuts page and in R
 
 Layout.jsx owns the notebook collection, active view, active notebook, library search, theme, FSRS preferences, prompts/notices, and remembered project path. Notebook-local browsing, editing, study scope, and review-session state live in their respective components.
 
-On startup, Rust opens `memomaster.sqlite3` in Tauri's application-data directory. The `app_state` table stores the complete library JSON in one row. The frontend loads this value with `load_library`, normalizes legacy topic fields, and debounces changes through `save_library`.
+On startup, Rust opens `memomaster.sqlite3` in Tauri's application-data directory. The `app_state` table stores the complete library JSON in one row. The frontend loads this value with `load_library`, normalizes the current card document shape, and debounces changes through `save_library` at 100 ms. A pending save is also requested on page suspension and close. Rust commits each save in a SQLite transaction with WAL journaling, a five-second busy timeout, and `synchronous=FULL`. The frontend serializes writes through a promise queue so snapshots cannot overtake one another.
 
 The full library JSON approach is intentional for the current small local data model. Normalized SQLite domain tables and explicit database migrations are future work.
 
@@ -49,7 +49,7 @@ The portable .memz format is a ZIP archive generated and parsed by `src/services
 - `notebooks/{notebookId}/notebook.json` contains notebook metadata, chapters, and study histories.
 - `notebooks/{notebookId}/cards/{cardId}.json` contains individual cards, including FSRS state.
 
-Version 3 stores JSON card records whose `front` and `back` fields are canonical Tiptap documents. Version 1 and 2 archives remain importable; legacy Markdown content is converted to Tiptap JSON when the library is normalized. The importer validates the manifest, identifiers, ZIP paths, decompressed size limits, compression methods, and CRC checksums. Keep these checks when changing archive handling.
+The sole supported archive version is manifest version 3. It stores JSON card records whose `front` and `back` fields are canonical Tiptap documents. Older and unknown versions are rejected; this new application does not carry archive migration code. The importer validates the manifest, identifiers, ZIP paths, decompressed size limits, compression methods, and CRC checksums. Keep these checks when changing archive handling.
 
 The File menu provides:
 
@@ -58,7 +58,11 @@ The File menu provides:
 - **Save project:** overwrites the associated archive. If no path is associated, it creates a timestamped backup in the application-data backups directory.
 - **Preferences:** changes the light/dark theme and FSRS scheduling preferences.
 
-On a successful window close, Layout first saves the latest library to SQLite, creates a .memz snapshot, writes it to the application-data backups directory, and then destroys the window. Backups are timestamped; there is currently no automatic retention or pruning policy.
+On a successful window close, Layout first saves the latest library to SQLite, creates a .memz snapshot, round-trips it through `importMemz` and checks notebook/card counts, then asks Rust to write it to the application-data backups directory. Rust writes to a temporary file, flushes it, atomically renames it, and only then prunes older backups. The newest 10 `.memz` backups are retained. The same manager is available in Preferences → Backups & recovery and is automatically opened if startup detects an unreadable or damaged SQLite database.
+
+SQLite is configured for WAL journaling and `synchronous=FULL`; each library update is a transaction. On startup, `PRAGMA quick_check` verifies the database. If opening or checking fails, the database and any WAL/SHM sidecars are moved to timestamped `memomaster-corrupt-*` files instead of being overwritten. The app then offers the user available automatic backups for restoration. Restoring a backup validates the archive before writing the recovered library to SQLite. The damaged database is preserved for manual inspection.
+
+Autosave is debounced by 100 ms to reduce write churn while limiting the crash-loss window. Page suspension and normal close also request a flush. No desktop application can guarantee the last in-memory edit survives sudden power loss or process termination before a pending save reaches SQLite; users should keep independent copies of important `.memz` projects.
 
 A .memz archive is a snapshot. It does not stay synchronized with subsequent SQLite edits.
 
@@ -123,7 +127,7 @@ The editor uses a contextual Notion-style workflow rather than a permanent forma
 - Video cards store a URL, provider, and editable label. They open the source URL in the browser and never embed or autoplay video.
 - Info cards store an editable title and rich-text body.
 
-`src/services/markdown.js` remains the legacy Markdown renderer and conversion path. Keep it for old library content and supported .memz imports. Review HTML-producing changes for XSS and cover normal and hostile input in tests.
+`src/services/markdown.js` remains the Markdown text-import/rendering utility. The `.memz` importer supports only the current version 3 structure. Review HTML-producing changes for XSS and cover normal and hostile input in tests.
 
 ## Important modules
 
@@ -136,13 +140,13 @@ The editor uses a contextual Notion-style workflow rather than a permanent forma
 | CardContent.jsx | Shared read-only card document renderer |
 | ReviewSession.jsx | Continuous FSRS review queue, four rating controls, and unscheduled practice queue |
 | StudyStatus.jsx | Retention, rating, workload, maturity, and lapse analytics |
-| projectArchive.js | .memz ZIP export/import and legacy migration |
+| projectArchive.js | Current-version .memz ZIP export/import and integrity validation |
 | fsrs.js | FSRS scheduling, study-day rollover, interval calculation |
 | fsrsSettings.js | Default and validated app-wide FSRS preferences |
 | cardDocument.js | Tiptap JSON normalization, media resolution, and shared HTML rendering |
 | editorExtensions.js | Shared Tiptap schema for editing and rendering |
 | markdown.js | Legacy Markdown rendering and conversion support |
-| lib.rs | SQLite commands, native file I/O, automatic backup writing |
+| lib.rs | Transactional SQLite commands, database integrity checks/quarantine, atomic backup writing, backup listing/retention |
 
 ## Verification
 
@@ -153,7 +157,7 @@ npm run build
 npm test
 ```
 
-The Node test suite covers FSRS rating semantics, learning/relearning steps, preview-versus-saved intervals, retention and maximum-interval configuration, study-day rollover, persisted review snapshots, canonical Tiptap document handling, and legacy Markdown rendering. Browser-dependent Tiptap HTML serialization is skipped by the Node runner and is exercised by the running app. The tests do not establish exact Anki parity; shared golden fixtures must still be executed against Anki's own scheduler.
+The Node test suite covers FSRS rating semantics, learning/relearning steps, preview-versus-saved intervals, retention and maximum-interval configuration, study-day rollover, persisted review snapshots, canonical Tiptap document handling, Markdown rendering, archive round trips, and archive corruption rejection. Browser-dependent Tiptap HTML serialization is skipped by the Node runner and is exercised by the running app. The tests do not establish exact Anki parity; shared golden fixtures must still be executed against Anki's own scheduler. Rust database recovery and the native backup file lifecycle require desktop integration testing in addition to Node tests.
 
 ## Data flow
 
