@@ -137,9 +137,10 @@ export default function RichTextEditor({ label, value = "", placeholder, onChang
     const editing = (type === "inlineMath" || type === "blockMath") && selectedMathType === type;
     const node = editing ? selectedNode : null;
     const selectedVideo = selection.node?.type?.name === "cardVideo" ? selection.node : null;
-    setDialogValue(type === "link" ? String(activeLink.href || "") : editing ? String(node?.attrs?.latex || "") : type === "video" ? String(selectedVideo?.attrs?.url || "") : "");
-    setDialogText(type === "link" ? selectedText : type === "video" ? String(selectedVideo?.attrs?.label || "") : "");
-    setDialog({ type, from: type === "link" ? linkRange.from : selection.from, to: type === "link" ? linkRange.to : selection.to, editing, title: editing ? "Edit equation" : type === "inlineMath" ? "Insert inline equation" : type === "blockMath" ? "Insert display equation" : type === "link" ? (activeLink.href ? "Edit link" : "Insert link") : selectedVideo ? "Edit video link card" : "Insert video link card", message: type.includes("Math") ? "Enter a LaTeX expression." : type === "link" ? "Set the visible text and destination." : "Choose the text shown on the video card and add its destination." });
+    const editingVideo = type === "video" && !!selectedVideo;
+    setDialogValue(type === "link" ? String(activeLink.href || "") : editing ? String(node?.attrs?.latex || "") : editingVideo ? String(selectedVideo.attrs.url || "") : "");
+    setDialogText(type === "link" ? selectedText : editingVideo ? String(selectedVideo.attrs.label || "") : "");
+    setDialog({ type, from: type === "link" ? linkRange.from : selection.from, to: type === "link" ? linkRange.to : selection.to, editing, editingVideo, title: editing ? "Edit equation" : type === "inlineMath" ? "Insert inline equation" : type === "blockMath" ? "Insert display equation" : type === "link" ? (activeLink.href ? "Edit link" : "Insert link") : editingVideo ? "Edit video link card" : "Insert video link card", message: type.includes("Math") ? "Enter a LaTeX expression." : type === "link" ? "Set the visible text and destination." : "Choose the text shown on the video card and add its destination." });
   }
   function submitInsert() {
     if (!editor || !dialogValue.trim()) { setDialog({ type: "notice", title: "Nothing to insert", message: "Enter a value first." }); return; }
@@ -156,7 +157,9 @@ export default function RichTextEditor({ label, value = "", placeholder, onChang
     if (dialog.type === "video") {
       const target = videoTarget(dialogValue);
       if (target.error) { setDialog({ type: "notice", title: "Unable to add video link", message: target.error }); return; }
-      editor.chain().focus().setTextSelection({ from: dialog.from, to: dialog.to }).insertContent({ type: "cardVideo", attrs: { ...target, label: dialogText.trim() || "Video link" } }).run();
+      const attrs = { ...target, label: dialogText.trim() || "Video link" };
+      if (dialog.editingVideo) editor.chain().focus().setNodeSelection(dialog.from).updateAttributes("cardVideo", attrs).run();
+      else editor.chain().focus().setTextSelection({ from: dialog.from, to: dialog.to }).insertContent({ type: "cardVideo", attrs }).run();
     }
     setDialog(null); setDialogValue(""); setDialogText("");
   }
