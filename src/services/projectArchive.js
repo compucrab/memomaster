@@ -82,6 +82,7 @@ function cleanNotebook(notebook) {
     chapters: Array.isArray(notebook.chapters)
       ? notebook.chapters.map(({ topics, ...chapter }) => chapter)
       : [],
+    media: Array.isArray(notebook.media) ? notebook.media : [],
     flashcards: cards.map((card, index) => {
       const { topicId, ...cleanCard } = card;
       return {
