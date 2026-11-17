@@ -113,7 +113,7 @@ Older projects without `studySessions` start with an empty activity history; exi
 
 `src/components/CardEditor.jsx` provides separate Question and Answer tabs. Each tab mounts its own RichTextEditor instance, so editor history remains independent per side.
 
-Card front/back content is stored as canonical Tiptap JSON in SQLite and .memz archives. `src/services/cardDocument.js` normalizes legacy Markdown strings to JSON, renders JSON using the shared extension schema, and resolves notebook media references for display. Browse previews and review sessions use this shared renderer so the editor and read-only views use the same document model.
+Card front/back content is stored as canonical Tiptap JSON in SQLite and .memz archives. `src/services/cardDocument.js` normalizes plain Markdown text input to JSON, renders JSON using the shared extension schema, and resolves notebook media references for display. Browse previews and review sessions use this shared renderer so the editor and read-only views use the same document model.
 
 The editor uses a contextual Notion-style workflow rather than a permanent formatting toolbar:
 
@@ -145,7 +145,7 @@ The editor uses a contextual Notion-style workflow rather than a permanent forma
 | fsrsSettings.js | Default and validated app-wide FSRS preferences |
 | cardDocument.js | Tiptap JSON normalization, media resolution, and shared HTML rendering |
 | editorExtensions.js | Shared Tiptap schema for editing and rendering |
-| markdown.js | Legacy Markdown rendering and conversion support |
+| markdown.js | Markdown text rendering and conversion support |
 | lib.rs | Transactional SQLite commands, database integrity checks/quarantine, atomic backup writing, backup listing/retention |
 
 ## Verification
