@@ -70,3 +70,11 @@
 .rich-editor-size select { width: 43px; border: 0; outline: 0; background: transparent; color: var(--ink); font: 10px var(--mono); }
 .rich-editor-size select:disabled { opacity: .4; }
 .rich-editor-content .tiptap-mathematics-render { max-width: 100%; }
+
+.media-library-dialog { width: min(680px, calc(100vw - 32px)); max-height: min(78vh, 720px); overflow: auto; }
+.media-library-dialog > p { margin: 0 0 14px; color: var(--muted); font: 11px/1.6 var(--sans); }
+.media-library-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); gap: 9px; max-height: 48vh; overflow: auto; }
+.media-library-item { display: flex; min-width: 0; flex-direction: column; gap: 6px; padding: 7px; border: 1px solid var(--line); background: var(--paper); color: var(--muted); cursor: pointer; text-align: left; }
+.media-library-item:hover { border-color: var(--accent); color: var(--ink); }
+.media-library-item img { width: 100%; height: 86px; object-fit: contain; background: var(--paper-deep); }
+.media-library-item span { overflow: hidden; font: 9px var(--sans); text-overflow: ellipsis; white-space: nowrap; }
