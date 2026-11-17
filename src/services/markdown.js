@@ -67,7 +67,7 @@ function renderInline(source) {
     const metadata = String(title || "").match(/width=(\d+);align=(left|center|right)/);
     const width = metadata ? Math.max(40, Math.min(1600, Number(metadata[1]))) : 420;
     const align = metadata ? metadata[2] : "center";
-    const style = align === "center" ? `width:${width}px;max-width:100%;display:block;margin:12px auto;` : `width:${width}px;max-width:100%;display:inline-block;vertical-align:middle;float:${align};margin:8px 14px 8px 0;`;
+    const style = `width:${width}px;max-width:100%;display:block;margin:12px ${align === "left" ? "auto 0" : align === "right" ? "0 auto" : "auto"};`;
     return safe ? `<img class="study-card-image" src="${safe}" alt="${escapeHtml(alt)}" style="${style}" loading="lazy">` : "";
   });
   value = value
