@@ -5,11 +5,10 @@ import { Markdown } from "@tiptap/markdown";
 import Placeholder from "@tiptap/extension-placeholder";
 import TextAlign from "@tiptap/extension-text-align";
 import Underline from "@tiptap/extension-underline";
-import { TextStyle } from "@tiptap/extension-text-style";
 import Color from "@tiptap/extension-color";
 import Link from "@tiptap/extension-link";
 import { AlignCenter, AlignLeft, AlignRight, Bold, Italic, Underline as UnderlineIcon, Link as LinkIcon, Heading1, Heading2, List, ListOrdered, Quote, Code, Undo2, Redo2, ImagePlus, Sigma, Video, X, Minus, Plus } from "lucide-preact";
-import { CardImage, CardVideo, CardMath, AlignedParagraph, AlignedHeading } from "../services/editorExtensions";
+import { CardImage, CardVideo, CardMath, CardTextStyle, AlignedParagraph, AlignedHeading } from "../services/editorExtensions";
 import "katex/dist/katex.min.css";
 const tools = [
   { label: "Bold", icon: Bold, run: e => e.chain().focus().toggleBold().run(), active: e => e.isActive("bold") },
@@ -17,6 +16,9 @@ const tools = [
   { label: "Underline", icon: UnderlineIcon, run: e => e.chain().focus().toggleUnderline().run(), active: e => e.isActive("underline") },
   { label: "Heading 1", icon: Heading1, run: e => e.chain().focus().toggleHeading({ level: 1 }).run(), active: e => e.isActive("heading", { level: 1 }) },
   { label: "Heading 2", icon: Heading2, run: e => e.chain().focus().toggleHeading({ level: 2 }).run(), active: e => e.isActive("heading", { level: 2 }) },
+  { label: "Heading 3", icon: Heading2, run: e => e.chain().focus().toggleHeading({ level: 3 }).run(), active: e => e.isActive("heading", { level: 3 }) },
+  { label: "Heading 4", icon: Heading2, run: e => e.chain().focus().toggleHeading({ level: 4 }).run(), active: e => e.isActive("heading", { level: 4 }) },
+  { label: "Heading 5", icon: Heading2, run: e => e.chain().focus().toggleHeading({ level: 5 }).run(), active: e => e.isActive("heading", { level: 5 }) },
   { label: "Bullet list", icon: List, run: e => e.chain().focus().toggleBulletList().run(), active: e => e.isActive("bulletList") },
   { label: "Numbered list", icon: ListOrdered, run: e => e.chain().focus().toggleOrderedList().run(), active: e => e.isActive("orderedList") },
   { label: "Quote", icon: Quote, run: e => e.chain().focus().toggleBlockquote().run(), active: e => e.isActive("blockquote") },
@@ -61,7 +63,7 @@ export default function RichTextEditor({ label, value = "", placeholder, onChang
     };
     const instance = new Editor({
       element: hostRef.current,
-      extensions: [StarterKit.configure({ paragraph: false, heading: false, undoRedo: { depth: 100 } }), AlignedParagraph, AlignedHeading, Markdown, Placeholder.configure({ placeholder: placeholder || "" }), Underline, TextStyle, Color, Link.configure({ openOnClick: false, autolink: true, protocols: ["http", "https"] }), CardImage.configure({ inline: true, allowBase64: true }), TextAlign.configure({ types: ["heading", "paragraph"], alignments: ["left", "center", "right"] }), CardMath, CardVideo],
+      extensions: [StarterKit.configure({ paragraph: false, heading: false, undoRedo: { depth: 100 } }), AlignedParagraph, AlignedHeading, Markdown, Placeholder.configure({ placeholder: placeholder || "" }), Underline, CardTextStyle, Color, Link.configure({ openOnClick: false, autolink: true, protocols: ["http", "https"] }), CardImage.configure({ inline: true, allowBase64: true }), TextAlign.configure({ types: ["heading", "paragraph"], alignments: ["left", "center", "right"] }), CardMath, CardVideo],
       content: value, contentType: "markdown",
       editorProps: {
         attributes: { class: "rich-editor-content", role: "textbox", "aria-label": label, "aria-multiline": "true", "data-placeholder": placeholder || "", spellcheck: "true" },
@@ -87,7 +89,7 @@ export default function RichTextEditor({ label, value = "", placeholder, onChang
     try { const src = await readImage(file); editor.chain().focus().setImage({ src, alt: file.name.replace(/\.[^.]+$/, ""), width: 420, align: "center" }).run(); }
     catch (error) { setDialog({ type: "notice", title: "Could not insert image", message: error.message }); }
   }
-  function openInsert(type) { setDialogValue(""); setDialog({ type, title: type === "inlineMath" ? "Insert inline equation" : type === "blockMath" ? "Insert display equation" : type === "link" ? "Insert link" : "Embed video", message: type.includes("Math") ? "Enter a LaTeX expression." : type === "link" ? "Paste the destination URL for the selected text." : "Paste a public video or reel link." }); }
+  function openInsert(type) { setDialogValue(""); setDialog({ type, title: type === "inlineMath" ? "Insert inline equation" : type === "blockMath" ? "Insert display equation" : type === "link" ? "Insert link" : "Insert video link card", message: type.includes("Math") ? "Enter a LaTeX expression." : type === "link" ? "Paste the destination URL for the selected text." : "Add a compact card that opens the video in your browser." }); }
   function submitInsert() {
     if (!editor || !dialogValue.trim()) { setDialog({ type: "notice", title: "Nothing to insert", message: "Enter an expression or video link first." }); return; }
     if (dialog.type === "inlineMath") editor.chain().focus().insertInlineMath({ latex: dialogValue.trim() }).run();
@@ -122,7 +124,7 @@ export default function RichTextEditor({ label, value = "", placeholder, onChang
       <button type="button" class="rich-editor-tool" title="Align left" aria-label="Align left" disabled={!editor} onMouseDown={e=>e.preventDefault()} onClick={()=>align("left")}><AlignLeft size={15}/></button>
       <button type="button" class="rich-editor-tool" title="Align centre" aria-label="Align centre" disabled={!editor} onMouseDown={e=>e.preventDefault()} onClick={()=>align("center")}><AlignCenter size={15}/></button>
       <button type="button" class="rich-editor-tool" title="Align right" aria-label="Align right" disabled={!editor} onMouseDown={e=>e.preventDefault()} onClick={()=>align("right")}><AlignRight size={15}/></button>
-      <label class="rich-editor-color" title="Text colour"><input aria-label="Text colour" type="color" disabled={!editor} value={editor?.getAttributes("textStyle").color || "#386fae"} onInput={e=>editor?.chain().focus().setColor(e.currentTarget.value).run()}/></label>
+      <label class="rich-editor-size" title="Text size"><span>A</span><select aria-label="Text size" disabled={!editor} value={editor?.getAttributes("textStyle").fontSize || "14px"} onChange={e=>editor?.chain().focus().setMark("textStyle", { fontSize: e.currentTarget.value }).run()}><option value="12px">12</option><option value="14px">14</option><option value="16px">16</option><option value="18px">18</option><option value="20px">20</option><option value="24px">24</option><option value="28px">28</option><option value="32px">32</option><option value="36px">36</option></select></label><label class="rich-editor-color" title="Text colour"><input aria-label="Text colour" type="color" disabled={!editor} value={editor?.getAttributes("textStyle").color || "#386fae"} onInput={e=>editor?.chain().focus().setColor(e.currentTarget.value).run()}/></label>
       <button type="button" class="rich-editor-tool" title="Insert link" aria-label="Insert link" disabled={!editor} onMouseDown={e=>e.preventDefault()} onClick={()=>openInsert("link")}><LinkIcon size={15}/></button>
       <span class="rich-editor-divider"/>
       <button type="button" class="rich-editor-tool" title="Insert image" aria-label="Insert image" disabled={!editor} onMouseDown={e=>e.preventDefault()} onClick={()=>fileRef.current?.click()}><ImagePlus size={15}/></button>
@@ -131,7 +133,7 @@ export default function RichTextEditor({ label, value = "", placeholder, onChang
       <span class="rich-editor-divider"/>
       <button type="button" class="rich-editor-tool" title="Inline equation" aria-label="Inline equation" disabled={!editor} onMouseDown={e=>e.preventDefault()} onClick={()=>openInsert("inlineMath")}><Sigma size={15}/></button>
       <button type="button" class="rich-editor-tool" title="Display equation" aria-label="Display equation" disabled={!editor} onMouseDown={e=>e.preventDefault()} onClick={()=>openInsert("blockMath")}>∑</button>
-      <button type="button" class="rich-editor-tool" title="Embed video" aria-label="Embed video" disabled={!editor} onMouseDown={e=>e.preventDefault()} onClick={()=>openInsert("video")}><Video size={15}/></button>
+      <button type="button" class="rich-editor-tool" title="Insert video link card" aria-label="Insert video link card" disabled={!editor} onMouseDown={e=>e.preventDefault()} onClick={()=>openInsert("video")}><Video size={15}/></button>
       <span class="rich-editor-divider"/>
       <button type="button" class="rich-editor-tool" title="Undo" aria-label="Undo" disabled={!editor?.can().undo()} onMouseDown={e=>e.preventDefault()} onClick={()=>editor?.chain().focus().undo().run()}><Undo2 size={15}/></button>
       <button type="button" class="rich-editor-tool" title="Redo" aria-label="Redo" disabled={!editor?.can().redo()} onMouseDown={e=>e.preventDefault()} onClick={()=>editor?.chain().focus().redo().run()}><Redo2 size={15}/></button>
