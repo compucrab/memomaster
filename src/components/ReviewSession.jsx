@@ -118,7 +118,6 @@ export default function ReviewSession({ cards, mode = "scheduled", settings, onR
         <button class="back-link" onClick={onExit}>← EXIT REVIEW</button>
         <span>{mode === "scheduled" ? "SCHEDULED" : "UNSCHEDULED"} · {reviewed} REVIEWS · {queue.length} LEFT</span>
       </header>
-      <div class="review-progress"><i style={{ width: `${(reviewed / (reviewed + queue.length + pending.length)) * 100}%` }} /></div>
       <div class="review-card">
         <div class="review-card-content">
           <p class="study-side-label">{revealed ? "ANSWER" : "QUESTION"}</p>
