@@ -24,23 +24,22 @@ function videoEmbed(url) {
     const parsed = new URL(url);
     if (parsed.protocol !== "https:" && parsed.protocol !== "http:") return "";
     const host = parsed.hostname.toLowerCase();
-    const supported = host === "youtu.be" || host === "youtube.com" || host.endsWith(".youtube.com") || host === "vimeo.com" || host.endsWith(".vimeo.com") || host === "instagram.com" || host.endsWith(".instagram.com") || host === "facebook.com" || host.endsWith(".facebook.com") || host === "fb.watch" || [".mp4", ".webm", ".ogg"].some(extension => parsed.pathname.toLowerCase().endsWith(extension));
+    const directFile = [".mp4", ".webm", ".ogg"].some(extension => parsed.pathname.toLowerCase().endsWith(extension));
+    const supported = host === "youtu.be" || host === "youtube.com" || host.endsWith(".youtube.com")
       || host === "vimeo.com" || host.endsWith(".vimeo.com")
       || host === "instagram.com" || host.endsWith(".instagram.com")
       || host === "facebook.com" || host.endsWith(".facebook.com")
-      || host === "fb.watch" || /\\.(mp4|webm|ogg)$/i.test(parsed.pathname);
+      || host === "fb.watch" || directFile;
     if (!supported) return "";
-    const safeUrl = escapeHtml(parsed.href);
-    const provider = (host.includes("youtube") || host === "youtu.be") ? "YouTube" : host.includes("vimeo") ? "Vimeo" : host.includes("instagram") ? "Instagram" : (host.includes("facebook") || host === "fb.watch") ? "Facebook" : "Video file";
-      : /vimeo/.test(host) ? "Vimeo"
-      : /instagram/.test(host) ? "Instagram"
-      : /facebook|fb\\.watch/.test(host) ? "Facebook" : "Video file";
-    return `<a class="study-video-card" href="${safeUrl}" target="_blank" rel="noopener noreferrer"><span class="study-video-card-icon">▶</span><span><strong>Open ${provider} video</strong><small>Opens in your browser</small></span><span class="study-video-card-arrow">↗</span></a>`;
+    const provider = (host.includes("youtube") || host === "youtu.be") ? "YouTube"
+      : host.includes("vimeo") ? "Vimeo"
+      : host.includes("instagram") ? "Instagram"
+      : (host.includes("facebook") || host === "fb.watch") ? "Facebook" : "Video file";
+    return '<a class="study-video-card" href="' + escapeHtml(parsed.href) + '" target="_blank" rel="noopener noreferrer"><span class="study-video-card-icon">▶</span><span><strong>Open ' + provider + ' video</strong><small>Opens in your browser</small></span><span class="study-video-card-arrow">↗</span></a>';
   } catch {
     return "";
   }
 }
-
 function renderInline(source, mediaMap = new Map()) {
   const styledSpans = [];
   const prepared = normalizeText(source).replace(/<span\s+style=["']([^"']*)["']>([\s\S]*?)<\/span>/gi, (match, rawStyle, inner) => {
