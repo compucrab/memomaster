@@ -31,3 +31,26 @@
 .notebook-aside > p:not(.eyebrow) { color: var(--muted); font-size: 11px; line-height: 1.8; }
 .coming-soon { color: var(--muted); font: 8px var(--mono); letter-spacing: .08em; }
 @media (max-width: 900px) { .notebook-content-grid { grid-template-columns: minmax(0, 1fr); } .notebook-aside { display: none; } }
+
+
+.notebook-daily-counts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  margin-top: 10px;
+}
+.notebook-daily-counts > span {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 5px;
+  padding: 7px 8px;
+  border: 1px solid var(--line);
+  background: var(--paper-deep);
+}
+.notebook-daily-counts strong { font: 600 10px var(--mono); }
+.notebook-daily-counts small { overflow: hidden; color: var(--muted); font: 8px var(--sans); text-overflow: ellipsis; }
+.notebook-daily-counts .daily-new strong { color: var(--accent); }
+.notebook-daily-counts .daily-learning strong { color: var(--warning); }
+.notebook-daily-counts .daily-review strong { color: var(--success); }
