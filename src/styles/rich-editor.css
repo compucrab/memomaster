@@ -268,15 +268,6 @@
 .rich-editor-content .study-image-frame.ProseMirror-selectednode { outline:2px solid var(--accent); outline-offset:3px; }
 .rich-editor-color-picker { display:inline-flex; align-items:center; gap:5px; padding:0 6px; color:var(--muted); font:10px var(--sans); cursor:pointer; }
 .rich-editor-color-picker input { width:20px; height:20px; padding:0; border:0; background:transparent; cursor:pointer; }
-.rich-editor-hover-tools { position:fixed; z-index:120; display:flex; align-items:center; gap:4px; padding:6px; border:1px solid var(--line); background:var(--paper-card); color:var(--ink); box-shadow:0 8px 24px rgb(0 0 0 / 20%); }
-.rich-editor-hover-tools strong { padding:0 5px; color:var(--muted); font:10px var(--sans); }
-.rich-editor-hover-tools button { padding:5px 7px; border:0; background:var(--paper-deep); color:var(--ink); font:10px var(--sans); cursor:pointer; white-space:nowrap; }
-.rich-editor-hover-tools button:hover { background:var(--hover); color:var(--accent); }
-
-/* One unobtrusive Edit affordance; all object properties live in the dialog. */
-.rich-editor-hover-tools { padding:3px; border-radius:5px; }
-.rich-editor-hover-tools .rich-editor-edit-trigger { min-width:52px; padding:6px 12px; border-radius:3px; background:var(--accent); color:var(--paper); font:600 11px var(--sans); }
-.rich-editor-hover-tools .rich-editor-edit-trigger:hover { background:var(--ink); color:var(--paper); }
 .rich-editor-table-actions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:7px; margin:10px 0 14px; }
 .rich-editor-table-actions button { min-height:34px; padding:6px 10px; border:1px solid var(--line); background:var(--paper-deep); color:var(--ink); cursor:pointer; font:11px var(--sans); }
 .rich-editor-table-actions button:hover { border-color:var(--accent); color:var(--accent); }
