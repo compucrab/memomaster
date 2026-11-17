@@ -45,3 +45,10 @@ export function renderCardDocument(value = "", media = []) {
   const document = resolveMedia(value, mediaById);
   return generateHTML(document, extensions);
 }
+
+export function cardDocumentText(value) {
+  if (typeof value === "string") return value;
+  if (!value || typeof value !== "object") return "";
+  if (Array.isArray(value)) return value.map(cardDocumentText).join(" ");
+  return [value.text || "", ...(value.content || []).map(cardDocumentText)].join(" ");
+}
