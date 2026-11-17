@@ -1,7 +1,6 @@
 import { Editor, generateHTML } from "@tiptap/core";
-import { Markdown } from "@tiptap/markdown";
 import { createCardExtensions } from "./editorExtensions";
-import { renderMarkdown } from "./markdown";
+import { renderMarkdown, unescapeMarkdownPunctuation } from "./markdown";
 
 const extensions = createCardExtensions();
 
@@ -12,7 +11,7 @@ export function isCardDocument(value) {
 export function normalizeCardDocument(value = "") {
   if (isCardDocument(value)) return value;
   if (value && typeof value === "object") return { type: "doc", content: [] };
-  const source = String(value || "");
+  const source = unescapeMarkdownPunctuation(String(value || ""));
   if (!source.trim()) return { type: "doc", content: [{ type: "paragraph" }] };
   if (typeof document === "undefined") return { type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: source }] }] };
   const editor = new Editor({
