@@ -31,6 +31,7 @@ export default function RichTextEditor({ label, value = "", placeholder, onChang
   const [editor, setEditor] = useState(null), [revision, setRevision] = useState(0);
   const [dialog, setDialog] = useState(null), [dialogValue, setDialogValue] = useState(""), [dialogText, setDialogText] = useState("");
   const [paletteOpen, setPaletteOpen] = useState(false), [paletteQuery, setPaletteQuery] = useState("");
+  const [paletteIndex, setPaletteIndex] = useState(0);
   const [hoverEdit, setHoverEdit] = useState(null);
   const [infoTitle, setInfoTitle] = useState("");
   const [imageWidth, setImageWidth] = useState(420);
@@ -291,7 +292,13 @@ export default function RichTextEditor({ label, value = "", placeholder, onChang
     { label: "Redo", icon: Redo2, detail: "Redo the last undone edit", run: () => editor.chain().focus().redo().run() },
   ];
   const filteredActions = actions.filter(item => (item.label + " " + item.detail).toLowerCase().includes(paletteQuery.toLowerCase()));
-  function chooseAction(action) { action.run(); setPaletteOpen(false); setPaletteQuery(""); }
+  function chooseAction(action) { action.run(); setPaletteOpen(false); setPaletteQuery(""); setPaletteIndex(0); }
+  function handlePaletteKeyDown(event) {
+    if (event.key === "Escape") { event.preventDefault(); setPaletteOpen(false); }
+    else if (event.key === "ArrowDown") { event.preventDefault(); setPaletteIndex(index => Math.min(Math.max(0, filteredActions.length - 1), index + 1)); }
+    else if (event.key === "ArrowUp") { event.preventDefault(); setPaletteIndex(index => Math.max(0, index - 1)); }
+    else if (event.key === "Enter" && filteredActions[paletteIndex]) { event.preventDefault(); chooseAction(filteredActions[paletteIndex]); }
+  }
   function applySelectionFormat(callback) { if (editor) callback(editor.chain().focus()); setSelectionPosition(null); }
   const selection = editor?.state.selection;
   const hasTextSelection = !!selection && !selection.empty && !selection.node && !!editor.state.doc.textBetween(selection.from, selection.to).trim();
@@ -325,13 +332,9 @@ export default function RichTextEditor({ label, value = "", placeholder, onChang
       <button type="button" title="Add link" aria-label="Add link" onClick={() => openInsert("link")}><LinkIcon size={14}/></button>
     </div>}
     {paletteOpen && <div class="rich-editor-command-palette" style={{ left: palettePosition.left + "px", top: palettePosition.top + "px" }} onMouseDown={event => event.stopPropagation()}>
-      <div class="rich-editor-command-search"><span>⌘</span><input ref={paletteInputRef} value={paletteQuery} onInput={event => setPaletteQuery(event.currentTarget.value)} onKeyDown={event => {
-        if (event.key === "Escape") { event.preventDefault(); setPaletteOpen(false); }
-        if (event.key === "Enter" && filteredActions[0]) { event.preventDefault(); chooseAction(filteredActions[0]); }
-        if (event.key === "ArrowDown") { event.preventDefault(); event.currentTarget.parentElement?.nextElementSibling?.querySelector("button")?.focus(); }
-      }} placeholder="Search commands..." aria-label="Search editor commands"/></div>
+      <div class="rich-editor-command-search"><span>⌘</span><input ref={paletteInputRef} value={paletteQuery} onInput={event => { setPaletteQuery(event.currentTarget.value); setPaletteIndex(0); }} onKeyDown={handlePaletteKeyDown} placeholder="Search commands..." aria-label="Search editor commands"/></div>
       <div class="rich-editor-command-results">
-        {filteredActions.map(action => <button type="button" key={action.label} onMouseDown={event => event.preventDefault()} onClick={() => chooseAction(action)}><span class="rich-editor-command-icon">{action.color ? <i class="rich-editor-command-color" style={{ backgroundColor: action.color }}/> : action.icon && <action.icon size={15}/>}</span><span class="rich-editor-command-copy"><strong>{action.label}</strong><small>{action.detail}</small></span></button>)}
+        {filteredActions.map((action, index) => <button type="button" key={action.label} tabIndex={-1} aria-selected={paletteIndex === index} class={paletteIndex === index ? "is-highlighted" : ""} onMouseEnter={() => setPaletteIndex(index)} onMouseDown={event => event.preventDefault()} onClick={() => chooseAction(action)}><span class="rich-editor-command-icon">{action.color ? <i class="rich-editor-command-color" style={{ backgroundColor: action.color }}/> : action.icon && <action.icon size={15}/>}</span><span class="rich-editor-command-copy"><strong>{action.label}</strong><small>{action.detail}</small></span></button>)}
         {!filteredActions.length && <p>No matching commands</p>}
       </div>
       <div class="rich-editor-command-hint">↑↓ to navigate · Enter to select · Esc to close</div>
