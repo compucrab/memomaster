@@ -114,7 +114,6 @@ export default function ReviewSession({ cards, mode = "scheduled", settings, onR
     <section class="review-session">
       <header class="review-session-header">
         <button class="back-link" onClick={onExit}>← EXIT REVIEW</button>
-        <span>{mode === "scheduled" ? "SCHEDULED" : "UNSCHEDULED"} · {reviewed} REVIEWS · {queue.length} LEFT</span>
       </header>
       <div class="review-card">
         <div class="review-card-content">
