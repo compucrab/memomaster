@@ -4,8 +4,15 @@ const STOP_WORDS = new Set([
   "what", "when", "where", "which", "who", "why", "with",
 ]);
 
+function plainText(value) {
+  if (typeof value === "string") return value;
+  if (!value || typeof value !== "object") return "";
+  if (Array.isArray(value)) return value.map(plainText).join(" ");
+  return [value.text || "", ...(value.content || []).map(plainText)].join(" ");
+}
+
 export function normalizeQuestion(value = "") {
-  return String(value)
+  return plainText(value)
     .replace(/<[^>]*>/g, " ")
     .replace(/[!#*_>`~]/g, " ")
     .toLocaleLowerCase()

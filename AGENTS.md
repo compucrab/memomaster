@@ -17,15 +17,13 @@ Read this document together with README.md and ARCHITECTURE.md before changing M
 
 The hierarchy is Notebook → Chapter → Flashcard. Topics have been removed; legacy topic fields must not be reintroduced into newly saved library or archive data.
 
-- Cards contain Markdown front/back content and may be assigned to a chapter.
+- Cards contain canonical Tiptap JSON front/back documents and may be assigned to a chapter. Markdown remains supported as a legacy input format.
 - Notebook view has Browse and Study tabs. Browse supports search, chapter filtering, next-due-date display, preview, editing, multi-selection, bulk deletion, chapter reassignment, and schedule reset.
-- Do not add a card right-click menu. Notebook cards in the library still use a right-click context menu for open, rename, delete, and cover colour.
 - Exact duplicate questions are blocked; similar questions warn and allow an explicit Save anyway choice.
 - Scheduled review and unscheduled practice can cover a whole notebook or one chapter.
-- Scheduled study includes due cards and updates FSRS-6 state and reviewHistory.
-- Scheduled ratings are Again, Hard, Good, and Easy, mapped directly to FSRS ratings. Queue behaviour is based on the resulting scheduled interval, not on the rating label: cards with a next interval of 10 minutes or less immediately return at the end of the active queue; longer intervals leave the queue until due.
+- Scheduled ratings are Again, Hard, Good, and Easy, mapped directly to FSRS ratings. Cards with a next interval of 10 minutes or less immediately return at the end of the active queue; longer intervals leave the queue until due.
+- The active review queue is continuous, not a fixed batch. Do not add review progress counters or an undo-last-review action.
 - Unscheduled practice can use any card, supports Repeat and Done, records practiceHistory, and must not alter FSRS state or due dates.
-- The active review component keeps its own card snapshot while review is open; do not rely on the parent's due-only list after rating a card.
 - Study status is derived from stored card state and review/practice history. Recall and rating outcomes use scheduled review history only.
 - Keep study/revision logic separate from card editing.
 
@@ -33,14 +31,15 @@ The hierarchy is Notebook → Chapter → Flashcard. Topics have been removed; l
 
 - Layout.jsx coordinates top-level state, theme, view switching, SQLite autosave, project open/save, and close-time backups.
 - SQLite stores the active library JSON in one row and restores it on launch.
-- .memz is the portable snapshot/restore format. It stores notebooks, chapters, cards, FSRS state, and study histories. Preserve supported version 1 import compatibility and current version 2 export structure.
+- .memz is the portable snapshot/restore format. Version 3 exports canonical Tiptap JSON card documents; versions 1 and 2 remain importable. Do not remove those migration paths without an explicit migration plan.
 - Opening a .memz replaces the active library and associates the selected path with Save project.
 - Save project overwrites the associated archive; with no associated path it creates a timestamped backup in the application-data backups folder.
 - A successful application close saves SQLite and creates another timestamped .memz backup in that folder. There is no retention/pruning policy yet.
-- Theme and remembered project path are stored in localStorage.
-- Card front/back content is Markdown. Tiptap edits it; markdown.js renders it for previews and study.
-- Images are embedded as data URLs; preserve width/alignment metadata. File insertion and clipboard paste share the same representation. The insertion limit is 12 MB.
-- Math uses Tiptap Mathematics and KaTeX. Video uses @[video](URL) Markdown and supported provider embeds.
+- Theme, FSRS preferences, and remembered project path are stored in localStorage.
+- Tiptap is the canonical card editor and document schema. `cardDocument.js` normalizes legacy Markdown and renders canonical JSON. `markdown.js` remains for legacy conversion/rendering only.
+- Images are notebook-scoped media assets referenced by ID from card documents. Preserve width metadata and the drag-resize handle; do not reintroduce alignment controls or duplicate image data in each card.
+- Math uses Tiptap Mathematics and KaTeX. Video cards store a validated URL, provider, and editable label; they open in the browser rather than embedding players.
+- The editor uses Ctrl + Space for its command palette, text-selection formatting controls, and right-click contextual Edit actions for editable objects. Do not add a permanent formatting toolbar or table zoom/full-screen control.
 - Question and Answer editors have separate undo/redo histories.
 - Anki import/export, cloud sync, and multi-device sync are not implemented.
 

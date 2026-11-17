@@ -19,7 +19,7 @@ function isDue(card, now) {
   return Number.isNaN(due.getTime()) || due <= now;
 }
 
-export default function ReviewSession({ cards, mode = "scheduled", settings, onReview, onComplete, scopeType, scopeChapterId, onExit }) {
+export default function ReviewSession({ cards, mode = "scheduled", settings, media = [], onReview, onComplete, scopeType, scopeChapterId, onExit }) {
   const [sessionCards, setSessionCards] = useState(() => cards.map((card) => ({ ...card })));
   const [queue, setQueue] = useState(() => {
     const now = new Date();
@@ -125,14 +125,14 @@ export default function ReviewSession({ cards, mode = "scheduled", settings, onR
         <div class="review-card-content">
           <section class="review-card-side review-question">
             <p class="study-side-label">QUESTION</p>
-            <CardContent content={activeCard.front} />
+            <CardContent content={activeCard.front} media={media} />
           </section>
           {revealed && (
             <>
               <div class="review-answer-divider" role="separator" />
               <section class="review-card-side review-answer">
                 <p class="study-side-label">ANSWER</p>
-                <CardContent content={activeCard.back} />
+                <CardContent content={activeCard.back} media={media} />
               </section>
             </>
           )}

@@ -12,6 +12,7 @@ import TextPrompt from "./TextPrompt";
 import StudyStatus from "./StudyStatus";
 import { createMemz, importMemz } from "../services/projectArchive";
 import { loadFsrsSettings, saveFsrsSettings } from "../services/fsrsSettings";
+import { normalizeCardDocument } from "../services/cardDocument";
 
 const savedTheme = () => {
   try { return localStorage.getItem("memomaster-theme") || "light"; }
@@ -26,7 +27,7 @@ const normalizeName = (value) => String(value || "").trim().toLocaleLowerCase();
 const normalizeLibrary = (items) => items.map((notebook) => ({
   ...notebook,
   chapters: (notebook.chapters || []).map(({ topics, ...chapter }) => chapter),
-  ...(Array.isArray(notebook.flashcards) ? { flashcards: notebook.flashcards.map((card) => { const cleanCard = { ...card }; delete cleanCard.topicId; return cleanCard; }) } : {}),
+  ...(Array.isArray(notebook.flashcards) ? { flashcards: notebook.flashcards.map((card) => { const cleanCard = { ...card }; delete cleanCard.topicId; cleanCard.front = normalizeCardDocument(cleanCard.front); cleanCard.back = normalizeCardDocument(cleanCard.back); return cleanCard; }) } : {}),
 }));
 
 export default function Layout() {

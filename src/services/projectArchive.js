@@ -82,6 +82,7 @@ function cleanNotebook(notebook) {
     chapters: Array.isArray(notebook.chapters)
       ? notebook.chapters.map(({ topics, ...chapter }) => chapter)
       : [],
+    media: Array.isArray(notebook.media) ? notebook.media : [],
     flashcards: cards.map((card, index) => {
       const { topicId, ...cleanCard } = card;
       return {
@@ -103,7 +104,7 @@ export async function createMemz(notebooks) {
     const notebook = cleanNotebook(source);
     if (!/^[\w-]{1,100}$/.test(notebook.id)) throw new Error("Invalid notebook identifier");
     notebookIds.push(notebook.id);
-    const { flashcards, ...metadata } = notebook;
+    const { flashcards, media = [], ...metadata } = notebook;
     files.push({
       name: `notebooks/${notebook.id}/notebook.json`,
       content: JSON.stringify(metadata, null, 2),
@@ -115,10 +116,17 @@ export async function createMemz(notebooks) {
         content: JSON.stringify({ ...card, id: cardId }, null, 2),
       });
     });
+    media.forEach((asset, index) => {
+      const mediaId = /^[A-Za-z0-9_-]{1,100}$/.test(asset.id) ? asset.id : `media-${index + 1}`;
+      files.push({
+        name: `notebooks/${notebook.id}/media/${mediaId}.json`,
+        content: JSON.stringify({ ...asset, id: mediaId }, null, 2),
+      });
+    });
   }
   files.unshift({
     name: "manifest.json",
-    content: JSON.stringify({ format: "memomaster", version: 2, notebooks: notebookIds }, null, 2),
+    content: JSON.stringify({ format: "memomaster", version: 3, notebooks: notebookIds }, null, 2),
   });
   return createZip(files);
 }
@@ -170,7 +178,7 @@ export async function importMemz(input) {
   const manifestText = files.get("manifest.json");
   if (!manifestText) throw new Error("Missing MemoMaster manifest");
   const manifest = JSON.parse(manifestText);
-  if (manifest.format !== "memomaster" || ![1, 2].includes(manifest.version) || !Array.isArray(manifest.notebooks)) {
+  if (manifest.format !== "memomaster" || ![1, 2, 3].includes(manifest.version) || !Array.isArray(manifest.notebooks)) {
     throw new Error("Unsupported MemoMaster project format");
   }
   return manifest.notebooks.map((id) => {
@@ -188,6 +196,9 @@ export async function importMemz(input) {
         .filter(([path]) => path.startsWith(`notebooks/${id}/cards/`) && path.endsWith(".json"))
         .map(([, value]) => JSON.parse(value));
     }
-    return cleanNotebook({ ...notebook, flashcards });
+    const media = manifest.version === 1 ? [] : [...files.entries()]
+      .filter(([path]) => path.startsWith(`notebooks/${id}/media/`) && path.endsWith(".json"))
+      .map(([, value]) => JSON.parse(value));
+    return cleanNotebook({ ...notebook, flashcards, media });
   });
 }

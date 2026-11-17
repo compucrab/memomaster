@@ -8,12 +8,14 @@ MemoMaster is a local-first desktop learning and revision app built with Tauri 2
 - Notebook workspace with Browse and Study tabs.
 - Browse cards with question/answer search, chapter filtering, preview, editing, multi-selection, bulk deletion, chapter reassignment, and schedule reset.
 - Duplicate-question detection: exact duplicates are blocked and close matches are flagged before saving.
-- Rich card editor with separate Question and Answer tabs.
-- Markdown-based card content with bold, italic, underline, headings, lists, quotes, inline code, links, and text colour.
-- Image insertion from files or clipboard, with per-image size and alignment controls. Images are embedded in card content (up to 12 MB per inserted image).
-- Inline and display LaTeX equations rendered with KaTeX.
-- Video embeds for YouTube, Vimeo, Instagram public posts/reels, Facebook, and direct MP4/WebM/OGG URLs. Playback depends on the provider's embedding policy.
-- Separate undo/redo history for the Question and Answer editors.
+- Rich card editor with separate Question and Answer tabs, powered by Tiptap.
+- Canonical Tiptap JSON for card content, with Markdown conversion retained for legacy content and archive imports.
+- Notion-style contextual text formatting, five heading levels, lists, quotes, inline code, links, and a native text-colour picker.
+- Editable tables with row and column controls; tables remain within the available editor and card width and scroll horizontally when needed.
+- Image insertion from files or clipboard, notebook-scoped reusable media, and per-image drag resizing. Images are stored once in the notebook media collection (up to 12 MB per inserted image).
+- Inline and display LaTeX equations rendered with KaTeX and edited through a contextual Edit action.
+- Video link cards for YouTube, Vimeo, Instagram public posts/reels, Facebook, and direct MP4/WebM/OGG URLs. Cards have editable labels and open the destination in the browser; they do not embed or autoplay video.
+- Contextual Edit actions for equations, images, video cards, info cards, and tables. Text selection exposes formatting controls; Ctrl + Space opens the searchable command palette.
 - FSRS-6 scheduled reviews and unscheduled practice for a whole notebook or a chapter.
 - Anki-style review screen with the question above the revealed answer, separated by a horizontal divider, plus Again/Hard/Good/Easy ratings backed by FSRS-6 and configurable learning/relearning steps.
 - Configurable desired retention, learning/relearning steps, maximum interval, and study-day rollover.
@@ -107,4 +109,4 @@ Vite uses port 1420; the Tauri configuration expects that fixed development port
 - Frontend code is JavaScript/JSX; do not introduce TypeScript without an explicit project decision.
 - MemoMaster is desktop-first and local-first. No cloud account, analytics, or sync backend is implemented.
 - Anki import/export and multi-device synchronization are not implemented.
-- Preserve .memz archive compatibility when changing its format.
+- Card front/back content is stored as Tiptap JSON. Keep Markdown conversion for legacy content and preserve supported .memz archive imports.

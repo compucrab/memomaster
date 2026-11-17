@@ -9,6 +9,22 @@ function escapeHtml(value) {
     .replaceAll("'", "&#39;");
 }
 
+export function unescapeMarkdownPunctuation(value) {
+  const protectedParts = [];
+  const protect = text => {
+    const token = "\u0000PROTECTED" + protectedParts.length + "\u0000";
+    protectedParts.push(text);
+    return token;
+  };
+  let source = String(value);
+  source = source.replace(/[\x60]{3}[\s\S]*?[\x60]{3}/g, protect);
+  source = source.replace(/[\x60][^\x60\n]*[\x60]/g, protect);
+  source = source.replace(/\$\$[\s\S]*?\$\$/g, protect);
+  source = source.replace(/(?<!\$)\$[^$\n]+\$(?!\$)/g, protect);
+  source = source.replace(/\\([\\\x60*_{}\[\]()<>#+\-.!|~])/g, "$1");
+  return source.replace(/\u0000PROTECTED(\d+)\u0000/g, (_, index) => protectedParts[Number(index)] ?? "");
+}
+
 function normalizeText(value) {
   return String(value)
     .replace(/&nbsp;|&#160;|&#xA0;/gi, " ")
@@ -23,41 +39,49 @@ function videoEmbed(url) {
   try {
     const parsed = new URL(url);
     if (parsed.protocol !== "https:" && parsed.protocol !== "http:") return "";
-    let source = "";
-    if (parsed.hostname === "youtu.be" || parsed.hostname === "youtube.com" || parsed.hostname.endsWith(".youtube.com")) {
-      const id = parsed.hostname === "youtu.be" ? parsed.pathname.slice(1) : parsed.searchParams.get("v") || parsed.pathname.split("/").filter(Boolean).pop();
-      if (!/^[\w-]{6,20}$/.test(id || "")) return "";
-      source = `https://www.youtube-nocookie.com/embed/${id}`;
-    } else if (parsed.hostname === "vimeo.com" || parsed.hostname.endsWith(".vimeo.com")) {
-      const id = parsed.pathname.split("/").filter(Boolean).pop();
-      if (!/^\d+$/.test(id || "")) return "";
-      source = `https://player.vimeo.com/video/${id}`;
-    } else if ((parsed.hostname === "instagram.com" || parsed.hostname.endsWith(".instagram.com")) && /^\/(reel|p|tv)\/[\w-]+(?:\/embed)?\/?$/i.test(parsed.pathname)) {
-      const match = parsed.pathname.match(/^\/(reel|p|tv)\/([\w-]+)/i);
-      source = parsed.pathname.toLowerCase().includes("/embed") ? url : `https://www.instagram.com/${match[1]}/${match[2]}/embed`;
-    } else if (parsed.hostname === "facebook.com" && parsed.pathname === "/plugins/video.php") {
-      source = url;
-    } else if (parsed.hostname === "facebook.com" || parsed.hostname.endsWith(".facebook.com") || parsed.hostname === "fb.watch" || parsed.hostname.endsWith(".fb.watch")) {
-      source = `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(url)}&show_text=0`;
-    } else if (/\.(mp4|webm|ogg)$/i.test(parsed.pathname)) {
-      return `<video class="study-embedded-video" controls preload="metadata" src="${escapeHtml(url)}"></video>`;
-    } else {
-      return "";
-    }
-    return `<div class="study-video-frame"><iframe src="${escapeHtml(source)}" title="Embedded video" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div>`;
+    const host = parsed.hostname.toLowerCase();
+    const directFile = [".mp4", ".webm", ".ogg"].some(extension => parsed.pathname.toLowerCase().endsWith(extension));
+    const supported = host === "youtu.be" || host === "youtube.com" || host.endsWith(".youtube.com")
+      || host === "vimeo.com" || host.endsWith(".vimeo.com")
+      || host === "instagram.com" || host.endsWith(".instagram.com")
+      || host === "facebook.com" || host.endsWith(".facebook.com")
+      || host === "fb.watch" || directFile;
+    if (!supported) return "";
+    const provider = (host.includes("youtube") || host === "youtu.be") ? "YouTube"
+      : host.includes("vimeo") ? "Vimeo"
+      : host.includes("instagram") ? "Instagram"
+      : (host.includes("facebook") || host === "fb.watch") ? "Facebook" : "Video file";
+    return '<a class="study-video-card" href="' + escapeHtml(parsed.href) + '" target="_blank" rel="noopener noreferrer"><span class="study-video-card-icon">▶</span><span><strong>Open ' + provider + ' video</strong><small>Opens in your browser</small></span><span class="study-video-card-arrow">↗</span></a>';
   } catch {
     return "";
   }
 }
-
-function renderInline(source) {
-  let value = escapeHtml(normalizeText(source));
-  value = value.replace(/!\[([^\]]*)\]\(((?:https?:\/\/|data:image\/(?:png|jpe?g|gif|webp);base64,)[^\s)]+)(?:\s+&quot;([^&]*?)&quot;)?\)/gi, (_, alt, src, title) => {
-    const safe = safeImageSource(src.replaceAll("&amp;", "&"));
-    const metadata = String(title || "").match(/width=(\d+);align=(left|center|right)/);
+function renderInline(source, mediaMap = new Map()) {
+  const styledSpans = [];
+  const prepared = unescapeMarkdownPunctuation(normalizeText(source)).replace(/<span\s+style=["']([^"']*)["']>([\s\S]*?)<\/span>/gi, (match, rawStyle, inner) => {
+    const safeStyles = [];
+    String(rawStyle).split(";").forEach(declaration => {
+      const separator = declaration.indexOf(":");
+      if (separator < 0) return;
+      const property = declaration.slice(0, separator).trim().toLowerCase();
+      const styleValue = declaration.slice(separator + 1).trim();
+      if (property === "color" && /^(#[0-9a-f]{3,8}|rgba?\([\d.% ,]+\)|hsla?\([\d.% ,]+\)|[a-z]{3,20})$/i.test(styleValue)) safeStyles.push("color:" + styleValue);
+      if (property === "font-size" && /^\d{1,2}(?:px|pt|rem|em)$/.test(styleValue)) safeStyles.push("font-size:" + styleValue);
+    });
+    if (!safeStyles.length) return inner;
+    const token = "\u0000STYLE" + styledSpans.length + "\u0000";
+    styledSpans.push({ token, html: '<span style="' + safeStyles.join(";") + '">' + renderInline(inner, mediaMap) + "</span>" });
+    return token;
+  });
+  let value = escapeHtml(prepared);
+  styledSpans.forEach(({ token, html }) => { value = value.replace(token, html); });
+  value = value.replace(/!\[([^\]]*)\]\(((?:https?:\/\/|memomedia:\/\/[\w-]+|data:image\/(?:png|jpe?g|gif|webp);base64,)[^\s)]+)(?:\s+&quot;([^&]*?)&quot;)?\)/gi, (_, alt, src, title) => {
+    const rawSrc = src.replaceAll("&amp;", "&");
+    const mediaId = rawSrc.match(/^memomedia:\/\/([\w-]+)$/)?.[1];
+    const safe = mediaId ? mediaMap.get(mediaId)?.data || "" : safeImageSource(rawSrc);
+    const metadata = String(title || "").match(/width=(\d+)/);
     const width = metadata ? Math.max(40, Math.min(1600, Number(metadata[1]))) : 420;
-    const align = metadata ? metadata[2] : "center";
-    const style = align === "center" ? `width:${width}px;max-width:100%;display:block;margin:12px auto;` : `width:${width}px;max-width:100%;display:inline-block;vertical-align:middle;float:${align};margin:8px 14px 8px 0;`;
+    const style = `width:${width}px;max-width:100%;display:block;margin:12px 0;`;
     return safe ? `<img class="study-card-image" src="${safe}" alt="${escapeHtml(alt)}" style="${style}" loading="lazy">` : "";
   });
   value = value
@@ -75,7 +99,8 @@ function renderInline(source) {
   );
 }
 
-export function renderMarkdown(source = "") {
+export function renderMarkdown(source = "", media = []) {
+  const mediaMap = new Map((Array.isArray(media) ? media : []).map(asset => [asset.id, asset]));
   const output = [];
   let paragraph = [];
   let list = null;
@@ -87,18 +112,18 @@ export function renderMarkdown(source = "") {
   const fence = String.fromCharCode(96).repeat(3);
 
   function flushParagraph() {
-    if (paragraph.length) output.push("<p>" + renderInline(paragraph.join(" ")) + "</p>");
+    if (paragraph.length) output.push("<p>" + renderInline(paragraph.join(" "), mediaMap) + "</p>");
     paragraph = [];
   }
   function flushList() {
     if (list) {
-      const items = list.items.map((item) => "<li>" + renderInline(item) + "</li>").join("");
+      const items = list.items.map((item) => "<li>" + renderInline(item, mediaMap) + "</li>").join("");
       output.push("<" + list.tag + (list.tag === "ol" && list.start > 1 ? ' start="' + list.start + '"' : "") + ">" + items + "</" + list.tag + ">");
     }
     list = null;
   }
   function flushQuote() {
-    if (quote.length) output.push("<blockquote>" + renderInline(quote.join(" ")) + "</blockquote>");
+    if (quote.length) output.push("<blockquote>" + renderInline(quote.join(" "), mediaMap) + "</blockquote>");
     quote = [];
   }
   function flushCode() {
@@ -140,11 +165,11 @@ export function renderMarkdown(source = "") {
     }
     if (inCode) { code.push(line); continue; }
 
-    const aligned = line.match(/^<(p|h[1-3]) style="text-align:(center|right)">([\s\S]*)<\/\1>$/i);
+    const aligned = line.match(/^<(p|h[1-5]) style="text-align:(center|right)">([\s\S]*)<\/\1>$/i);
     if (aligned) {
       flushParagraph(); flushList(); flushQuote();
       const tag = aligned[1].toLowerCase();
-      output.push(`<${tag} style="text-align:${aligned[2]}">${renderInline(aligned[3])}</${tag}>`);
+      output.push(`<${tag} style="text-align:${aligned[2]}">${renderInline(aligned[3], mediaMap)}</${tag}>`);
       continue;
     }
  
@@ -155,7 +180,7 @@ export function renderMarkdown(source = "") {
       continue;
     }
 
-    const heading = line.match(/^(#{1,3})\s+(.+)$/);
+    const heading = line.match(/^(#{1,5})\s+(.+)$/);
     const bullet = line.match(/^\s*[-*+]\s+(.+)$/);
     const ordered = line.match(/^\s*(\d+)\.\s+(.+)$/);
     const rule = /^\s*(---+|___+|\*\*\*+)\s*$/.test(line);
@@ -165,7 +190,7 @@ export function renderMarkdown(source = "") {
     if (heading) {
       flushList(); flushQuote();
       const level = heading[1].length;
-      output.push("<h" + level + ">" + renderInline(heading[2]) + "</h" + level + ">");
+      output.push("<h" + level + ">" + renderInline(heading[2], mediaMap) + "</h" + level + ">");
     } else if (bullet || ordered) {
       flushQuote();
       const tag = bullet ? "ul" : "ol";

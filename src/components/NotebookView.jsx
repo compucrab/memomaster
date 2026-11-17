@@ -6,9 +6,11 @@ import CardContent from "./CardContent";
 import CardEditor from "./CardEditor";
 import ReviewSession from "./ReviewSession";
 import { getStudyQueueCounts } from "../services/studyQueue";
+import { createMediaAsset } from "../services/mediaLibrary";
+import { normalizeCardDocument, cardDocumentText } from "../services/cardDocument";
 
 function makeCard() {
-  return { id: crypto.randomUUID(), front: "## Your question\n\nWrite a prompt here.", back: "Write the answer here.", chapterId: "" };
+  return { id: crypto.randomUUID(), front: normalizeCardDocument("## Your question\n\nWrite a prompt here."), back: normalizeCardDocument("Write the answer here."), chapterId: "" };
 }
 const makeId = () => crypto.randomUUID();
 const normalizeName = (value) => String(value || "").trim().toLocaleLowerCase();
@@ -58,7 +60,7 @@ export default function NotebookView({ notebook, fsrsSettings, onUpdate, onBack,
     const needle = search.trim().toLocaleLowerCase();
     return cards.filter(card => {
       const chapter = chapters.find(item => item.id === card.chapterId);
-      const matchesSearch = !needle || [card.front, card.back, chapter?.name]
+      const matchesSearch = !needle || [cardDocumentText(card.front), cardDocumentText(card.back), chapter?.name]
         .some(value => String(value || "").toLocaleLowerCase().includes(needle));
       const matchesChapter = chapterFilter === "all" || card.chapterId === chapterFilter;
       return matchesSearch && matchesChapter;
@@ -88,6 +90,13 @@ export default function NotebookView({ notebook, fsrsSettings, onUpdate, onBack,
     if (mode === "scheduled") changes.reviewHistory = [...(notebook.reviewHistory || []), log];
     else changes.practiceHistory = [...(notebook.practiceHistory || []), log];
     onUpdate(changes);
+  }
+
+  async function addMedia(file) {
+    const asset = await createMediaAsset(file);
+    const current = notebook.media || [];
+    onUpdate({ media: [...current, asset] });
+    return asset;
   }
 
   function saveCard(draft) {
@@ -182,7 +191,7 @@ export default function NotebookView({ notebook, fsrsSettings, onUpdate, onBack,
   }
 
   if (editingCard) {
-    return <CardEditor key={editingCard.id} card={editingCard} chapters={chapters}
+    return <CardEditor key={editingCard.id} card={editingCard} chapters={chapters} media={notebook.media || []} onAddMedia={addMedia}
       onSave={saveCard} existingCards={cards} onCancel={() => { setEditingCardId(null); setNewCard(null); setCardAddedNotice(false); }}
       addedNotice={cardAddedNotice} onAddChapter={addChapter} onDelete={() => { deleteCards([editingCard.id]); setEditingCardId(null); }}
       onResetSchedule={(id) => resetCardSchedules([id])} />;
@@ -190,7 +199,7 @@ export default function NotebookView({ notebook, fsrsSettings, onUpdate, onBack,
 
   if (reviewing) {
     return <ReviewSession key={`${studyType}-${scopeType}-${scopeChapterId}`}
-      cards={studyCards} mode={studyType} settings={fsrsSettings}
+      cards={studyCards} mode={studyType} settings={fsrsSettings} media={notebook.media || []}
       onReview={handleReview}
       scopeType={scopeType}
       scopeChapterId={scopeChapterId}
@@ -258,7 +267,7 @@ export default function NotebookView({ notebook, fsrsSettings, onUpdate, onBack,
                     <input class="browse-card-checkbox" type="checkbox" aria-label="Select card" checked={selectedCardIds.includes(card.id)} onChange={() => toggleCardSelection(card.id)} />
                     <button type="button" class="browse-card-select" onClick={() => setSelectedCardId(card.id)}>
                       <span class="browse-card-index">{String(index + 1).padStart(2, "0")}</span>
-                      <span class="browse-card-copy"><strong>{String(card.front || "").replace(/[#>*_\x60]/g, "").trim().split("\n")[0] || "Untitled question"}</strong><small>{chapter?.name || "Unassigned"} · Due: {getDueLabel(card)}</small></span>
+                      <span class="browse-card-copy"><strong>{cardDocumentText(card.front).trim().split("\n")[0] || "Untitled question"}</strong><small>{chapter?.name || "Unassigned"} · Due: {getDueLabel(card)}</small></span>
                     </button>
                   </div>
                 );
@@ -277,7 +286,7 @@ export default function NotebookView({ notebook, fsrsSettings, onUpdate, onBack,
                   <button class="study-secondary" onClick={() => setEditingCardId(selectedCard.id)}><PencilLine size={13} /> Edit card</button>
                 </header>
                 <div class="browse-preview-content">
-                  <CardContent content={previewSide === "question" ? selectedCard.front : selectedCard.back} />
+                  <CardContent content={previewSide === "question" ? selectedCard.front : selectedCard.back} media={notebook.media || []} />
                 </div>
                 <footer class="browse-preview-meta">
                   <span>{chapters.find(item => item.id === selectedCard.chapterId)?.name || "Unassigned"}</span>

@@ -1,6 +1,6 @@
 @reference "tailwindcss";
 
-.rich-editor { @apply grid min-w-0 gap-1; }
+.rich-editor { @apply relative grid min-w-0 gap-1; }
 .rich-editor-heading { color: var(--muted); font: 8px var(--mono); letter-spacing: .13em; }
 .rich-editor-toolbar { @apply flex flex-wrap items-center gap-1 border px-2 py-1; border-color: var(--line); background: var(--paper-deep); }
 .rich-editor-tool { @apply inline-flex h-7 w-7 items-center justify-center border-0 bg-transparent; color: var(--muted); cursor: pointer; }
@@ -58,3 +58,289 @@
 .rich-editor-color input { width: 17px; height: 17px; padding: 0; border: 0; background: transparent; cursor: pointer; }
 .rich-editor-color input::-webkit-color-swatch-wrapper { padding: 0; }
 .rich-editor-color input::-webkit-color-swatch { border: 1px solid var(--line); border-radius: 3px; }
+
+/* Consistent heading scale, text sizing, and predictable media flow. */
+.rich-editor-content h1 { font-size: 19px; }
+.rich-editor-content h2 { font-size: 16px; }
+.rich-editor-content h3 { font-size: 14px; }
+.rich-editor-content h4 { margin: 5px 0 7px; color: var(--ink); font: 650 12px/1.4 var(--display); }
+.rich-editor-content h5 { margin: 5px 0 7px; color: var(--muted); font: 650 11px/1.4 var(--display); }
+.rich-editor-content img { display: block !important; float: none !important; vertical-align: baseline; }
+.rich-editor-size { display: inline-flex; height: 29px; align-items: center; gap: 3px; padding: 0 4px; color: var(--muted); font: 10px var(--sans); }
+.rich-editor-size select { width: 43px; border: 0; outline: 0; background: transparent; color: var(--ink); font: 10px var(--mono); }
+.rich-editor-size select:disabled { opacity: .4; }
+.rich-editor-content .tiptap-mathematics-render { max-width: 100%; }
+
+.media-library-dialog { width: min(680px, calc(100vw - 32px)); max-height: min(78vh, 720px); overflow: auto; }
+.media-library-dialog > p { margin: 0 0 14px; color: var(--muted); font: 11px/1.6 var(--sans); }
+.media-library-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); gap: 9px; max-height: 48vh; overflow: auto; }
+.media-library-item { display: flex; min-width: 0; flex-direction: column; gap: 6px; padding: 7px; border: 1px solid var(--line); background: var(--paper); color: var(--muted); cursor: pointer; text-align: left; }
+.media-library-item:hover { border-color: var(--accent); color: var(--ink); }
+.media-library-item img { width: 100%; height: 86px; object-fit: contain; background: var(--paper-deep); }
+.media-library-item span { overflow: hidden; font: 9px var(--sans); text-overflow: ellipsis; white-space: nowrap; }
+
+/* Notion-like block flow: content starts at the left edge and image tools are contextual. */
+.rich-editor-content img { display: block !important; margin: 12px 0 !important; }
+.rich-editor-content .tiptap-mathematics-render[data-type="inline-math"] { font-size: 1em !important; vertical-align: baseline; }
+.rich-editor-content .tiptap-mathematics-render[data-type="block-math"] { font-size: 1.35em; }
+
+.rich-editor-content > * { text-align: left !important; }
+
+/* Keep inline math at the surrounding text size, including KaTeX's inner wrapper. */
+.rich-editor-content .tiptap-mathematics-render[data-type="inline-math"],
+.rich-editor-content .tiptap-mathematics-render[data-type="inline-math"] .katex {
+  font-size: 1em !important;
+}
+.rich-editor-content a { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
+
+/* Match the editable card surface to the Browse and Review renderer. */
+.rich-editor-content,
+.card-editor-writing .rich-editor-content {
+  font-size: 14px;
+  line-height: 1.75;
+}
+.rich-editor-content h1,
+.card-editor-writing .rich-editor-content h1 { font-size: clamp(20px, 2.2vw, 27px); }
+.rich-editor-content h2,
+.card-editor-writing .rich-editor-content h2 { font-size: clamp(18px, 1.9vw, 23px); }
+.rich-editor-content h3,
+.card-editor-writing .rich-editor-content h3 { font-size: 18px; }
+.rich-editor-content h4,
+.card-editor-writing .rich-editor-content h4 { font-size: 16px; }
+.rich-editor-content h5,
+.card-editor-writing .rich-editor-content h5 { font-size: 14px; }
+
+.rich-editor-colors { display: inline-flex; align-items: center; gap: 5px; padding: 0 4px; }
+.rich-editor-color-swatch { width: 14px; height: 14px; padding: 0; border: 1px solid color-mix(in srgb, var(--ink) 35%, transparent); border-radius: 50%; cursor: pointer; }
+.rich-editor-color-swatch.is-active { outline: 2px solid var(--accent); outline-offset: 2px; }
+.rich-editor-color-reset { width: 19px; height: 19px; border: 1px solid var(--line); background: transparent; color: var(--muted); cursor: pointer; font: 11px var(--sans); }
+.rich-editor-color-swatch:disabled, .rich-editor-color-reset:disabled { opacity: .45; cursor: default; }
+.rich-editor-insert-menu { position: absolute; z-index: 30; top: calc(100% - 2px); left: 10px; width: min(320px, calc(100vw - 48px)); padding: 8px; border: 1px solid var(--line); background: var(--paper-card); box-shadow: 0 12px 32px rgb(0 0 0 / 18%); }
+.rich-editor-insert-menu > input { width: 100%; height: 34px; padding: 0 10px; border: 1px solid var(--line); outline: none; background: var(--paper); color: var(--ink); font: 11px var(--sans); }
+.rich-editor-insert-menu > input:focus { border-color: var(--accent); }
+.rich-editor-insert-results { display: flex; max-height: 260px; flex-direction: column; gap: 2px; overflow-y: auto; margin-top: 6px; }
+.rich-editor-insert-results button { display: flex; min-height: 42px; flex-direction: column; align-items: flex-start; justify-content: center; gap: 3px; padding: 6px 9px; border: 0; background: transparent; color: var(--ink); cursor: pointer; text-align: left; }
+.rich-editor-insert-results button:hover { background: var(--hover); }
+.rich-editor-insert-results strong { font: 550 11px var(--sans); }
+.rich-editor-insert-results span, .rich-editor-insert-results p { margin: 0; color: var(--muted); font: 9px var(--sans); }
+.rich-editor-insert-results p { padding: 12px 9px; }
+.rich-editor-content, .study-card-prose { font-family: var(--sans); font-size: 14px !important; line-height: 1.75 !important; text-align: left; }
+.rich-editor-content > *, .study-card-prose > * { text-align: left !important; }
+.rich-editor-content h1, .study-card-prose h1 { margin: 18px 0 10px; font-size: 24px !important; line-height: 1.3; font-weight: 700; }
+.rich-editor-content h2, .study-card-prose h2 { margin: 16px 0 9px; font-size: 21px !important; line-height: 1.35; font-weight: 680; }
+.rich-editor-content h3, .study-card-prose h3 { margin: 14px 0 8px; font-size: 18px !important; line-height: 1.4; font-weight: 650; }
+.rich-editor-content h4, .study-card-prose h4 { margin: 12px 0 7px; font-size: 16px !important; line-height: 1.45; font-weight: 650; }
+.rich-editor-content h5, .study-card-prose h5 { margin: 10px 0 6px; font-size: 14px !important; line-height: 1.5; font-weight: 650; }
+.rich-editor-content table, .study-card-prose table { width: 100%; border-collapse: collapse; margin: 14px 0; }
+.rich-editor-content th, .rich-editor-content td, .study-card-prose th, .study-card-prose td { min-width: 72px; padding: 7px 9px; border: 1px solid var(--line); text-align: left; vertical-align: top; }
+.rich-editor-content th, .study-card-prose th { background: var(--hover); font-weight: 650; }
+.rich-editor-content .tiptap-mathematics-render[data-type="inline-math"], .rich-editor-content .tiptap-mathematics-render[data-type="inline-math"] .katex, .study-card-prose .katex { font-size: 1em !important; }
+
+
+/* Keep the insert popover anchored to the editor instead of the page viewport. */
+.rich-editor-insert-menu { top: 42px; left: 6px; }
+
+/* Keep the compact selection formatting controls legible and consistent. */
+.rich-editor-colors { gap: 7px; }
+.rich-editor-color-swatch { width: 15px; height: 15px; border-radius: 50%; }
+.rich-editor-color-reset { display: inline-flex; align-items: center; justify-content: center; font-weight: 650; }
+.rich-editor-insert-dialog input { width: 100%; height: 36px; margin-bottom: 8px; padding: 0 10px; border: 1px solid var(--line); outline: none; background: var(--paper); color: var(--ink); font: 12px/1.5 var(--sans); }
+.rich-editor-insert-dialog input:focus { border-color: var(--accent); }
+
+
+/* Contextual Notion-style editing: no permanent formatting toolbar. */
+.rich-editor { grid-template-rows: auto minmax(120px, 1fr); }
+.rich-editor-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.rich-editor-shortcut { color: var(--muted); font: 10px var(--mono); opacity: .75; }
+.rich-editor-selection-tools,
+.rich-editor-command-palette {
+  position: fixed;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 6px;
+  border: 1px solid var(--line);
+  background: var(--paper-card);
+  color: var(--ink);
+  box-shadow: 0 10px 32px rgb(0 0 0 / 22%);
+}
+.rich-editor-selection-tools { transform: translateX(-50%); white-space: nowrap; }
+.rich-editor-selection-tools button {
+  display: inline-flex;
+  width: 27px;
+  height: 27px;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+.rich-editor-selection-tools button:hover,
+.rich-editor-selection-tools button.is-active { background: var(--hover); color: var(--accent); }
+.rich-editor-selection-tools select {
+  max-width: 112px;
+  height: 27px;
+  padding: 0 5px;
+  border: 0;
+  outline: 0;
+  background: var(--paper-card);
+  color: var(--ink);
+  font: 10px var(--sans);
+}
+.rich-editor-selection-divider { width: 1px; height: 18px; margin: 0 3px; background: var(--line); }
+.rich-editor-selection-color { width: 13px !important; height: 13px !important; border-radius: 50%; }
+.rich-editor-selection-reset { width: 20px !important; height: 20px !important; border: 1px solid var(--line) !important; font: 10px var(--sans); }
+.rich-editor-command-palette { width: min(340px, calc(100vw - 24px)); flex-direction: column; align-items: stretch; padding: 7px; }
+.rich-editor-command-search { display: flex; height: 36px; align-items: center; gap: 9px; padding: 0 9px; border: 1px solid var(--line); background: var(--paper); color: var(--muted); }
+.rich-editor-command-search > span { font: 12px var(--mono); }
+.rich-editor-command-search input { width: 100%; min-width: 0; border: 0; outline: 0; background: transparent; color: var(--ink); font: 12px var(--sans); }
+.rich-editor-command-results { display: flex; max-height: min(320px, 48vh); flex-direction: column; gap: 2px; overflow-y: auto; margin-top: 6px; }
+.rich-editor-command-results button { display: flex; min-height: 42px; flex-direction: column; align-items: flex-start; justify-content: center; gap: 3px; padding: 6px 9px; border: 0; background: transparent; color: var(--ink); cursor: pointer; text-align: left; }
+.rich-editor-command-results button:hover,
+.rich-editor-command-results button:focus { outline: 0; background: var(--hover); }
+.rich-editor-command-results strong { font: 550 11px var(--sans); }
+.rich-editor-command-results span,
+.rich-editor-command-results p { margin: 0; color: var(--muted); font: 9px var(--sans); }
+.rich-editor-command-results p { padding: 12px 9px; }
+.rich-editor-command-hint { padding: 7px 8px 2px; border-top: 1px solid var(--line); color: var(--muted); font: 9px var(--mono); }
+
+
+/* Searchable command palette: clear icon + label hierarchy. */
+.rich-editor-command-results button {
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  min-height: 44px;
+}
+.rich-editor-command-icon {
+  display: inline-flex;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 28px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line);
+  background: var(--paper-deep);
+  color: var(--muted);
+}
+.rich-editor-command-results button:hover .rich-editor-command-icon,
+.rich-editor-command-results button:focus .rich-editor-command-icon {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.rich-editor-command-copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+}
+.rich-editor-command-copy strong { color: var(--ink); font: 550 11px var(--sans); }
+.rich-editor-command-copy small { color: var(--muted); font: 9px var(--sans); }
+.rich-editor-shortcut { white-space: nowrap; }
+
+
+/* Distinct color previews in the editor command palette. */
+.rich-editor-command-color { display: block; width: 14px; height: 14px; border: 1px solid rgb(127 127 127 / 35%); border-radius: 50%; }
+
+/* Editable informational blocks shared by editor and study previews. */
+.rich-editor-content .study-info-card, .study-card-prose .study-info-card { margin: 14px 0; padding: 12px 14px; border: 1px solid var(--line); border-left: 3px solid var(--accent); background: var(--paper-card); }
+.study-info-card-heading { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; color: var(--ink); font-size: 12px; font-weight: 650; }
+.study-info-card-heading > span { color: var(--accent); }
+.study-info-card-content > :first-child { margin-top: 0; }
+.study-info-card-content > :last-child { margin-bottom: 0; }
+
+/* Responsive tables never expand the card or editor beyond its available width. */
+.study-table-scroll { display:block; width:100%; max-width:100%; overflow-x:auto; overscroll-behavior-inline:contain; }
+.rich-editor-surface, .study-card-prose { min-width:0; max-width:100%; overflow-wrap:anywhere; }
+.rich-editor-content table, .study-card-prose table { width:max-content; min-width:100%; max-width:none; table-layout:fixed; }
+.rich-editor-content th, .rich-editor-content td, .study-card-prose th, .study-card-prose td { min-width:100px; max-width:280px; overflow-wrap:anywhere; word-break:break-word; }
+.rich-editor-content h5, .study-card-prose h5 { color:var(--ink) !important; }
+.rich-editor-content h1, .rich-editor-content h2, .rich-editor-content h3, .rich-editor-content h4, .rich-editor-content h5,
+.study-card-prose h1, .study-card-prose h2, .study-card-prose h3, .study-card-prose h4, .study-card-prose h5 { color:var(--ink); }
+.study-image-frame { position:relative; display:block; width:max-content; max-width:100%; margin:12px 0; line-height:0; }
+.study-image-frame img { display:block; height:auto; max-width:100%; margin:0 !important; }
+.study-image-resize-handle { position:absolute; right:-5px; bottom:-5px; width:12px; height:12px; border:2px solid var(--paper-card); border-radius:2px; background:var(--accent); cursor:nwse-resize; opacity:0; transition:opacity .12s ease; }
+.study-image-frame:hover .study-image-resize-handle, .study-image-frame:focus-within .study-image-resize-handle { opacity:1; }
+.rich-editor-content .study-image-frame.ProseMirror-selectednode { outline:2px solid var(--accent); outline-offset:3px; }
+.rich-editor-color-picker { display:inline-flex; align-items:center; gap:5px; padding:0 6px; color:var(--muted); font:10px var(--sans); cursor:pointer; }
+.rich-editor-color-picker input { width:20px; height:20px; padding:0; border:0; background:transparent; cursor:pointer; }
+.rich-editor-table-actions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:7px; margin:10px 0 14px; }
+.rich-editor-table-actions button { min-height:34px; padding:6px 10px; border:1px solid var(--line); background:var(--paper-deep); color:var(--ink); cursor:pointer; font:11px var(--sans); }
+.rich-editor-table-actions button:hover { border-color:var(--accent); color:var(--accent); }
+.study-image-resize-handle { z-index:2; touch-action:none; user-select:none; }
+.study-image-frame { position:relative; }
+
+
+/* Right-click context actions are anchored to the selected editable object. */
+.rich-editor-context-menu {
+  position: fixed;
+  z-index: 130;
+  display: flex;
+  min-height: 36px;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 5px 4px 10px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: var(--paper-card);
+  color: var(--ink);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 22%);
+}
+.rich-editor-context-menu > span {
+  color: var(--muted);
+  font: 10px var(--sans);
+  white-space: nowrap;
+}
+.rich-editor-context-menu > button {
+  min-width: 48px;
+  padding: 6px 10px;
+  border: 0;
+  border-radius: 3px;
+  background: var(--accent);
+  color: var(--paper);
+  cursor: pointer;
+  font: 600 10px var(--sans);
+}
+.rich-editor-context-menu > button:hover { filter: brightness(.94); }
+
+/* Selection controls wrap and stay inside the visible viewport on narrow screens. */
+.rich-editor-selection-tools {
+  max-width: calc(100vw - 16px);
+  flex-wrap: wrap;
+  white-space: normal;
+}
+.rich-editor-selection-tools select { max-width: min(112px, 28vw); }
+@media (max-width: 520px) {
+  .rich-editor-selection-tools { gap: 1px; padding: 4px; }
+  .rich-editor-selection-tools button { width: 25px; height: 25px; }
+}
+
+
+/* Equation scale is stored per equation and adjusted from its Edit dialog. */
+.rich-editor-content .tiptap-mathematics-render[data-font-size],
+.study-card-prose .tiptap-mathematics-render[data-font-size] {
+  font-size: attr(data-font-size px) !important;
+}
+.rich-editor-content .tiptap-mathematics-render[data-font-size] .katex,
+.study-card-prose .tiptap-mathematics-render[data-font-size] .katex {
+  font-size: 1em !important;
+}
+
+/* Equation size controls in the existing Edit popup. */
+.rich-editor-math-size {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0 0 10px;
+  color: var(--muted);
+  font: 11px var(--sans);
+}
+.rich-editor-math-size input {
+  width: 86px !important;
+  margin: 0 !important;
+}
+
