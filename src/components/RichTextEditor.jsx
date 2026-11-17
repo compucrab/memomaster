@@ -8,6 +8,7 @@ import Color from "@tiptap/extension-color";
 import Link from "@tiptap/extension-link";
 import { Bold, Italic, Underline as UnderlineIcon, Link as LinkIcon, Heading1, Heading2, Heading3, Heading4, Heading5, List, ListOrdered, Quote, Code, Undo2, Redo2, ImagePlus, Sigma, Video, X, Minus, Plus, Pilcrow } from "lucide-preact";
 import { CardImage, CardVideo, CardMath, CardTextStyle, AlignedParagraph, AlignedHeading } from "../services/editorExtensions";
+import { unescapeMarkdownPunctuation } from "../services/markdown";
 import "katex/dist/katex.min.css";
 const tools = [
   { label: "Normal text", icon: Pilcrow, run: e => e.chain().focus().setParagraph().run(), active: e => e.isActive("paragraph") },
@@ -49,7 +50,7 @@ function videoTarget(value) {
 export default function RichTextEditor({ label, value = "", placeholder, onChange, media = [], onAddMedia }) {
   const hostRef = useRef(null), editorRef = useRef(null), fileRef = useRef(null), onChangeRef = useRef(onChange), onAddMediaRef = useRef(onAddMedia), mediaRef = useRef(media);
   mediaRef.current = media;
-  const toEditorMarkdown = source => mediaRef.current.reduce((text, asset) => asset?.id && asset?.data ? text.replaceAll("memomedia://" + asset.id, asset.data) : text, String(source || ""));
+  const toEditorMarkdown = source => unescapeMarkdownPunctuation(mediaRef.current.reduce((text, asset) => asset?.id && asset?.data ? text.replaceAll("memomedia://" + asset.id, asset.data) : text, String(source || "")));
   const toStoredMarkdown = source => mediaRef.current.reduce((text, asset) => asset?.id && asset?.data ? text.replaceAll(asset.data, "memomedia://" + asset.id) : text, String(source || ""));
   const cacheMediaAsset = asset => {
     if (asset?.id) mediaRef.current = [...mediaRef.current.filter(item => item.id !== asset.id), asset];
