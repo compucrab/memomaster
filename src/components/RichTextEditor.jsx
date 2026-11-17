@@ -257,7 +257,7 @@ export default function RichTextEditor({ label, value = "", placeholder, onChang
       {hoverEdit.type === "cardInfo" && <button type="button" onClick={() => openInsert("info", hoverEdit.pos)}>Edit title</button>}
       {hoverEdit.type === "cardVideo" && <button type="button" onClick={() => openInsert("video", hoverEdit.pos)}>Edit</button>}
       {["inlineMath","blockMath"].includes(hoverEdit.type) && <button type="button" onClick={() => openInsert(hoverEdit.type, hoverEdit.pos)}>Edit equation</button>}
-      {hoverEdit.type === "link" && <button type="button" onClick={() => openInsert("link")}>Edit link</button>}
+      {hoverEdit.type === "link" && <button type="button" onClick={() => openInsert("link", hoverEdit.pos)}>Edit link</button>}
       {hoverEdit.type === "image" && <button type="button" onClick={() => { editor?.commands.setNodeSelection(hoverEdit.pos); setHoverEdit(null); }}>Select image</button>}
       {hoverEdit.type === "table" && <>
         <button type="button" onClick={() => editor?.chain().focus().setTextSelection(hoverEdit.pos + 4).addTableRowAfter().run()}>+ Row</button>
