@@ -125,14 +125,14 @@ export default function ReviewSession({ cards, mode = "scheduled", settings, med
         <div class="review-card-content">
           <section class="review-card-side review-question">
             <p class="study-side-label">QUESTION</p>
-            <CardContent content={activeCard.front} />
+            <CardContent content={activeCard.front} media={media} />
           </section>
           {revealed && (
             <>
               <div class="review-answer-divider" role="separator" />
               <section class="review-card-side review-answer">
                 <p class="study-side-label">ANSWER</p>
-                <CardContent content={activeCard.back} />
+                <CardContent content={activeCard.back} media={media} />
               </section>
             </>
           )}
