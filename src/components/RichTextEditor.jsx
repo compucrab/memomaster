@@ -67,7 +67,7 @@ export default function RichTextEditor({ label, value = "", placeholder, onChang
     if (asset?.id) mediaRef.current = [...mediaRef.current.filter(item => item.id !== asset.id), asset];
     return asset;
   };
-  const [revision, setRevision] = useState(0), [editor, setEditor] = useState(null), [dialog, setDialog] = useState(null), [dialogValue, setDialogValue] = useState(""), [dialogText, setDialogText] = useState("");
+  const [revision, setRevision] = useState(0), [editor, setEditor] = useState(null), [dialog, setDialog] = useState(null), [dialogValue, setDialogValue] = useState(""), [dialogText, setDialogText] = useState(""), [insertMenu, setInsertMenu] = useState(false), [insertQuery, setInsertQuery] = useState("");
   onChangeRef.current = onChange;
   onAddMediaRef.current = onAddMedia;
   useEffect(() => {
@@ -158,6 +158,25 @@ export default function RichTextEditor({ label, value = "", placeholder, onChang
     }
     setDialog(null); setDialogValue(""); setDialogText("");
   }
+
+  const insertActions = [
+    { label: "Paragraph", detail: "Normal text block", run: () => editor.chain().focus().setParagraph().run() },
+    { label: "Heading 1", detail: "Large section heading", run: () => editor.chain().focus().setHeading({ level: 1 }).run() },
+    { label: "Heading 2", detail: "Section heading", run: () => editor.chain().focus().setHeading({ level: 2 }).run() },
+    { label: "Heading 3", detail: "Small heading", run: () => editor.chain().focus().setHeading({ level: 3 }).run() },
+    { label: "Code block", detail: "Monospaced code", run: () => editor.chain().focus().toggleCodeBlock().run() },
+    { label: "Table", detail: "Insert a 2 × 2 table", run: () => editor.chain().focus().insertContent({ type: "table", content: [{ type: "tableRow", content: [{ type: "tableHeader", content: [{ type: "paragraph" }] }, { type: "tableHeader", content: [{ type: "paragraph" }] }] }, { type: "tableRow", content: [{ type: "tableCell", content: [{ type: "paragraph" }] }, { type: "tableCell", content: [{ type: "paragraph" }] }] }] }).run() },
+    { label: "Link", detail: "Add or edit a hyperlink", run: () => openInsert("link") },
+    { label: "Image", detail: "Insert an image", run: () => fileRef.current?.click() },
+    { label: "Inline equation", detail: "Insert LaTeX in a sentence", run: () => openInsert("inlineMath") },
+    { label: "Block equation", detail: "Insert a display equation", run: () => openInsert("blockMath") },
+    { label: "Video link", detail: "Add a video link card", run: () => openInsert("video") },
+  ];
+  function chooseInsert(action) {
+    action.run();
+    setInsertMenu(false);
+    setInsertQuery("");
+  }
   function resize(delta) {
     if (!editor?.isActive("image")) { setDialog({ type: "notice", title: "Select an image first", message: "Click an image, then use the image size controls." }); return; }
     const width = Number(editor.getAttributes("image").width) || 420;
@@ -167,7 +186,8 @@ export default function RichTextEditor({ label, value = "", placeholder, onChang
   return <section class="rich-editor">
     <div class="rich-editor-heading">{label}</div>
     <div class="rich-editor-toolbar" role="toolbar" aria-label={`${label} formatting`}>
-      {tools.map(({ label: name, icon: Icon, run, active }) => <button type="button" class={`rich-editor-tool ${editor && active(editor) ? "is-active" : ""}`} title={name} aria-label={name} disabled={!editor} onMouseDown={e => e.preventDefault()} onClick={() => editor && run(editor)}><Icon size={15}/></button>)}
+      {tools.filter(({ label: name }) => ["Bold", "Italic", "Underline", "Bullet list", "Numbered list", "Quote", "Inline code"].includes(name)).map(({ label: name, icon: Icon, run, active }) => <button type="button" class={`rich-editor-tool ${editor && active(editor) ? "is-active" : ""}`} title={name} aria-label={name} disabled={!editor} onMouseDown={e => e.preventDefault()} onClick={() => editor && run(editor)}><Icon size={15}/></button>)}
+      <button type="button" class={`rich-editor-tool ${insertMenu ? "is-active" : ""}`} title="Insert block or element" aria-label="Insert block or element" disabled={!editor} onMouseDown={e=>e.preventDefault()} onClick={()=>setInsertMenu(value=>!value)}><Plus size={16}/></button>
       <span class="rich-editor-divider"/>
       {imageSelected && <><button type="button" class="rich-editor-tool" title="Decrease image size" aria-label="Decrease image size" disabled={!editor} onMouseDown={e=>e.preventDefault()} onClick={()=>resize(-60)}><Minus size={15}/></button><button type="button" class="rich-editor-tool" title="Increase image size" aria-label="Increase image size" disabled={!editor} onMouseDown={e=>e.preventDefault()} onClick={()=>resize(60)}><Plus size={15}/></button><span class="rich-editor-divider"/></>}
       <div class="rich-editor-colors" role="group" aria-label="Text colour">
@@ -186,6 +206,13 @@ export default function RichTextEditor({ label, value = "", placeholder, onChang
       <button type="button" class="rich-editor-tool" title="Redo" aria-label="Redo" disabled={!editor?.can().redo()} onMouseDown={e=>e.preventDefault()} onClick={()=>editor?.chain().focus().redo().run()}><Redo2 size={15}/></button>
       <input ref={fileRef} type="file" accept="image/*" hidden onChange={insertImage}/>
     </div>
+    {insertMenu && <div class="rich-editor-insert-menu">
+      <input autoFocus value={insertQuery} onInput={e=>setInsertQuery(e.currentTarget.value)} placeholder="Search blocks and actions..." aria-label="Search insert menu"/>
+      <div class="rich-editor-insert-results">
+        {insertActions.filter(item => (item.label + " " + item.detail).toLowerCase().includes(insertQuery.toLowerCase())).map(item => <button type="button" onMouseDown={e=>e.preventDefault()} onClick={()=>chooseInsert(item)}><strong>{item.label}</strong><span>{item.detail}</span></button>)}
+        {!insertActions.some(item => (item.label + " " + item.detail).toLowerCase().includes(insertQuery.toLowerCase())) && <p>No matching blocks</p>}
+      </div>
+    </div>}
     <div class="rich-editor-surface"><div ref={hostRef}/></div>
     {dialog && <div class="prompt-backdrop" onMouseDown={e=>e.target===e.currentTarget && setDialog(null)}>
       <section class="prompt-panel rich-editor-insert-dialog" role="dialog" aria-modal="true" aria-label={dialog.title}>
