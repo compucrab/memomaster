@@ -46,9 +46,9 @@ function videoTarget(value) {
   if (/\.(mp4|webm|ogg)$/i.test(url.pathname)) return { url: value.trim(), provider: "direct" };
   return { error: "This video host does not provide a supported embed. Try YouTube, Instagram, Facebook, Vimeo, or a direct MP4/WebM/OGG link. Some providers block playback outside their own website." };
 }
-export default function RichTextEditor({ label, value = "", placeholder, onChange }) {
+export default function RichTextEditor({ label, value = "", placeholder, onChange, media = [], onAddMedia }) {
   const hostRef = useRef(null), editorRef = useRef(null), fileRef = useRef(null), onChangeRef = useRef(onChange);
-  const [revision, setRevision] = useState(0), [editor, setEditor] = useState(null), [dialog, setDialog] = useState(null), [dialogValue, setDialogValue] = useState("");
+  const [revision, setRevision] = useState(0), [editor, setEditor] = useState(null), [dialog, setDialog] = useState(null), [dialogValue, setDialogValue] = useState(""), [mediaOpen, setMediaOpen] = useState(false);
   onChangeRef.current = onChange;
   useEffect(() => {
     const insertFiles = async (files, instance) => {
@@ -56,7 +56,7 @@ export default function RichTextEditor({ label, value = "", placeholder, onChang
       if (!images.length) return false;
       for (const file of images) {
         if (file.size > 12 * 1024 * 1024) { setDialog({ type: "notice", title: "Image is too large", message: `“${file.name}” exceeds the 12 MB image limit.` }); continue; }
-        try { const src = await readImage(file); instance.chain().focus().setImage({ src, alt: file.name.replace(/\.[^.]+$/, ""), width: 420, align: "center" }).run(); }
+        try { const asset = onAddMedia ? await onAddMedia(file) : { data: await readImage(file) }; const src = asset.id ? "memomedia://" + asset.id : asset.data; instance.chain().focus().setImage({ src, alt: asset.name || file.name.replace(/\.[^.]+$/, ""), width: 420, align: "center" }).run(); }
         catch (error) { setDialog({ type: "notice", title: "Could not paste image", message: error.message }); }
       }
       return true;
@@ -86,7 +86,7 @@ export default function RichTextEditor({ label, value = "", placeholder, onChang
     if (!file || !editor) return;
     if (!file.type.startsWith("image/")) { setDialog({ type: "notice", title: "Unsupported file", message: "Choose an image file such as PNG, JPEG, GIF or WebP." }); return; }
     if (file.size > 12 * 1024 * 1024) { setDialog({ type: "notice", title: "Image is too large", message: "Choose an image smaller than 12 MB." }); return; }
-    try { const src = await readImage(file); editor.chain().focus().setImage({ src, alt: file.name.replace(/\.[^.]+$/, ""), width: 420, align: "center" }).run(); }
+    try { const asset = onAddMedia ? await onAddMedia(file) : { data: await readImage(file) }; const src = asset.id ? "memomedia://" + asset.id : asset.data; editor.chain().focus().setImage({ src, alt: asset.name || file.name.replace(/\.[^.]+$/, ""), width: 420, align: "center" }).run(); }
     catch (error) { setDialog({ type: "notice", title: "Could not insert image", message: error.message }); }
   }
   function openInsert(type) { setDialogValue(""); setDialog({ type, title: type === "inlineMath" ? "Insert inline equation" : type === "blockMath" ? "Insert display equation" : type === "link" ? "Insert link" : "Insert video link card", message: type.includes("Math") ? "Enter a LaTeX expression." : type === "link" ? "Paste the destination URL for the selected text." : "Add a compact card that opens the video in your browser." }); }
@@ -127,7 +127,7 @@ export default function RichTextEditor({ label, value = "", placeholder, onChang
       <label class="rich-editor-size" title="Text size"><span>A</span><select aria-label="Text size" disabled={!editor} value={editor?.getAttributes("textStyle").fontSize || "14px"} onChange={e=>editor?.chain().focus().setMark("textStyle", { fontSize: e.currentTarget.value }).run()}><option value="12px">12</option><option value="14px">14</option><option value="16px">16</option><option value="18px">18</option><option value="20px">20</option><option value="24px">24</option><option value="28px">28</option><option value="32px">32</option><option value="36px">36</option></select></label><label class="rich-editor-color" title="Text colour"><input aria-label="Text colour" type="color" disabled={!editor} value={editor?.getAttributes("textStyle").color || "#386fae"} onInput={e=>editor?.chain().focus().setColor(e.currentTarget.value).run()}/></label>
       <button type="button" class="rich-editor-tool" title="Insert link" aria-label="Insert link" disabled={!editor} onMouseDown={e=>e.preventDefault()} onClick={()=>openInsert("link")}><LinkIcon size={15}/></button>
       <span class="rich-editor-divider"/>
-      <button type="button" class="rich-editor-tool" title="Insert image" aria-label="Insert image" disabled={!editor} onMouseDown={e=>e.preventDefault()} onClick={()=>fileRef.current?.click()}><ImagePlus size={15}/></button>
+      <button type="button" class="rich-editor-tool" title="Insert image" aria-label="Insert image" disabled={!editor} onMouseDown={e=>e.preventDefault()} onClick={()=>setMediaOpen(true)}><ImagePlus size={15}/></button>
       <button type="button" class="rich-editor-tool" title="Decrease image size" aria-label="Decrease image size" disabled={!editor || !imageSelected} onMouseDown={e=>e.preventDefault()} onClick={()=>resize(-60)}><Minus size={15}/></button>
       <button type="button" class="rich-editor-tool" title="Increase image size" aria-label="Increase image size" disabled={!editor || !imageSelected} onMouseDown={e=>e.preventDefault()} onClick={()=>resize(60)}><Plus size={15}/></button>
       <span class="rich-editor-divider"/>
