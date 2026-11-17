@@ -55,12 +55,12 @@ The File menu provides:
 
 - **New project:** replaces the active library with an empty one and clears the remembered project path. Existing archive files are not deleted.
 - **Open project:** imports a .memz archive and associates that path with Save project.
-- **Save project:** overwrites the associated archive. If no path is associated, it creates a timestamped backup in the application-data backups directory.
+- **Save project:** always opens the native save dialog and writes a portable `.memz` file to the chosen destination. The chosen path is remembered for the next dialog.
 - **Preferences:** changes the light/dark theme and FSRS scheduling preferences.
 
 On a successful window close, Layout first saves the latest library to SQLite, creates a .memz snapshot, round-trips it through `importMemz` and checks notebook/card counts, then asks Rust to write it to the application-data backups directory. Rust writes to a temporary file, flushes it, atomically renames it, and only then prunes older backups. The newest 10 `.memz` backups are retained. The same manager is available in Preferences → Backups & recovery and is automatically opened if startup detects an unreadable or damaged SQLite database.
 
-SQLite is configured for WAL journaling and `synchronous=FULL`; each library update is a transaction. On startup, `PRAGMA quick_check` verifies the database. If opening or checking fails, the database and any WAL/SHM sidecars are moved to timestamped `memomaster-corrupt-*` files instead of being overwritten. The app then offers the user available automatic backups for restoration. Restoring a backup validates the archive before writing the recovered library to SQLite. The damaged database is preserved for manual inspection.
+SQLite is configured for WAL journaling and `synchronous=FULL`; each library update is a transaction. On startup, `PRAGMA quick_check` verifies the database. If opening or checking fails, the database and any WAL/SHM sidecars are moved to timestamped `memomaster-corrupt-*` files instead of being overwritten. The app then offers the user available automatic backups for restoration. Restoring a backup validates the archive before writing the recovered library to SQLite. When the current database is healthy, the current library is first saved as an additional automatic snapshot so the restore can be reversed. The damaged database is preserved for manual inspection.
 
 Autosave is debounced by 100 ms to reduce write churn while limiting the crash-loss window. Page suspension and normal close also request a flush. No desktop application can guarantee the last in-memory edit survives sudden power loss or process termination before a pending save reaches SQLite; users should keep independent copies of important `.memz` projects.
 
