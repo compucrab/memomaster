@@ -87,7 +87,7 @@ export default function RichTextEditor({ label, value = "", placeholder, onChang
     if (!file || !editor) return;
     if (!file.type.startsWith("image/")) { setDialog({ type: "notice", title: "Unsupported file", message: "Choose an image file such as PNG, JPEG, GIF or WebP." }); return; }
     if (file.size > 12 * 1024 * 1024) { setDialog({ type: "notice", title: "Image is too large", message: "Choose an image smaller than 12 MB." }); return; }
-    try { const asset = onAddMedia ? await onAddMedia(file) : { data: await readImage(file) }; const src = asset.id ? "memomedia://" + asset.id : asset.data; editor.chain().focus().setImage({ src, alt: asset.name || file.name.replace(/\.[^.]+$/, ""), width: 420, align: "center" }).run(); setMediaOpen(false); }
+    try { const asset = onAddMediaRef.current ? await onAddMediaRef.current(file) : { data: await readImage(file) }; const src = asset.id ? "memomedia://" + asset.id : asset.data; editor.chain().focus().setImage({ src, alt: asset.name || file.name.replace(/\.[^.]+$/, ""), width: 420, align: "center" }).run(); setMediaOpen(false); }
     catch (error) { setDialog({ type: "notice", title: "Could not insert image", message: error.message }); }
   }
   function openInsert(type) { setDialogValue(""); setDialog({ type, title: type === "inlineMath" ? "Insert inline equation" : type === "blockMath" ? "Insert display equation" : type === "link" ? "Insert link" : "Insert video link card", message: type.includes("Math") ? "Enter a LaTeX expression." : type === "link" ? "Paste the destination URL for the selected text." : "Add a compact card that opens the video in your browser." }); }
