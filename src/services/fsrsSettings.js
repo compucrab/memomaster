@@ -1,6 +1,6 @@
 export const DEFAULT_FSRS_SETTINGS = Object.freeze({
   desiredRetention: 0.9,
-  learningSteps: ["10m"],
+  learningSteps: ["1m", "10m"],
   relearningSteps: ["10m"],
   maximumInterval: 180,
   rolloverHour: 4,
@@ -27,7 +27,12 @@ export function normalizeFsrsSettings(value = {}) {
 export function loadFsrsSettings() {
   try {
     const saved = localStorage.getItem("memomaster-fsrs-settings");
-    return normalizeFsrsSettings(saved ? JSON.parse(saved) : DEFAULT_FSRS_SETTINGS);
+    const parsed = saved ? JSON.parse(saved) : DEFAULT_FSRS_SETTINGS;
+    // Migrate the previous default learning step to Anki-style short steps.
+    if (Array.isArray(parsed.learningSteps) && parsed.learningSteps.length === 1 && parsed.learningSteps[0] === "10m") {
+      parsed.learningSteps = ["1m", "10m"];
+    }
+    return normalizeFsrsSettings(parsed);
   } catch {
     return DEFAULT_FSRS_SETTINGS;
   }
