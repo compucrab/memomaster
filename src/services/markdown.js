@@ -65,8 +65,8 @@ function renderInline(source, mediaMap = new Map()) {
     const safe = mediaId ? mediaMap.get(mediaId)?.data || "" : safeImageSource(rawSrc);
     const metadata = String(title || "").match(/width=(\d+);align=(left|center|right)/);
     const width = metadata ? Math.max(40, Math.min(1600, Number(metadata[1]))) : 420;
-    const align = metadata ? metadata[2] : "center";
-    const style = `width:${width}px;max-width:100%;display:block;margin:12px ${align === "left" ? "auto 0" : align === "right" ? "0 auto" : "auto"};`;
+    const align = "left";
+    const style = `width:${width}px;max-width:100%;display:block;margin:12px 0;`;
     return safe ? `<img class="study-card-image" src="${safe}" alt="${escapeHtml(alt)}" style="${style}" loading="lazy">` : "";
   });
   value = value
