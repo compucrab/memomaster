@@ -3,7 +3,7 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 import { Minus, Square, X, Copy } from "lucide-preact";
 import AppMenu from "./AppMenu";
 
-export default function Titlebar({ onNewProject, onOpenProject, onSaveProject, onPreferences }) {
+export default function Titlebar({ onNewProject, onOpenProject, onSaveProject, onPreferences, onHelp }) {
   const [maximized, setMaximized] = useState(false);
 
   async function toggleMaximize() {
@@ -23,7 +23,7 @@ export default function Titlebar({ onNewProject, onOpenProject, onSaveProject, o
         <span class="titlebar-mark" data-tauri-drag-region>m</span>
         <span data-tauri-drag-region>MemoMaster</span>
       </div>
-      <AppMenu onNewProject={onNewProject} onOpenProject={onOpenProject} onSaveProject={onSaveProject} onPreferences={onPreferences} />
+      <AppMenu onNewProject={onNewProject} onOpenProject={onOpenProject} onSaveProject={onSaveProject} onPreferences={onPreferences} onHelp={onHelp} />
       <div class="titlebar-drag" data-tauri-drag-region onMouseDown={startWindowDrag} />
       <div class="window-controls">
         <button aria-label="Minimize" onClick={() => getCurrentWindow().minimize()}>
