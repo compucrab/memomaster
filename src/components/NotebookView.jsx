@@ -1,11 +1,11 @@
 import { useMemo, useState } from "preact/hooks";
-import { State } from "ts-fsrs";
 import {
   ArrowLeft, BookOpen, GraduationCap, Layers3, Plus, Search, PencilLine, Trash2, X,
 } from "lucide-preact";
 import CardContent from "./CardContent";
 import CardEditor from "./CardEditor";
-import ReviewSession from "./ReviewSession";\nimport { getStudyQueueCounts } from "../services/studyQueue";
+import ReviewSession from "./ReviewSession";
+import { getStudyQueueCounts } from "../services/studyQueue";
 
 function makeCard() {
   return { id: crypto.randomUUID(), front: "## Your question\n\nWrite a prompt here.", back: "Write the answer here.", chapterId: "" };
