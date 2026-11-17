@@ -29,14 +29,14 @@ export default function CardEditor({ card, chapters = [], existingCards = [], on
 
   useEffect(() => {
     const handleEditorShortcuts = (event) => {
-      if (event.repeat || event.target?.closest?.("[role='dialog']") || !(event.ctrlKey || event.metaKey) || event.altKey) return;
+      if (event.repeat || event.target?.closest?.("[role='dialog'], [role='alertdialog']") || !(event.ctrlKey || event.metaKey) || event.altKey) return;
       if (event.key.toLowerCase() === "d") {
         event.preventDefault();
         setChapterQuery("");
         setHighlightedChapter(Math.max(0, chapterOptions.findIndex(item => item.id === (draft.chapterId || ""))));
         setChapterPickerOpen(true);
       } else if (event.key === "Enter" && !event.shiftKey) {
-        if (event.target?.closest?.(".chapter-picker, input, textarea, [role='dialog']")) return;
+        if (event.target?.closest?.(".chapter-picker, input, textarea, [role='dialog'], [role='alertdialog']")) return;
         event.preventDefault();
         requestSave(true);
       }
