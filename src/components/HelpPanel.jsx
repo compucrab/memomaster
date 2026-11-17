@@ -39,7 +39,7 @@ Ctrl + D — Open the chapter picker while editing a card`],
 Alt + S — Leave review for the Study tab
 Alt + B — Leave review for Browse
 Space — Reveal the answer; when it is visible, rate Good`],
-      ["Unscheduled practice", "Space — Reveal the answer; when it is visible, mark the card Done."],
+      ["Unscheduled practice", "2 — Reveal the answer; when it is visible, mark the card Done\nSpace — Reveal the answer; when it is visible, mark the card Done\n1 — Repeat the revealed card (move it to the end of the queue)"],
       ["Editor", `Alt + Q — Switch to the Question side while editing a card
 Alt + W — Switch to the Answer side while editing a card
 Alt + S — Leave the editor for Study (asks before discarding changes)
