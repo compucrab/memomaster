@@ -142,8 +142,12 @@ export function scheduleReview(card, choice, now = new Date(), settings = DEFAUL
     ? serializeDates(getFsrsCard(card, now), ["due", "last_review"])
     : null;
   const nextFsrs = serializeDates(nextCard, ["due", "last_review"]);
+  const elapsedDays = current.last_review
+    ? Math.max(0, studyDayIndex(now, config.rolloverHour) - studyDayIndex(current.last_review, config.rolloverHour))
+    : (result.log.elapsed_days || 0);
   const nextLog = {
     ...result.log,
+    elapsed_days: elapsedDays,
     due: current.due,
     review: now,
     rating: choice,
