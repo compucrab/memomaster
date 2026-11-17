@@ -20,6 +20,7 @@ test("the next study day begins at the configured rollover hour", () => {
   const now = new Date(2026, 10, 17, 3, 30);
   const counts = getStudyQueueCounts([
     { id: "learning-before-rollover", fsrs: { state: State.Learning, due: new Date(2026, 10, 17, 3, 45).toISOString() } },
+    { id: "review-due-today", fsrs: { state: State.Review, due: new Date(2026, 10, 17, 3, 59).toISOString() } },
     { id: "review-after-rollover", fsrs: { state: State.Review, due: new Date(2026, 10, 17, 4, 0).toISOString() } },
   ], now, 4);
 
