@@ -100,6 +100,19 @@ export default function ReviewSession({ cards, mode = "scheduled", settings, onR
     setRevealed(false);
   }
 
+  if (!queue.length && pending.length) {
+    return (
+      <section class="review-session">
+        <header class="review-session-header"><button class="back-link" onClick={onExit}>← EXIT REVIEW</button><span>{reviewed} REVIEWS · {pending.length} LEARNING</span></header>
+        <div class="review-complete">
+          <Check size={30} />
+          <h1>You're all caught up</h1>
+          <p>This session is still active. The next learning cards will appear automatically when they're ready.</p>
+        </div>
+      </section>
+    );
+  }
+
   if (!queue.length) {
     return (
       <section class="review-session">
@@ -107,7 +120,7 @@ export default function ReviewSession({ cards, mode = "scheduled", settings, onR
         <div class="review-complete">
           <Check size={30} />
           <h1>{reviewed ? "Review complete" : "Nothing due right now"}</h1>
-          <p>{pending.length ? "You’ve finished all currently available cards. Learning cards will return when their steps are due." : reviewed ? `You completed ${reviewed} ${reviewed === 1 ? "review" : "reviews"}.` : "All caught up. New cards and due reviews will appear here."}</p>
+          <p>{reviewed ? `You completed ${reviewed} ${reviewed === 1 ? "review" : "reviews"}.` : "All caught up. New cards and due reviews will appear here."}</p>
           <button class="study-primary" onClick={onExit}>Back to notebook</button>
         </div>
       </section>
