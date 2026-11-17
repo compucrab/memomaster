@@ -180,11 +180,11 @@ export default function RichTextEditor({ label, value = "", placeholder, onChang
             });
             if (found && found.type !== "image") {
               const rect = target.getBoundingClientRect();
-              setHoverEdit({ type: found.type, pos: found.type === "table" ? coords.pos : found.pos, left: rect.right, top: rect.top });
+              setHoverEdit({ type: found.type, pos: found.type === "table" ? coords.pos : found.pos, left: rect.left, top: rect.top });
             } else if (target.tagName === "A") {
               const anchorPos = view.posAtDOM(target, 0);
               const rect = target.getBoundingClientRect();
-              setHoverEdit({ type: "link", pos: anchorPos, left: rect.right, top: rect.top });
+              setHoverEdit({ type: "link", pos: anchorPos, left: rect.left, top: rect.top });
             } else {
               setHoverEdit(null);
             }
@@ -317,9 +317,9 @@ export default function RichTextEditor({ label, value = "", placeholder, onChang
       setTablePreview(current => current?.html === html && current?.left === rect.right && current?.top === rect.top ? current : { html, left: rect.right, top: rect.top });
     }} onMouseLeave={() => setTablePreview(null)}>
       <div ref={hostRef}/>
-      {tablePreview && <button type="button" class="rich-editor-table-zoom-trigger" style={{ left: Math.max(8, Math.min(window.innerWidth - 42, tablePreview.left - 38)) + "px", top: Math.max(8, tablePreview.top + 6) + "px" }} title="View table full screen" aria-label="View table full screen" onMouseDown={event => event.preventDefault()} onClick={() => setTableZoomHtml(tablePreview.html)}><span>⛶</span></button>}
+      {tablePreview && <button type="button" class="rich-editor-table-zoom-trigger" style={{ left: Math.max(8, Math.min(window.innerWidth - 38, tablePreview.left + 6)) + "px", top: Math.max(8, tablePreview.top + 6) + "px" }} title="View table full screen" aria-label="View table full screen" onMouseDown={event => event.preventDefault()} onClick={() => setTableZoomHtml(tablePreview.html)}><span>⛶</span></button>}
     </div>
-    {hoverEdit && <div class="rich-editor-context-menu" style={{ left: Math.max(8, Math.min(window.innerWidth - 150, hoverEdit.left - 150)) + "px", top: Math.max(8, Math.min(window.innerHeight - 52, hoverEdit.top - 42)) + "px" }} onMouseDown={event => event.preventDefault()}>
+    {hoverEdit && <div class="rich-editor-context-menu" style={{ left: Math.max(8, Math.min(window.innerWidth - 150, hoverEdit.left)) + "px", top: Math.max(8, Math.min(window.innerHeight - 52, hoverEdit.top - 42)) + "px" }} onMouseDown={event => event.preventDefault()}>
       <span>{hoverEdit.type === "inlineMath" || hoverEdit.type === "blockMath" ? "Equation" : hoverEdit.type === "cardVideo" ? "Video" : hoverEdit.type === "cardInfo" ? "Info card" : hoverEdit.type === "table" ? "Table" : "Link"}</span>
       <button type="button" onClick={() => { const item = hoverEdit; setHoverEdit(null); openInsert(item.type === "cardInfo" ? "info" : item.type === "cardVideo" ? "video" : item.type, item.pos); }}>Edit</button>
     </div>}
