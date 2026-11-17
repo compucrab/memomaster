@@ -72,7 +72,7 @@ Default scheduling preferences:
 | Maximum interval | 180 days |
 | Study-day rollover | 04:00 local time |
 
-The scheduler uses deterministic intervals (`enable_fuzz: false`) so the interval shown before a rating matches the due date saved after that rating. Existing due dates are not rescheduled when preferences change; the new preferences apply on subsequent reviews.
+The scheduler uses deterministic intervals (`enable_fuzz: false`) so the interval shown before a rating matches the due date saved after that rating. Existing due dates are not rescheduled when preferences change; the new preferences apply on subsequent reviews. Each scheduled review log also stores the exact pre-review and post-review FSRS snapshots, state, stability, and difficulty. This supports a safe undo of the latest scheduled review across the library. Legacy review logs without snapshots are preserved but are not eligible for destructive undo.
 
 Scheduled ratings map to FSRS as follows:
 
@@ -102,7 +102,7 @@ FSRS v5 measures elapsed time in fixed 24-hour blocks. MemoMaster normalizes sch
 - New, Learning/Relearning, Young, and Mature card breakdown. Mature uses a 21-day-or-longer review interval.
 - Frequently forgotten cards ranked by FSRS lapse count.
 
-FSRS parameter optimization from review history is not implemented yet.
+FSRS parameter optimization from review history is not yet executable in the app. `fsrsOptimizerData.js` prepares the official FSRS-6 optimizer CSV schema from complete review logs, including study-day rollover and timezone metadata; legacy logs without a recorded pre-review state are skipped rather than guessed. Settings exposes an export action that writes this CSV using the native save dialog. The remaining step is integrating the official optimizer binding in a Tauri-compatible worker/runtime. Do not substitute hand-written parameter fitting for the official FSRS optimizer. Modern Anki does not impose a fixed 1,000-review minimum, so readiness should be based on data quality and the optimizer evaluation rather than an arbitrary hard threshold.
 
 ## Card editor and content formats
 
@@ -131,7 +131,8 @@ Image insertion supports file selection and clipboard paste. Inserted images are
 | ReviewSession.jsx | Timed scheduled learning/relearning queue and unscheduled practice queue |
 | StudyStatus.jsx | Retention, rating, workload, maturity, and lapse analytics |
 | projectArchive.js | .memz ZIP export/import and legacy migration |
-| fsrs.js | FSRS scheduling, study-day rollover, memory estimates, interval calculation |
+| fsrs.js | FSRS scheduling, study-day rollover, memory estimates, interval calculation, review undo |
+| fsrsOptimizerData.js | Converts complete FSRS-6 review history into the official optimizer CSV input format |
 | fsrsSettings.js | Default and validated app-wide FSRS preferences |
 | markdown.js | Safe read-only Markdown/media rendering |
 | lib.rs | SQLite commands, native file I/O, automatic backup writing |
@@ -145,7 +146,7 @@ npm run build
 npm test
 ```
 
-The test suite covers Again/relearning, Hard semantics, Good/Easy graduation, preview-versus-saved intervals, retention and maximum-interval configuration, memory-curve output, and study-day rollover.
+The test suite covers Again/relearning, Hard semantics, Good/Easy graduation, preview-versus-saved intervals, retention and maximum-interval configuration, memory-curve output, study-day rollover, review snapshots, and undo. `fsrsCompatibility.test.js` adds a scheduler-contract matrix for all ratings, late reviews, counters, maximum interval enforcement, and minute-level learning steps. These tests do not yet establish exact Anki parity; shared golden fixtures must still be executed against Anki’s own scheduler.
 
 ## Data flow
 

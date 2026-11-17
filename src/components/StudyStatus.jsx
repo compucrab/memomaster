@@ -1,5 +1,5 @@
 import { useMemo } from "preact/hooks";
-import { ArrowLeft, Target, Clock3, Brain, TrendingUp, AlertCircle } from "lucide-preact";
+import { ArrowLeft, Target, Clock3, Brain, TrendingUp, AlertCircle, Undo2 } from "lucide-preact";
 import { State } from "ts-fsrs";
 
 const dateKey = (date) => `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,"0")}-${String(date.getDate()).padStart(2,"0")}`;
@@ -16,7 +16,7 @@ function classify(card) {
   return (card.fsrs.scheduled_days || 0) >= 21 ? "mature" : "young";
 }
 
-export default function StudyStatus({ notebooks, settings, onBack }) {
+export default function StudyStatus({ notebooks, settings, onBack, onUndoLastReview }) {
   const data = useMemo(() => {
     const history = notebooks.flatMap(n => (n.reviewHistory || []).map(log => ({ ...log, notebookTitle: n.title })));
     const cards = notebooks.flatMap(n => (n.flashcards || []).map(card => ({ ...card, notebookTitle: n.title })));
@@ -44,8 +44,9 @@ export default function StudyStatus({ notebooks, settings, onBack }) {
     });
     const workloadIndex = new Map(workload.map((item, index) => [item.key, index]));
     cards.forEach(card => {
-      const due = card.fsrs?.due ? new Date(card.fsrs.due) : now;
-      if (Number.isNaN(due.getTime())) return;
+      if (!card.fsrs || card.fsrs.state === State.New) return;
+      const due = card.fsrs.due ? new Date(card.fsrs.due) : null;
+      if (!due || Number.isNaN(due.getTime())) return;
       const dueKey = studyDayKey(due < now ? now : due, rollover);
       const index = workloadIndex.get(dueKey);
       if (index !== undefined) workload[index].count++;
@@ -66,7 +67,7 @@ export default function StudyStatus({ notebooks, settings, onBack }) {
 
   return (
     <section class="workspace status-workspace">
-      <header class="status-heading"><button class="back-link" onClick={onBack}><ArrowLeft size={14}/> LIBRARY</button><div><h1>Retention & memory</h1><p>How well your cards are retained, and what needs attention.</p></div></header>
+      <header class="status-heading"><button class="back-link" onClick={onBack}><ArrowLeft size={14}/> LIBRARY</button><div><h1>Retention & memory</h1><p>How well your cards are retained, and what needs attention.</p></div><button type="button" class="status-undo-review" onClick={onUndoLastReview}><Undo2 size={14}/> Undo last review</button></header>
       <div class="status-stats-grid">
         <article class="status-stat"><span><Target size={15}/> ACTUAL RETENTION</span><strong>{data.retention === null ? "—" : `${Math.round(data.retention * 100)}%`}</strong><p>{data.retention === null ? "Complete reviews to measure retention" : `${retentionDelta >= 0 ? "+" : ""}${retentionDelta} points vs ${Math.round(target * 100)}% target`}</p></article>
         <article class="status-stat"><span><Brain size={15}/> CARDS TRACKED</span><strong>{data.cards.length.toLocaleString()}</strong><p>{data.dueNow} due in the current study day</p></article>

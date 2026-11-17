@@ -138,17 +138,74 @@ export function scheduleReview(card, choice, now = new Date(), settings = DEFAUL
     last_review: now,
   };
   const current = getFsrsCard(card, now);
+  const previousFsrs = card?.fsrs
+    ? serializeDates(getFsrsCard(card, now), ["due", "last_review"])
+    : null;
+  const nextFsrs = serializeDates(nextCard, ["due", "last_review"]);
   const nextLog = {
     ...result.log,
     due: current.due,
     review: now,
     rating: choice,
     cardId: card.id,
+    previousFsrs,
+    nextFsrs,
+    previousState: current.state,
+    nextState: nextCard.state,
+    previousStability: current.stability,
+    nextStability: nextCard.stability,
+    previousDifficulty: current.difficulty,
+    nextDifficulty: nextCard.difficulty,
   };
   return {
-    fsrs: serializeDates(nextCard, ["due", "last_review"]),
+    fsrs: nextFsrs,
     log: serializeDates(nextLog, ["due", "review"]),
   };
+}
+
+export function undoLatestReview(notebooks) {
+  let latest = null;
+  for (const notebook of notebooks || []) {
+    const history = notebook.reviewHistory || [];
+    history.forEach((log, index) => {
+      const timestamp = new Date(log.review).getTime();
+      if (!Number.isFinite(timestamp) || !log.cardId) return;
+      if (!latest || timestamp > latest.timestamp) {
+        latest = { notebookId: notebook.id, log, index, timestamp };
+      }
+    });
+  }
+  if (!latest) return { notebooks, undone: false, reason: "No scheduled review is available to undo." };
+  if (!Object.hasOwn(latest.log, "previousFsrs") || !Object.hasOwn(latest.log, "nextFsrs")) {
+    return { notebooks, undone: false, reason: "This older review does not contain the state needed to undo it safely." };
+  }
+  const targetNotebook = notebooks.find((notebook) => notebook.id === latest.notebookId);
+  const targetCard = targetNotebook?.flashcards?.find((card) => card.id === latest.log.cardId);
+  if (!targetCard) return { notebooks, undone: false, reason: "The reviewed card no longer exists." };
+  if (JSON.stringify(targetCard.fsrs || null) !== JSON.stringify(latest.log.nextFsrs || null)) {
+    return { notebooks, undone: false, reason: "This card's schedule changed after the review. Undo is no longer safe." };
+  }
+
+  let restored = false;
+  const nextNotebooks = notebooks.map((notebook) => {
+    if (notebook.id !== latest.notebookId) return notebook;
+    const flashcards = (notebook.flashcards || []).map((card) => {
+      if (card.id !== latest.log.cardId) return card;
+      restored = true;
+      const nextCard = { ...card };
+      if (latest.log.previousFsrs) nextCard.fsrs = latest.log.previousFsrs;
+      else delete nextCard.fsrs;
+      return nextCard;
+    });
+    return {
+      ...notebook,
+      flashcards,
+      cards: flashcards.length,
+      reviewHistory: (notebook.reviewHistory || []).filter((_, index) => index !== latest.index),
+    };
+  });
+  if (!restored) return { notebooks, undone: false, reason: "The reviewed card no longer exists." };
+  return { notebooks: nextNotebooks, undone: true, log: latest.log };
 }
 
 export function getMemoryOverview(card, now = new Date(), settings = DEFAULT_FSRS_SETTINGS) {
