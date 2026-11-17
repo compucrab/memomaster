@@ -344,3 +344,6 @@
   margin: 0 !important;
 }
 
+
+.rich-editor-command-results button.is-highlighted { background: var(--hover); color: var(--ink); }
+.rich-editor-command-results button[aria-selected="true"] .rich-editor-command-copy strong { color: var(--accent); }
