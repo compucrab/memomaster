@@ -6,7 +6,7 @@ import Placeholder from "@tiptap/extension-placeholder";
 import Underline from "@tiptap/extension-underline";
 import Color from "@tiptap/extension-color";
 import { Bold, Italic, Underline as UnderlineIcon, Link as LinkIcon, Heading1, Heading2, Heading3, Heading4, Heading5, List, ListOrdered, Quote, Code, Undo2, Redo2, ImagePlus, Sigma, Video, X, Minus, Plus, Pilcrow } from "lucide-preact";
-import { CardImage, CardVideo, CardMath, CardTextStyle, CardLink, AlignedParagraph, AlignedHeading } from "../services/editorExtensions";
+import { CardImage, CardVideo, CardMath, CardTextStyle, AlignedParagraph, AlignedHeading } from "../services/editorExtensions";
 import "katex/dist/katex.min.css";
 const tools = [
   { label: "Normal text", icon: Pilcrow, run: e => e.chain().focus().setParagraph().run(), active: e => e.isActive("paragraph") },
@@ -54,7 +54,7 @@ export default function RichTextEditor({ label, value = "", placeholder, onChang
     if (asset?.id) mediaRef.current = [...mediaRef.current.filter(item => item.id !== asset.id), asset];
     return asset;
   };
-  const [revision, setRevision] = useState(0), [editor, setEditor] = useState(null), [dialog, setDialog] = useState(null), [dialogValue, setDialogValue] = useState(""), [mediaOpen, setMediaOpen] = useState(false);
+  const [revision, setRevision] = useState(0), [editor, setEditor] = useState(null), [dialog, setDialog] = useState(null), [dialogValue, setDialogValue] = useState(""), [dialogText, setDialogText] = useState("");
   onChangeRef.current = onChange;
   onAddMediaRef.current = onAddMedia;
   useEffect(() => {
@@ -70,7 +70,7 @@ export default function RichTextEditor({ label, value = "", placeholder, onChang
     };
     const instance = new Editor({
       element: hostRef.current,
-      extensions: [StarterKit.configure({ paragraph: false, heading: false, undoRedo: { depth: 100 } }), AlignedParagraph, AlignedHeading, Markdown, Placeholder.configure({ placeholder: placeholder || "" }), Underline, CardTextStyle, Color, CardLink.configure({ openOnClick: false, autolink: true, protocols: ["http", "https"] }), CardImage.configure({ allowBase64: true }), CardMath, CardVideo],
+      extensions: [StarterKit.configure({ paragraph: false, heading: false, undoRedo: { depth: 100 } }), AlignedParagraph, AlignedHeading, Markdown, Placeholder.configure({ placeholder: placeholder || "" }), Underline, CardTextStyle, Color, CardImage.configure({ allowBase64: true }), CardMath, CardVideo],
       content: toEditorMarkdown(value), contentType: "markdown",
       editorProps: {
         attributes: { class: "rich-editor-content", role: "textbox", "aria-label": label, "aria-multiline": "true", "data-placeholder": placeholder || "", spellcheck: "true" },
@@ -102,25 +102,39 @@ export default function RichTextEditor({ label, value = "", placeholder, onChang
     if (!file || !editor) return;
     if (!file.type.startsWith("image/")) { setDialog({ type: "notice", title: "Unsupported file", message: "Choose an image file such as PNG, JPEG, GIF or WebP." }); return; }
     if (file.size > 12 * 1024 * 1024) { setDialog({ type: "notice", title: "Image is too large", message: "Choose an image smaller than 12 MB." }); return; }
-    try { const asset = cacheMediaAsset(onAddMediaRef.current ? await onAddMediaRef.current(file) : { data: await readImage(file) }); const src = asset.data || (asset.id ? "memomedia://" + asset.id : ""); editor.chain().focus().setImage({ src, alt: asset.name || file.name.replace(/\.[^.]+$/, ""), width: 420 }).run(); setMediaOpen(false); }
+    try { const asset = cacheMediaAsset(onAddMediaRef.current ? await onAddMediaRef.current(file) : { data: await readImage(file) }); const src = asset.data || (asset.id ? "memomedia://" + asset.id : ""); editor.chain().focus().setImage({ src, alt: asset.name || file.name.replace(/\.[^.]+$/, ""), width: 420 }).run(); }
     catch (error) { setDialog({ type: "notice", title: "Could not insert image", message: error.message }); }
   }
-  function openInsert(type) { setDialogValue(""); setDialog({ type, title: type === "inlineMath" ? "Insert inline equation" : type === "blockMath" ? "Insert display equation" : type === "link" ? "Insert link" : "Insert video link card", message: type.includes("Math") ? "Enter a LaTeX expression." : type === "link" ? "Paste the destination URL for the selected text." : "Add a compact card that opens the video in your browser." }); }
+  function openInsert(type) {
+    if (!editor) return;
+    const selection = editor.state.selection;
+    const activeLink = editor.getAttributes("link");
+    const selectedText = editor.state.doc.textBetween(selection.from, selection.to, " ");
+    const mathType = editor.isActive("inlineMath") ? "inlineMath" : editor.isActive("blockMath") ? "blockMath" : null;
+    const editing = (type === "inlineMath" || type === "blockMath") && mathType === type;
+    const node = editing ? editor.state.doc.nodeAt(selection.from) : null;
+    setDialogValue(type === "link" ? String(activeLink.href || "") : editing ? String(node?.attrs?.latex || "") : "");
+    setDialogText(type === "link" ? selectedText : "");
+    setDialog({ type, from: selection.from, to: selection.to, editing, title: editing ? "Edit equation" : type === "inlineMath" ? "Insert inline equation" : type === "blockMath" ? "Insert display equation" : type === "link" ? (activeLink.href ? "Edit link" : "Insert link") : "Insert video link card", message: type.includes("Math") ? "Enter a LaTeX expression." : type === "link" ? "Set the visible text and destination." : "Add a compact card that opens the video in your browser." });
+  }
   function submitInsert() {
-    if (!editor || !dialogValue.trim()) { setDialog({ type: "notice", title: "Nothing to insert", message: "Enter an expression or video link first." }); return; }
-    if (dialog.type === "inlineMath") editor.chain().focus().insertInlineMath({ latex: dialogValue.trim() }).run();
-    if (dialog.type === "blockMath") editor.chain().focus().insertBlockMath({ latex: dialogValue.trim() }).run();
+    if (!editor || !dialogValue.trim()) { setDialog({ type: "notice", title: "Nothing to insert", message: "Enter a value first." }); return; }
+    if (dialog.type === "inlineMath" || dialog.type === "blockMath") {
+      const nodeType = dialog.type, latex = dialogValue.trim();
+      if (dialog.editing) editor.chain().focus().setNodeSelection(dialog.from).updateAttributes(nodeType, { latex }).run();
+      else editor.chain().focus().setTextSelection({ from: dialog.from, to: dialog.to })[nodeType === "inlineMath" ? "insertInlineMath" : "insertBlockMath"]({ latex }).run();
+    }
     if (dialog.type === "link") {
-      let url; try { url = new URL(dialogValue.trim()); } catch { setDialog({ type: "notice", title: "Invalid link", message: "Enter a complete link beginning with https:// or http://." }); return; }
+      let url; try { url = new URL(dialogValue.trim()); } catch { setDialog({ type: "notice", title: "Invalid link", message: "Enter a complete https:// or http:// link." }); return; }
       if (!["http:", "https:"].includes(url.protocol)) { setDialog({ type: "notice", title: "Invalid link", message: "Only http and https links are supported." }); return; }
-      editor.chain().focus().setLink({ href: url.href }).run();
+      editor.chain().focus().setTextSelection({ from: dialog.from, to: dialog.to }).insertContent({ type: "text", text: dialogText.trim() || url.hostname, marks: [{ type: "link", attrs: { href: url.href, target: "_blank", rel: "noopener noreferrer" } }] }).run();
     }
     if (dialog.type === "video") {
       const target = videoTarget(dialogValue);
-      if (target.error) { setDialog({ type: "notice", title: "Unable to embed video", message: target.error }); return; }
-      editor.chain().focus().insertContent({ type: "cardVideo", attrs: target }).run();
+      if (target.error) { setDialog({ type: "notice", title: "Unable to add video link", message: target.error }); return; }
+      editor.chain().focus().setTextSelection({ from: dialog.from, to: dialog.to }).insertContent({ type: "cardVideo", attrs: target }).run();
     }
-    setDialog(null); setDialogValue("");
+    setDialog(null); setDialogValue(""); setDialogText("");
   }
   function resize(delta) {
     if (!editor?.isActive("image")) { setDialog({ type: "notice", title: "Select an image first", message: "Click an image, then use the image size controls." }); return; }
@@ -137,7 +151,7 @@ export default function RichTextEditor({ label, value = "", placeholder, onChang
       <label class="rich-editor-size" title="Text size"><span>A</span><select aria-label="Text size" disabled={!editor} value={editor?.getAttributes("textStyle").fontSize || "14px"} onChange={e=>editor?.chain().focus().setMark("textStyle", { fontSize: e.currentTarget.value }).run()}><option value="12px">12</option><option value="14px">14</option><option value="16px">16</option><option value="18px">18</option><option value="20px">20</option><option value="24px">24</option><option value="28px">28</option><option value="32px">32</option><option value="36px">36</option></select></label><label class="rich-editor-color" title="Text colour"><input aria-label="Text colour" type="color" disabled={!editor} value={editor?.getAttributes("textStyle").color || "#386fae"} onInput={e=>editor?.chain().focus().setColor(e.currentTarget.value).run()}/></label>
       <button type="button" class="rich-editor-tool" title="Insert link" aria-label="Insert link" disabled={!editor} onMouseDown={e=>e.preventDefault()} onClick={()=>openInsert("link")}><LinkIcon size={15}/></button>
       <span class="rich-editor-divider"/>
-      <button type="button" class="rich-editor-tool" title="Insert image" aria-label="Insert image" disabled={!editor} onMouseDown={e=>e.preventDefault()} onClick={()=>setMediaOpen(true)}><ImagePlus size={15}/></button>
+      <button type="button" class="rich-editor-tool" title="Insert image" aria-label="Insert image" disabled={!editor} onMouseDown={e=>e.preventDefault()} onClick={()=>fileRef.current?.click()}><ImagePlus size={15}/></button>
       <span class="rich-editor-divider"/>
       <button type="button" class="rich-editor-tool" title="Inline equation" aria-label="Inline equation" disabled={!editor} onMouseDown={e=>e.preventDefault()} onClick={()=>openInsert("inlineMath")}><Sigma size={15}/></button>
       <button type="button" class="rich-editor-tool" title="Display equation" aria-label="Display equation" disabled={!editor} onMouseDown={e=>e.preventDefault()} onClick={()=>openInsert("blockMath")}>∑</button>
@@ -148,18 +162,11 @@ export default function RichTextEditor({ label, value = "", placeholder, onChang
       <input ref={fileRef} type="file" accept="image/*" hidden onChange={insertImage}/>
     </div>
     <div class="rich-editor-surface"><div ref={hostRef}/></div>
-    {mediaOpen && <div class="prompt-backdrop" onMouseDown={e=>e.target===e.currentTarget && setMediaOpen(false)}>
-      <section class="prompt-panel media-library-dialog" role="dialog" aria-modal="true" aria-label="Media library">
-        <div class="prompt-heading"><h2>Media library</h2><button type="button" aria-label="Close" onClick={()=>setMediaOpen(false)}><X size={16}/></button></div>
-        <p>Choose an image already stored in this notebook, or add a new one to reuse across cards.</p>
-        <div class="media-library-grid">{media.map(asset => <button type="button" class="media-library-item" key={asset.id} onClick={()=>{editor?.chain().focus().setImage({src:asset.data || "memomedia://" + asset.id,alt:asset.name || "Image",width:420,}).run();setMediaOpen(false);}}><img src={asset.data} alt={asset.name || "Stored media"}/><span>{asset.name || "Image"}</span></button>)}</div>
-        <div class="prompt-actions"><button type="button" class="prompt-cancel" onClick={()=>setMediaOpen(false)}>Close</button><button type="button" class="prompt-confirm" onClick={()=>fileRef.current?.click()}>Add image</button></div>
-      </section>
-    </div>}
     {dialog && <div class="prompt-backdrop" onMouseDown={e=>e.target===e.currentTarget && setDialog(null)}>
       <section class="prompt-panel rich-editor-insert-dialog" role="dialog" aria-modal="true" aria-label={dialog.title}>
         <div class="prompt-heading"><h2>{dialog.title}</h2><button type="button" aria-label="Close" onClick={()=>setDialog(null)}><X size={16}/></button></div>
         <p>{dialog.message}</p>
+        {dialog.type === "link" && <input aria-label="Link text" placeholder="Link text" value={dialogText} onInput={e=>setDialogText(e.currentTarget.value)}/>}
         {dialog.type !== "notice" && <textarea rows={dialog.type==="blockMath" ? 5 : 3} value={dialogValue} onInput={e=>setDialogValue(e.currentTarget.value)} placeholder={dialog.type.includes("Math") ? "\\frac{a+b}{c}" : dialog.type === "link" ? "https://example.com" : "Paste the link"}/>}
         <div class="prompt-actions"><button type="button" class="prompt-cancel" onClick={()=>setDialog(null)}>{dialog.type==="notice" ? "Close" : "Cancel"}</button>{dialog.type!=="notice" && <button type="button" class="prompt-confirm" onClick={submitInsert}>Insert</button>}</div>
       </section>
