@@ -29,7 +29,7 @@ export default function CardEditor({ card, chapters = [], existingCards = [], on
 
   useEffect(() => {
     const handleEditorShortcuts = (event) => {
-      if (!(event.ctrlKey || event.metaKey) || event.altKey) return;
+      if (event.repeat || event.target?.closest?.("[role='dialog']") || !(event.ctrlKey || event.metaKey) || event.altKey) return;
       if (event.key.toLowerCase() === "d") {
         event.preventDefault();
         setChapterQuery("");
