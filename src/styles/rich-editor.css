@@ -1,6 +1,6 @@
 @reference "tailwindcss";
 
-.rich-editor { @apply grid min-w-0 gap-1; }
+.rich-editor { @apply relative grid min-w-0 gap-1; }
 .rich-editor-heading { color: var(--muted); font: 8px var(--mono); letter-spacing: .13em; }
 .rich-editor-toolbar { @apply flex flex-wrap items-center gap-1 border px-2 py-1; border-color: var(--line); background: var(--paper-deep); }
 .rich-editor-tool { @apply inline-flex h-7 w-7 items-center justify-center border-0 bg-transparent; color: var(--muted); cursor: pointer; }
@@ -135,3 +135,14 @@
 .rich-editor-content th, .rich-editor-content td, .study-card-prose th, .study-card-prose td { min-width: 72px; padding: 7px 9px; border: 1px solid var(--line); text-align: left; vertical-align: top; }
 .rich-editor-content th, .study-card-prose th { background: var(--hover); font-weight: 650; }
 .rich-editor-content .tiptap-mathematics-render[data-type="inline-math"], .rich-editor-content .tiptap-mathematics-render[data-type="inline-math"] .katex, .study-card-prose .katex { font-size: 1em !important; }
+
+
+/* Keep the insert popover anchored to the editor instead of the page viewport. */
+.rich-editor-insert-menu { top: 42px; left: 6px; }
+
+/* Keep the compact selection formatting controls legible and consistent. */
+.rich-editor-colors { gap: 7px; }
+.rich-editor-color-swatch { width: 15px; height: 15px; border-radius: 50%; }
+.rich-editor-color-reset { display: inline-flex; align-items: center; justify-content: center; font-weight: 650; }
+.rich-editor-insert-dialog input { width: 100%; height: 36px; margin-bottom: 8px; padding: 0 10px; border: 1px solid var(--line); outline: none; background: var(--paper); color: var(--ink); font: 12px/1.5 var(--sans); }
+.rich-editor-insert-dialog input:focus { border-color: var(--accent); }
