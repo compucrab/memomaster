@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "preact/hooks";
 import { State } from "ts-fsrs";
-import { Check, Clock3, RotateCw } from "lucide-preact";
+import { Check, RotateCw } from "lucide-preact";
 import CardContent from "./CardContent";
 import { formatInterval, getReviewOptions, scheduleReview } from "../services/fsrs";
 
@@ -29,15 +29,11 @@ export default function ReviewSession({ cards, mode = "scheduled", settings, onR
       if (state === State.Review) return 1;
       return 2;
     };
-    return cards.filter((card) => mode === "unscheduled" || isDue(card, now))
+    return cards.filter((card) => mode === "unscheduled" || isDue(card, now) || isShortTermPending(card, now))
       .sort((a, b) => mode === "scheduled"
         ? priority(a) - priority(b) || new Date(a.fsrs?.due || 0) - new Date(b.fsrs?.due || 0)
         : 0)
       .map((card) => card.id);
-  });
-  const [pending, setPending] = useState(() => {
-    const now = new Date();
-    return mode === "scheduled" ? cards.filter((card) => isShortTermPending(card, now)).map((card) => card.id) : [];
   });
   const [clockNow, setClockNow] = useState(() => new Date());
   const [revealed, setRevealed] = useState(false);
@@ -50,22 +46,7 @@ export default function ReviewSession({ cards, mode = "scheduled", settings, onR
     [activeCard?.id, activeCard?.fsrs, clockNow, settings],
   );
 
-  useEffect(() => {
-    if (!pending.length) return undefined;
-    const timer = window.setInterval(() => {
-      const now = new Date();
-      const dueIds = pending.filter((id) => {
-        const card = sessionCards.find((item) => item.id === id);
-        return card && isDue(card, now);
-      });
-      if (!queue.length || dueIds.length) setClockNow(now);
-      if (dueIds.length) {
-        setQueue((items) => [...items, ...dueIds.filter((id) => !items.includes(id))]);
-        setPending((items) => items.filter((id) => !dueIds.includes(id)));
-      }
-    }, 500);
-    return () => window.clearInterval(timer);
-  }, [pending, sessionCards, queue.length]);
+
 
   function removeActiveCard() {
     setQueue((items) => items.slice(1));
@@ -84,8 +65,8 @@ export default function ReviewSession({ cards, mode = "scheduled", settings, onR
         setSessionCards((items) => items.map((card) => card.id === activeCard.id ? { ...card, fsrs: result.fsrs } : card));
         setReviewed((count) => count + 1);
         if (isShortTermPending({ fsrs: result.fsrs }, reviewedAt)) {
-          setPending((items) => items.includes(activeCard.id) ? items : [...items, activeCard.id]);
-          removeActiveCard();
+          setQueue((items) => [...items.slice(1), activeCard.id]);
+          setRevealed(false);
           return;
         }
       } else {
@@ -111,24 +92,7 @@ export default function ReviewSession({ cards, mode = "scheduled", settings, onR
     setRevealed(false);
   }
 
-  if (!queue.length && pending.length) {
-    const nextDue = pending
-      .map((id) => sessionCards.find((card) => card.id === id)?.fsrs?.due)
-      .filter(Boolean)
-      .map((due) => new Date(due))
-      .filter((due) => !Number.isNaN(due.getTime()))
-      .sort((a, b) => a - b)[0];
-    return (
-      <section class="review-session">
-        <header class="review-session-header"><button class="back-link" onClick={onExit}>← EXIT REVIEW</button><span>{reviewed} REVIEWS · {pending.length} WAITING</span></header>
-        <div class="review-complete">
-          <Clock3 size={30} />
-          <h1>Waiting for the next card</h1>
-          <p>{nextDue ? "The next learning card is due at " + nextDue.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) + ". It will return automatically." : "No short-step cards are waiting right now."}</p>
-        </div>
-      </section>
-    );
-  }
+
 
   if (!queue.length) {
     return (
@@ -152,7 +116,7 @@ export default function ReviewSession({ cards, mode = "scheduled", settings, onR
     <section class="review-session">
       <header class="review-session-header">
         <button class="back-link" onClick={onExit}>← EXIT REVIEW</button>
-        <span>{mode === "scheduled" ? "SCHEDULED" : "UNSCHEDULED"} · {reviewed} REVIEWS · {queue.length + pending.length} LEFT</span>
+        <span>{mode === "scheduled" ? "SCHEDULED" : "UNSCHEDULED"} · {reviewed} REVIEWS · {queue.length} LEFT</span>
       </header>
       <div class="review-progress"><i style={{ width: `${(reviewed / (reviewed + queue.length + pending.length)) * 100}%` }} /></div>
       <div class="review-card">
