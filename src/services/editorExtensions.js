@@ -67,43 +67,11 @@ export const CardLink = Link.extend({
 export const CardMath = Mathematics.configure({ katexOptions: { throwOnError: false, strict: "ignore" } });
 
 export const CardTextStyle = TextStyle.extend({
-  addAttributes() {
-    return {
-      ...this.parent?.(),
-      fontSize: {
-        default: null,
-        parseHTML: element => element.style.fontSize || null,
-        renderHTML: attributes => {
-          const size = String(attributes.fontSize || "");
-          return /^\d{1,2}(?:px|pt|rem|em)$/.test(size) ? { style: `font-size:${size}` } : {};
-        },
-      },
-    };
-  },
   renderMarkdown(mark, helpers) {
-    const attrs = mark?.attrs || {};
-    const styles = [];
-    const color = String(attrs.color || "");
-    const size = String(attrs.fontSize || "");
-    if (/^(#[0-9a-f]{3,8}|rgba?\([\d.% ,]+\)|hsla?\([\d.% ,]+\)|[a-z]{3,20})$/i.test(color)) styles.push("color:" + color);
-    if (/^\d{1,2}(?:px|pt|rem|em)$/.test(size)) styles.push("font-size:" + size);
+    const color = String(mark?.attrs?.color || "");
     const content = helpers.renderChildren(mark);
-    return styles.length ? '<span style="' + styles.join(";") + '">' + content + "</span>" : content;
+    return /^(#[0-9a-f]{3,8}|rgba?\([\d.% ,]+\)|hsla?\([\d.% ,]+\)|[a-z]{3,20})$/i.test(color)
+      ? '<span style="color:' + color + '">' + content + "</span>"
+      : content;
   },
 });
-
-export function createCardExtensions() {
-  return [
-    StarterKit.configure({ paragraph: false, heading: false, undoRedo: { depth: 100 } }),
-    AlignedParagraph,
-    AlignedHeading,
-    Markdown,
-    Underline,
-    CardTextStyle,
-    Color,
-    CardLink.configure({ openOnClick: false, autolink: true, protocols: ["http", "https"] }),
-    CardImage.configure({ allowBase64: true }),
-    CardMath,
-    CardVideo,
-  ];
-}
