@@ -85,7 +85,8 @@ fn load_library(app: AppHandle) -> Result<Option<String>, String> {
 
 #[tauri::command]
 fn save_library(app: AppHandle, data: String) -> Result<(), String> {
-    let _: Value = serde_json::from_str(&data).map_err(|error| format!("Invalid library data: {error}"))?;
+    let parsed: Value = serde_json::from_str(&data).map_err(|error| format!("Invalid library data: {error}"))?;
+    if !parsed.is_array() { return Err("Library data must be a JSON array".into()); }
     let mut connection = database_connection(&app)?;
     let transaction = connection.transaction().map_err(|error| error.to_string())?;
     transaction.execute(
@@ -144,6 +145,12 @@ fn prune_automatic_backups(directory: &Path) -> Result<(), String> {
 #[tauri::command]
 fn create_automatic_backup(app: AppHandle, bytes: Vec<u8>) -> Result<String, String> {
     let directory = backup_directory(&app)?;
+    for entry in fs::read_dir(&directory).map_err(|error| error.to_string())?.filter_map(Result::ok) {
+        let path = entry.path();
+        if path.extension().and_then(|value| value.to_str()) == Some("tmp") {
+            let _ = fs::remove_file(path);
+        }
+    }
     let timestamp = SystemTime::now().duration_since(UNIX_EPOCH)
         .map_err(|error| error.to_string())?.as_millis();
     let filename = format!("MemoMaster-{timestamp}.memz");
