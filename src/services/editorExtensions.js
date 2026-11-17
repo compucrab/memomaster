@@ -6,7 +6,7 @@ import { TextStyle } from "@tiptap/extension-text-style";
 import { Mathematics } from "@tiptap/extension-mathematics";
 const safeMediaUrl = (value = "") => /^(https?:|memomedia:\/\/[\w-]+$|data:image\/(png|jpe?g|gif|webp);base64,)/i.test(value) ? value : "";
 export const CardImage = Image.extend({
-  inline: true,
+  inline: false,
   addAttributes() { return { ...this.parent?.(), src: { default: null }, alt: { default: null }, title: { default: null }, width: { default: 420 }, align: { default: "center" } }; },
   renderHTML({ HTMLAttributes }) {
     const width = Math.max(40, Math.min(1600, Number(HTMLAttributes.width) || 420));
@@ -14,8 +14,8 @@ export const CardImage = Image.extend({
     return ["img", { ...this.options.HTMLAttributes, ...HTMLAttributes, style, "data-image-width": width }];
   },
   parseMarkdown(token) {
-    const metadata = String(token.title || "").match(/width=(\d+);align=(left|center|right)/);
-    return { type: "image", attrs: { src: safeMediaUrl(token.href), alt: token.text || "", title: null, width: metadata ? Number(metadata[1]) : 420, align: metadata ? metadata[2] : "center" } };
+    const metadata = String(token.title || "").match(/width=(\\d+)/);
+    return { type: "image", attrs: { src: safeMediaUrl(token.href), alt: token.text || "", title: null, width: metadata ? Number(metadata[1]) : 420 } };
   },
   renderMarkdown(node) {
     const attrs = node?.attrs || {};
@@ -23,7 +23,7 @@ export const CardImage = Image.extend({
     if (!src) return "";
     const alt = String(attrs.alt || "").replace(/[\\\]]/g, "\\$&");
     const width = Math.max(40, Math.min(1600, Number(attrs.width) || 420));
-    return " !";
+    return "![" + alt + "](" + src + ' "width=' + width + '")';
   },
 });
 export const AlignedParagraph = Paragraph;
