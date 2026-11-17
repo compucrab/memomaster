@@ -35,6 +35,7 @@ export default function Layout() {
   const [notebooks, setNotebooks] = useState([]);
   const [view, setView] = useState("library");
   const [helpPage, setHelpPage] = useState("guide");
+  const [helpReturnView, setHelpReturnView] = useState("library");
   const [activeId, setActiveId] = useState(null);
   const [query, setQuery] = useState("");
   const [menu, setMenu] = useState(null);
@@ -231,7 +232,7 @@ export default function Layout() {
           onOpenProject={openProjectFile}
           onSaveProject={saveProject}
           onPreferences={() => { setView("settings"); setActiveId(null); }}
-          onHelp={(page) => { setHelpPage(page); setView("help"); }}
+          onHelp={(page) => { setHelpReturnView(view === "notebook" ? "notebook" : "library"); setHelpPage(page); setView("help"); }}
         />
         {view === "library" && (
           <Topbar title="Your library" query={query} onQueryChange={setQuery} onCreate={createNotebook} onStudyStatus={() => { setView("status"); setActiveId(null); }} />
@@ -240,7 +241,7 @@ export default function Layout() {
           {view === "settings" ? (
             <SettingsPanel theme={theme} onThemeChange={setTheme} fsrsSettings={fsrsSettings} onFsrsSettingsChange={setFsrsSettings} onBack={() => setView("library")} />
           ) : view === "help" ? (
-            <HelpPanel page={helpPage} onPageChange={setHelpPage} onBack={() => setView(activeId ? "notebook" : "library")} />
+            <HelpPanel page={helpPage} onPageChange={setHelpPage} backLabel={helpReturnView === "notebook" ? "BACK TO NOTEBOOK" : "BACK TO LIBRARY"} onBack={() => setView(helpReturnView)} />
           ) : view === "status" ? (
             <StudyStatus notebooks={notebooks} settings={fsrsSettings} onBack={() => setView("library")} />
           ) : view === "notebook" && activeNotebook ? (
