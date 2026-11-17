@@ -280,7 +280,7 @@ export default function RichTextEditor({ label, value = "", placeholder, onChang
         {[1, 2, 3, 4, 5].map(level => <option value={String(level)}>Heading {level}</option>)}
       </select>
       <span class="rich-editor-selection-divider"/>
-      <label class="rich-editor-color-picker" title="Text color"><input ref={colorInputRef} type="color" aria-label="Choose text color" value={editor.getAttributes("textStyle").color || "#5797f5"} onInput={event => applySelectionFormat(chain => chain.setColor(event.currentTarget.value).run())}/><span>Text color</span></label>
+      <label class="rich-editor-color-picker" title="Text color"><input type="color" aria-label="Choose text color" value={editor.getAttributes("textStyle").color || "#5797f5"} onInput={event => applySelectionFormat(chain => chain.setColor(event.currentTarget.value).run())}/><span>Text color</span></label>
       <button type="button" class="rich-editor-selection-reset" title="Default theme color" aria-label="Default theme color" onClick={() => applySelectionFormat(chain => chain.unsetColor().run())}>A</button>
       <span class="rich-editor-selection-divider"/>
       <button type="button" title="Add link" aria-label="Add link" onClick={() => openInsert("link")}><LinkIcon size={14}/></button>
@@ -298,7 +298,7 @@ export default function RichTextEditor({ label, value = "", placeholder, onChang
       <div class="rich-editor-command-hint">↑↓ to navigate · Enter to select · Esc to close</div>
     </div>}
     <input ref={fileRef} type="file" accept="image/*" hidden onChange={insertImage}/>
-    <input ref={colorInputRef} type="color" hidden aria-label="Choose text color" onInput={event => editor?.chain().focus().setColor(event.currentTarget.value).run()}/>
+    <input ref={colorInputRef} type="color" aria-label="Choose text color" tabIndex={-1} style={{ position: "fixed", left: "-1000px", top: "0", width: "1px", height: "1px", opacity: 0 }} onInput={event => editor?.chain().focus().setColor(event.currentTarget.value).run()}/>
     {dialog && <div class="prompt-backdrop" onMouseDown={event => event.target === event.currentTarget && setDialog(null)}>
       <section class="prompt-panel rich-editor-insert-dialog" role="dialog" aria-modal="true" aria-label={dialog.title}>
         <div class="prompt-heading"><h2>{dialog.title}</h2><button type="button" aria-label="Close" onClick={() => setDialog(null)}><X size={16}/></button></div>
