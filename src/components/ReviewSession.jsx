@@ -147,7 +147,6 @@ export default function ReviewSession({ cards, mode = "scheduled", settings, onR
         )}
       </div>
       {reviewError && <p class="review-error" role="alert">{reviewError}</p>}
-      <footer class="review-session-footer"><Clock3 size={13} /> {mode === "scheduled" ? "Again enters a timed relearning step; Hard is a successful recall and does not repeat automatically." : "Practice only · scheduled due dates remain unchanged"}</footer>
     </section>
   );
 }
