@@ -10,9 +10,8 @@ export const CardImage = Image.extend({
   addAttributes() { return { ...this.parent?.(), src: { default: null }, alt: { default: null }, title: { default: null }, width: { default: 420 }, align: { default: "center" } }; },
   renderHTML({ HTMLAttributes }) {
     const width = Math.max(40, Math.min(1600, Number(HTMLAttributes.width) || 420));
-    const align = ["left", "center", "right"].includes(HTMLAttributes.align) ? HTMLAttributes.align : "center";
-    const style = `width:${width}px;max-width:100%;display:block;margin:12px ${align === "left" ? "auto 0" : align === "right" ? "0 auto" : "auto"};`;
-    return ["img", { ...this.options.HTMLAttributes, ...HTMLAttributes, style, "data-image-align": align, "data-image-width": width }];
+    const style = `width:${width}px;max-width:100%;display:block;margin:12px 0;`;
+    return ["img", { ...this.options.HTMLAttributes, ...HTMLAttributes, style, "data-image-width": width }];
   },
   parseMarkdown(token) {
     const metadata = String(token.title || "").match(/width=(\d+);align=(left|center|right)/);
@@ -24,8 +23,7 @@ export const CardImage = Image.extend({
     if (!src) return "";
     const alt = String(attrs.alt || "").replace(/[\\\]]/g, "\\$&");
     const width = Math.max(40, Math.min(1600, Number(attrs.width) || 420));
-    const align = ["left", "center", "right"].includes(attrs.align) ? attrs.align : "center";
-    return "![" + alt + "](" + src + ' "width=' + width + ";align=" + align + '")';
+    return " !";
   },
 });
 export const AlignedParagraph = Paragraph;
@@ -53,9 +51,19 @@ export const CardTextStyle = TextStyle.extend({
         parseHTML: element => element.style.fontSize || null,
         renderHTML: attributes => {
           const size = String(attributes.fontSize || "");
-          return /^\d{1,2}(?:px|pt|rem|em)$/.test(size) ? { style: `font-size:${size}` } : {};
+          return /^\\d{1,2}(?:px|pt|rem|em)$/.test(size) ? { style: `font-size:${size}` } : {};
         },
       },
     };
+  },
+  renderMarkdown(mark, helpers) {
+    const attrs = mark?.attrs || {};
+    const styles = [];
+    const color = String(attrs.color || "");
+    const size = String(attrs.fontSize || "");
+    if (/^#[0-9a-f]{3,8}$/i.test(color)) styles.push("color:" + color);
+    if (/^\\d{1,2}(?:px|pt|rem|em)$/.test(size)) styles.push("font-size:" + size);
+    const content = helpers.renderChildren(mark.content);
+    return styles.length ? '<span style="' + styles.join(";") + '">' + content + "</span>" : content;
   },
 });
