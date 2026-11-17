@@ -125,6 +125,7 @@ Build and regression checks:
 
     npm run build
     npm test
+    cargo test --manifest-path src-tauri/Cargo.toml
     npm run tauri build
 
 Vite uses port 1420; the Tauri configuration expects that fixed development port.
