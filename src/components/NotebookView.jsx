@@ -141,7 +141,9 @@ export default function NotebookView({ notebook, fsrsSettings, onUpdate, onBack,
   }
 
   function saveAndAddCard(draft) {
+    const isAdding = !cards.some(card => card.id === draft.id);
     saveCard(draft);
+    if (isAdding) return;
     const nextDraft = { ...makeCard(), chapterId: draft.chapterId || "" };
     setNewCard(nextDraft);
     setEditingCardId(nextDraft.id);
