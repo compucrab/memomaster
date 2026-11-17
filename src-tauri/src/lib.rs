@@ -2,7 +2,7 @@ use rusqlite::{params, Connection, OptionalExtension};
 use serde_json::Value;
 use std::fs::{self, File, OpenOptions};
 use std::io::Write;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 use tauri::{AppHandle, Manager};
 
@@ -128,6 +128,19 @@ fn list_automatic_backups(app: AppHandle) -> Result<Vec<serde_json::Value>, Stri
     Ok(backups)
 }
 
+fn prune_automatic_backups(directory: &Path) -> Result<(), String> {
+    let mut backups: Vec<_> = fs::read_dir(directory).map_err(|error| error.to_string())?
+        .filter_map(Result::ok)
+        .filter(|entry| entry.path().extension().and_then(|value| value.to_str()) == Some("memz"))
+        .collect();
+    backups.sort_by_key(|entry| entry.file_name());
+    backups.reverse();
+    for old in backups.into_iter().skip(BACKUP_LIMIT) {
+        fs::remove_file(old.path()).map_err(|error| error.to_string())?;
+    }
+    Ok(())
+}
+
 #[tauri::command]
 fn create_automatic_backup(app: AppHandle, bytes: Vec<u8>) -> Result<String, String> {
     let directory = backup_directory(&app)?;
@@ -148,14 +161,7 @@ fn create_automatic_backup(app: AppHandle, bytes: Vec<u8>) -> Result<String, Str
         return Err(error.to_string());
     }
 
-    let mut backups: Vec<_> = fs::read_dir(&directory).map_err(|error| error.to_string())?
-        .filter_map(Result::ok)
-        .filter(|entry| entry.path().extension().and_then(|value| value.to_str()) == Some("memz"))
-        .collect();
-    backups.sort_by_key(|entry| std::cmp::Reverse(entry.metadata().and_then(|metadata| metadata.modified()).ok()));
-    for old in backups.into_iter().skip(BACKUP_LIMIT) {
-        let _ = fs::remove_file(old.path());
-    }
+    prune_automatic_backups(&directory)?;
     if let Ok(directory_file) = File::open(&directory) { let _ = directory_file.sync_all(); }
     Ok(backup_path.to_string_lossy().into_owned())
 }
@@ -185,4 +191,36 @@ pub fn run() {
         ])
         .run(tauri::generate_context!())
         .expect("error while running MemoMaster");
+}
+
+#[cfg(test)]
+mod tests {
+    use super::prune_automatic_backups;
+    use std::fs;
+    use std::time::{SystemTime, UNIX_EPOCH};
+
+    #[test]
+    fn backup_retention_keeps_only_the_ten_newest_snapshots() {
+        let unique = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_nanos();
+        let directory = std::env::temp_dir().join(format!("memomaster-backup-test-{unique}"));
+        fs::create_dir_all(&directory).unwrap();
+        for index in 0..12 {
+            fs::write(directory.join(format!("MemoMaster-{index:03}.memz")), b"backup").unwrap();
+        }
+        fs::write(directory.join("not-a-backup.tmp"), b"temporary").unwrap();
+
+        prune_automatic_backups(&directory).unwrap();
+
+        let mut names: Vec<_> = fs::read_dir(&directory).unwrap()
+            .filter_map(Result::ok)
+            .map(|entry| entry.file_name().to_string_lossy().into_owned())
+            .collect();
+        names.sort();
+        assert_eq!(names.len(), 11);
+        assert!(!names.contains(&"MemoMaster-000.memz".to_string()));
+        assert!(!names.contains(&"MemoMaster-001.memz".to_string()));
+        assert!(names.contains(&"MemoMaster-011.memz".to_string()));
+        assert!(names.contains(&"not-a-backup.tmp".to_string()));
+        fs::remove_dir_all(directory).unwrap();
+    }
 }
