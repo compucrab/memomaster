@@ -103,7 +103,7 @@ export async function createMemz(notebooks) {
     const notebook = cleanNotebook(source);
     if (!/^[\w-]{1,100}$/.test(notebook.id)) throw new Error("Invalid notebook identifier");
     notebookIds.push(notebook.id);
-    const { flashcards, ...metadata } = notebook;
+    const { flashcards, media = [], ...metadata } = notebook;
     files.push({
       name: `notebooks/${notebook.id}/notebook.json`,
       content: JSON.stringify(metadata, null, 2),
@@ -113,6 +113,13 @@ export async function createMemz(notebooks) {
       files.push({
         name: `notebooks/${notebook.id}/cards/${cardId}.json`,
         content: JSON.stringify({ ...card, id: cardId }, null, 2),
+      });
+    });
+    media.forEach((asset, index) => {
+      const mediaId = /^[\\w-]{1,100}$/.test(asset.id) ? asset.id : `media-${index + 1}`;
+      files.push({
+        name: `notebooks/${notebook.id}/media/${mediaId}.json`,
+        content: JSON.stringify({ ...asset, id: mediaId }, null, 2),
       });
     });
   }
@@ -188,6 +195,9 @@ export async function importMemz(input) {
         .filter(([path]) => path.startsWith(`notebooks/${id}/cards/`) && path.endsWith(".json"))
         .map(([, value]) => JSON.parse(value));
     }
-    return cleanNotebook({ ...notebook, flashcards });
+    const media = manifest.version === 1 ? [] : [...files.entries()]
+      .filter(([path]) => path.startsWith(`notebooks/${id}/media/`) && path.endsWith(".json"))
+      .map(([, value]) => JSON.parse(value));
+    return cleanNotebook({ ...notebook, flashcards, media });
   });
 }
