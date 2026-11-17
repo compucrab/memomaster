@@ -19,7 +19,7 @@ function isDue(card, now) {
   return Number.isNaN(due.getTime()) || due <= now;
 }
 
-export default function ReviewSession({ cards, mode = "scheduled", settings, media = [], onReview, onEditCard, onComplete, scopeType, scopeChapterId, onExit, onEscape }) {
+export default function ReviewSession({ cards, mode = "scheduled", settings, media = [], onReview, onEditCard, onComplete, scopeType, scopeChapterId, onExit, onEscape, onBrowse }) {
   const [sessionCards, setSessionCards] = useState(() => cards.map((card) => ({ ...card })));
   const [queue, setQueue] = useState(() => {
     const now = new Date();
@@ -47,8 +47,12 @@ export default function ReviewSession({ cards, mode = "scheduled", settings, med
 
   useEffect(() => {
     const handleReviewKeys = (event) => {
-      if (event.repeat || event.ctrlKey || event.metaKey || event.altKey || event.target?.closest?.("input, textarea, select, [contenteditable='true'], [role='dialog'], [role='alertdialog']")) return;
+      if (event.repeat || event.ctrlKey || event.metaKey || event.target?.closest?.("input, textarea, select, [contenteditable='true'], [role='dialog'], [role='alertdialog']")) return;
       if (event.key === "Escape") { event.preventDefault(); onEscape?.(); return; }
+      if (event.altKey) {
+        if (event.key.toLowerCase() === "b") { event.preventDefault(); onBrowse?.(); }
+        return;
+      }
       if (!activeCard || processing) return;
       if (event.key.toLowerCase() === "e") {
         event.preventDefault();
@@ -68,7 +72,7 @@ export default function ReviewSession({ cards, mode = "scheduled", settings, med
     };
     window.addEventListener("keydown", handleReviewKeys);
     return () => window.removeEventListener("keydown", handleReviewKeys);
-  }, [activeCard?.id, revealed, processing, mode, onEditCard, onEscape]);
+  }, [activeCard?.id, revealed, processing, mode, onEditCard, onEscape, onBrowse]);
 
   function removeActiveCard() {
     setQueue((items) => items.slice(1));
