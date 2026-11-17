@@ -50,6 +50,7 @@ export default function Layout() {
   const [backupItems, setBackupItems] = useState([]);
   const [backupDialog, setBackupDialog] = useState(false);
   const [backupToRestore, setBackupToRestore] = useState(null);
+  const [recoveryRequired, setRecoveryRequired] = useState(false);
   const notebooksRef = useRef(notebooks);
   notebooksRef.current = notebooks;
   const saveQueueRef = useRef(Promise.resolve());
@@ -89,6 +90,7 @@ export default function Layout() {
         if (!mounted) return;
         console.error("Unable to load local library:", error);
         setNotebooks([]);
+        setRecoveryRequired(true);
         setNotice("Could not load the saved library: " + (error.message || error));
         invoke("list_automatic_backups").then((items) => { setBackupItems(items); setBackupDialog(true); }).catch((backupError) => console.error("Could not list recovery backups:", backupError));
         setReady(true);
@@ -97,17 +99,17 @@ export default function Layout() {
   }, []);
 
   useEffect(() => {
-    if (!ready) return;
+    if (!ready || recoveryRequired) return;
     const timeout = window.setTimeout(() => {
       persistLibrary(notebooks)
         .catch((error) => setNotice(`Could not save local changes: ${error}`));
     }, 100);
     return () => window.clearTimeout(timeout);
-  }, [notebooks, ready]);
+  }, [notebooks, ready, recoveryRequired]);
 
   useEffect(() => {
     const flushPendingSave = () => {
-      if (ready) persistLibrary(notebooksRef.current).catch((error) => console.error("Unable to flush library during app suspension:", error));
+      if (ready && !recoveryRequired) persistLibrary(notebooksRef.current).catch((error) => console.error("Unable to flush library during app suspension:", error));
     };
     const handleVisibilityChange = () => { if (document.visibilityState === "hidden") flushPendingSave(); };
     window.addEventListener("pagehide", flushPendingSave);
@@ -116,7 +118,7 @@ export default function Layout() {
       window.removeEventListener("pagehide", flushPendingSave);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [ready]);
+  }, [ready, recoveryRequired]);
 
   useEffect(() => {
     if (!notice) return;
@@ -133,6 +135,10 @@ export default function Layout() {
           setNotice("The library is still loading. Try closing again in a moment.");
           return;
         }
+        if (recoveryRequired) {
+          setNotice("Restore a backup or explicitly start with an empty library before closing.");
+          return;
+        }
         await persistLibrary(notebooksRef.current);
         const archive = await createMemz(notebooksRef.current);
         const verified = await importMemz(archive);
@@ -147,7 +153,7 @@ export default function Layout() {
     }).then((dispose) => { unlisten = dispose; })
       .catch((error) => console.error("Could not register close handler:", error));
     return () => unlisten?.();
-  }, [ready]);
+  }, [ready, recoveryRequired]);
 
   function requestText({ title, value = "", placeholder, submitLabel, onSubmit }) {
     setPrompt({ title, value, placeholder, submitLabel, onSubmit });
@@ -230,6 +236,7 @@ export default function Layout() {
       setProjectPath(null);
       setBackupToRestore(null);
       setBackupDialog(false);
+      setRecoveryRequired(false);
       setNotice("Restored " + backup.name + ". Review the recovered library before continuing.");
     } catch (error) { setNotice("Could not restore " + backup.name + ": " + (error.message || error)); }
   }
@@ -400,7 +407,10 @@ export default function Layout() {
             ) : (
               <><p>Automatic backups are verified before saving. The newest 10 backups are retained. Restoring a backup replaces the current library.</p>
                 {backupItems.length ? <div class="backup-list">{backupItems.map((backup) => <div class="backup-item"><div><strong>{backup.name}</strong><small>{new Date(backup.modified * 1000).toLocaleString()}</small></div><button class="prompt-confirm" onClick={() => setBackupToRestore(backup)}>Restore</button></div>)}</div> : <p class="backup-empty">No automatic backups are available yet.</p>}
-                <div class="prompt-actions"><button class="prompt-cancel" onClick={() => setBackupDialog(false)}>Close</button></div></>
+                <div class="prompt-actions">
+                  {recoveryRequired && <button class="prompt-cancel" onClick={() => { setRecoveryRequired(false); setBackupDialog(false); setNotebooks([]); setNotice("Started with an empty library. Existing backup files and the damaged database were preserved."); }}>Start with empty library</button>}
+                  <button class="prompt-cancel" onClick={() => setBackupDialog(false)}>Close</button>
+                </div></>
             )}
           </section>
         </div>
