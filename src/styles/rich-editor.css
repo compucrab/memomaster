@@ -282,3 +282,48 @@
 .rich-editor-table-actions button:hover { border-color:var(--accent); color:var(--accent); }
 .study-image-resize-handle { z-index:2; touch-action:none; user-select:none; }
 .study-image-frame { position:relative; }
+
+
+/* Right-click context actions are anchored to the selected editable object. */
+.rich-editor-context-menu {
+  position: fixed;
+  z-index: 130;
+  display: flex;
+  min-height: 36px;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 5px 4px 10px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: var(--paper-card);
+  color: var(--ink);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 22%);
+}
+.rich-editor-context-menu > span {
+  color: var(--muted);
+  font: 10px var(--sans);
+  white-space: nowrap;
+}
+.rich-editor-context-menu > button {
+  min-width: 48px;
+  padding: 6px 10px;
+  border: 0;
+  border-radius: 3px;
+  background: var(--accent);
+  color: var(--paper);
+  cursor: pointer;
+  font: 600 10px var(--sans);
+}
+.rich-editor-context-menu > button:hover { filter: brightness(.94); }
+
+/* Selection controls wrap and stay inside the visible viewport on narrow screens. */
+.rich-editor-selection-tools {
+  max-width: calc(100vw - 16px);
+  flex-wrap: wrap;
+  white-space: normal;
+}
+.rich-editor-selection-tools select { max-width: min(112px, 28vw); }
+@media (max-width: 520px) {
+  .rich-editor-selection-tools { gap: 1px; padding: 4px; }
+  .rich-editor-selection-tools button { width: 25px; height: 25px; }
+}
