@@ -32,8 +32,8 @@ Space — Reveal the answer; when it is visible, rate Good`],
       ["Editor", `Ctrl + Space — Open the editor command palette
 ↑ / ↓ — Move through the command palette or chapter picker
 Enter — Choose the highlighted option`],
-      ["Application", "Ctrl + , — Open Preferences
-Ctrl + S — Save project (.memz) and choose a destination"]
+      ["Application", `Ctrl + , — Open Preferences
+Ctrl + S — Save project (.memz) and choose a destination`]
     ]
   },
   about: {
