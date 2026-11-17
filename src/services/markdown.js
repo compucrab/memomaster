@@ -9,6 +9,24 @@ function escapeHtml(value) {
     .replaceAll("'", "&#39;");
 }
 
+function unescapeMarkdownPunctuation(value) {
+  const protectedParts = [];
+  const protect = text => {
+    const token = "\\u0000PROTECTED" + protectedParts.length + "\\u0000";
+    protectedParts.push(text);
+    return token;
+  };
+  let source = String(value);
+  source = source.replace(/```[\\s\\S]*?```/g, protect);
+  source = source.replace(/`[^`\\n]*`/g, protect);
+  source = source.replace(/\\$\\$[\\s\\S]*?\\$\\$/g, protect);
+  source = source.replace(/(?<!\\$)\\$[^\\$\\n]+\\$(?!\\$)/g, protect);
+  source = source.replace(/\\\\\\[[\\s\\S]*?\\\\\\]/g, protect);
+  source = source.replace(/\\\\\\([^\\n]*?\\\\\\)/g, protect);
+  source = source.replace(/\\\\([\\\\`*_{}\\[\\]<>#+\\-.!|~])/g, "$1");
+  return source.replace(/\\u0000PROTECTED(\\d+)\\u0000/g, (_, index) => protectedParts[Number(index)] ?? "");
+}
+
 function normalizeText(value) {
   return String(value)
     .replace(/&nbsp;|&#160;|&#xA0;/gi, " ")
@@ -42,7 +60,7 @@ function videoEmbed(url) {
 }
 function renderInline(source, mediaMap = new Map()) {
   const styledSpans = [];
-  const prepared = normalizeText(source).replace(/<span\s+style=["']([^"']*)["']>([\s\S]*?)<\/span>/gi, (match, rawStyle, inner) => {
+  const prepared = unescapeMarkdownPunctuation(normalizeText(source)).replace(/<span\s+style=["']([^"']*)["']>([\s\S]*?)<\/span>/gi, (match, rawStyle, inner) => {
     const safeStyles = [];
     String(rawStyle).split(";").forEach(declaration => {
       const separator = declaration.indexOf(":");
