@@ -1,3 +1,7 @@
+import StarterKit from "@tiptap/starter-kit";
+import { Markdown } from "@tiptap/markdown";
+import Underline from "@tiptap/extension-underline";
+import Color from "@tiptap/extension-color";
 import { Node } from "@tiptap/core";
 import Image from "@tiptap/extension-image";
 import Paragraph from "@tiptap/extension-paragraph";
@@ -87,3 +91,19 @@ export const CardTextStyle = TextStyle.extend({
     return styles.length ? '<span style="' + styles.join(";") + '">' + content + "</span>" : content;
   },
 });
+
+export function createCardExtensions() {
+  return [
+    StarterKit.configure({ paragraph: false, heading: false, undoRedo: { depth: 100 } }),
+    AlignedParagraph,
+    AlignedHeading,
+    Markdown,
+    Underline,
+    CardTextStyle,
+    Color,
+    CardLink.configure({ openOnClick: false, autolink: true, protocols: ["http", "https"] }),
+    CardImage.configure({ allowBase64: true }),
+    CardMath,
+    CardVideo,
+  ];
+}
