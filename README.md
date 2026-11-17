@@ -15,7 +15,7 @@ MemoMaster is a local-first desktop learning and revision app built with Tauri 2
 - Video embeds for YouTube, Vimeo, Instagram public posts/reels, Facebook, and direct MP4/WebM/OGG URLs. Playback depends on the provider's embedding policy.
 - Separate undo/redo history for the Question and Answer editors.
 - FSRS-6 scheduled reviews and unscheduled practice for a whole notebook or a chapter.
-- Correct Again/Hard/Good/Easy semantics, timed learning and relearning steps, and due-time-aware review queues.
+- Anki-style Again/Hard/Good/Easy ratings backed by FSRS-6, with configurable learning and relearning steps.
 - Reversible scheduled review history with an Undo last review action in the retention dashboard.
 - Export complete FSRS-6 review history as CSV for use with the official FSRS optimizer (the optimizer runtime is not yet integrated into the app).
 - Configurable desired retention, learning/relearning steps, maximum interval, and study-day rollover.
@@ -38,10 +38,12 @@ The scheduler uses `ts-fsrs` (FSRS-6). Default preferences:
 
 Review buttons follow these rules:
 
-- **Forgot / Again:** failed recall. Enters a learning or relearning step and returns to the queue only when that step is due.
-- **Difficult / Hard:** successful recall with effort. It does not automatically repeat; if the card is still in a learning step, it can return when its actual step becomes due.
-- **Good:** advances a learning step or continues the normal review schedule.
-- **Easy:** graduates a learning card or continues the normal review schedule.
+- **Again:** failed recall. FSRS schedules a learning or relearning step.
+- **Hard:** successful recall with significant effort.
+- **Good:** successful recall.
+- **Easy:** successful recall with high confidence.
+
+The active review queue includes new cards, due cards, and learning/relearning cards whose next due time is within 10 minutes. After a rating, a card whose next interval is 10 minutes or less is placed at the end of the queue immediately instead of making you wait for its timestamp. Cards scheduled beyond that short-term window leave the active queue and become available when due later. The queue is continuous rather than a fixed batch, so the review screen intentionally has no progress bar or completion percentage.
 
 Use **Export CSV** in FSRS scheduling preferences to export complete review logs in the official optimizer input format. Logs without reliable pre-review state data are excluded and reported. The in-app optimizer is not yet integrated. Changing FSRS preferences affects future scheduling. Existing due dates are not silently recalculated. Each new review stores the before-and-after FSRS state in its review log, allowing the latest scheduled review to be safely undone. Older logs without snapshots remain readable but cannot be undone safely. Preferences are shared across notebooks and stored locally in the application webview; they are not currently embedded in .memz archives. Per-notebook presets are a later iteration.
 
