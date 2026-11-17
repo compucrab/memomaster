@@ -64,11 +64,12 @@ export default function ReviewSession({ cards, mode = "scheduled", settings, onR
     const timer = window.setInterval(() => {
       const now = new Date();
       const dayEnd = studyDayEnd;
-      const dueIds = pending.filter((id) => {
+      const dayEnded = now >= dayEnd;
+      const dueIds = dayEnded ? [] : pending.filter((id) => {
         const card = sessionCards.find((item) => item.id === id);
         return card && isDue(card, now);
       });
-      const expiredIds = pending.filter((id) => {
+      const expiredIds = dayEnded ? pending : pending.filter((id) => {
         const card = sessionCards.find((item) => item.id === id);
         const due = new Date(card?.fsrs?.due);
         return !card || Number.isNaN(due.getTime()) || due >= dayEnd;
