@@ -1,14 +1,15 @@
 import { useEffect, useRef, useState } from "preact/hooks";
 import { Editor } from "@tiptap/core";
-import StarterKit from "@tiptap/starter-kit";
-import { Markdown } from "@tiptap/markdown";
+
+
 import Placeholder from "@tiptap/extension-placeholder";
-import Underline from "@tiptap/extension-underline";
-import Color from "@tiptap/extension-color";
-import Link from "@tiptap/extension-link";
+
+
+
 import { Bold, Italic, Underline as UnderlineIcon, Link as LinkIcon, Heading1, Heading2, Heading3, Heading4, Heading5, List, ListOrdered, Quote, Code, Undo2, Redo2, ImagePlus, Sigma, Video, X, Minus, Plus, Pilcrow } from "lucide-preact";
-import { CardImage, CardVideo, CardMath, CardTextStyle, AlignedParagraph, AlignedHeading } from "../services/editorExtensions";
-import { unescapeMarkdownPunctuation } from "../services/markdown";
+import { createCardExtensions } from "../services/editorExtensions";
+import { normalizeCardDocument } from "../services/cardDocument";
+
 import "katex/dist/katex.min.css";
 const tools = [
   { label: "Normal text", icon: Pilcrow, run: e => e.chain().focus().setParagraph().run(), active: e => e.isActive("paragraph") },
@@ -50,8 +51,18 @@ function videoTarget(value) {
 export default function RichTextEditor({ label, value = "", placeholder, onChange, media = [], onAddMedia }) {
   const hostRef = useRef(null), editorRef = useRef(null), fileRef = useRef(null), onChangeRef = useRef(onChange), onAddMediaRef = useRef(onAddMedia), mediaRef = useRef(media);
   mediaRef.current = media;
-  const toEditorMarkdown = source => unescapeMarkdownPunctuation(mediaRef.current.reduce((text, asset) => asset?.id && asset?.data ? text.replaceAll("memomedia://" + asset.id, asset.data) : text, String(source || "")));
-  const toStoredMarkdown = source => mediaRef.current.reduce((text, asset) => asset?.id && asset?.data ? text.replaceAll(asset.data, "memomedia://" + asset.id) : text, String(source || ""));
+  const mapDocumentMedia = (node, direction) => {
+    if (!node || typeof node !== "object") return node;
+    const next = { ...node };
+    if (next.attrs?.src) {
+      const asset = mediaRef.current.find(item => item?.id && (direction === "editor" ? next.attrs.src === "memomedia://" + item.id : next.attrs.src === item.data));
+      if (asset) next.attrs = { ...next.attrs, src: direction === "editor" ? asset.data : "memomedia://" + asset.id };
+    }
+    if (Array.isArray(next.content)) next.content = next.content.map(child => mapDocumentMedia(child, direction));
+    return next;
+  };
+  const toEditorDocument = source => mapDocumentMedia(normalizeCardDocument(source), "editor");
+  const toStoredDocument = source => mapDocumentMedia(source, "stored");
   const cacheMediaAsset = asset => {
     if (asset?.id) mediaRef.current = [...mediaRef.current.filter(item => item.id !== asset.id), asset];
     return asset;
@@ -72,8 +83,8 @@ export default function RichTextEditor({ label, value = "", placeholder, onChang
     };
     const instance = new Editor({
       element: hostRef.current,
-      extensions: [StarterKit.configure({ paragraph: false, heading: false, undoRedo: { depth: 100 } }), AlignedParagraph, AlignedHeading, Markdown, Placeholder.configure({ placeholder: placeholder || "" }), Underline, CardTextStyle, Color, Link.configure({ openOnClick: false, autolink: true, protocols: ["http", "https"] }), CardImage.configure({ allowBase64: true }), CardMath, CardVideo],
-      content: toEditorMarkdown(value), contentType: "markdown",
+      extensions: [...createCardExtensions(), Placeholder.configure({ placeholder: placeholder || "" })],
+      content: toEditorDocument(value), contentType: "json",
       editorProps: {
         attributes: { class: "rich-editor-content", role: "textbox", "aria-label": label, "aria-multiline": "true", "data-placeholder": placeholder || "", spellcheck: "true" },
         handlePaste(view, event) {
@@ -92,7 +103,7 @@ export default function RichTextEditor({ label, value = "", placeholder, onChang
           return false;
         },
       },
-      onUpdate: ({ editor: current }) => onChangeRef.current?.(toStoredMarkdown(current.getMarkdown())),
+      onUpdate: ({ editor: current }) => onChangeRef.current?.(toStoredDocument(current.getJSON())),
       onTransaction: () => setRevision(n => n + 1),
     });
     editorRef.current = instance; setEditor(instance);
