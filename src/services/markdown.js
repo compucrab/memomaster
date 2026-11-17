@@ -41,7 +41,7 @@ function videoEmbed(url) {
   }
 }
 
-function renderInline(source) {
+function renderInline(source, mediaMap = new Map()) {
   const styledSpans = [];
   const prepared = normalizeText(source).replace(/<span\s+style=["']([^"']*)["']>([\s\S]*?)<\/span>/gi, (match, rawStyle, inner) => {
     const safeStyles = [];
