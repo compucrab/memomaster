@@ -178,7 +178,7 @@ export async function importMemz(input) {
   const manifestText = files.get("manifest.json");
   if (!manifestText) throw new Error("Missing MemoMaster manifest");
   const manifest = JSON.parse(manifestText);
-  if (manifest.format !== "memomaster" || manifest.version === 3 || !Array.isArray(manifest.notebooks)) {
+  if (manifest.format !== "memomaster" || manifest.version !== 3 || !Array.isArray(manifest.notebooks)) {
     throw new Error("Unsupported MemoMaster project format");
   }
   return manifest.notebooks.map((id) => {
