@@ -23,28 +23,19 @@ function videoEmbed(url) {
   try {
     const parsed = new URL(url);
     if (parsed.protocol !== "https:" && parsed.protocol !== "http:") return "";
-    let source = "";
-    if (parsed.hostname === "youtu.be" || parsed.hostname === "youtube.com" || parsed.hostname.endsWith(".youtube.com")) {
-      const id = parsed.hostname === "youtu.be" ? parsed.pathname.slice(1) : parsed.searchParams.get("v") || parsed.pathname.split("/").filter(Boolean).pop();
-      if (!/^[\w-]{6,20}$/.test(id || "")) return "";
-      source = `https://www.youtube-nocookie.com/embed/${id}`;
-    } else if (parsed.hostname === "vimeo.com" || parsed.hostname.endsWith(".vimeo.com")) {
-      const id = parsed.pathname.split("/").filter(Boolean).pop();
-      if (!/^\d+$/.test(id || "")) return "";
-      source = `https://player.vimeo.com/video/${id}`;
-    } else if ((parsed.hostname === "instagram.com" || parsed.hostname.endsWith(".instagram.com")) && /^\/(reel|p|tv)\/[\w-]+(?:\/embed)?\/?$/i.test(parsed.pathname)) {
-      const match = parsed.pathname.match(/^\/(reel|p|tv)\/([\w-]+)/i);
-      source = parsed.pathname.toLowerCase().includes("/embed") ? url : `https://www.instagram.com/${match[1]}/${match[2]}/embed`;
-    } else if (parsed.hostname === "facebook.com" && parsed.pathname === "/plugins/video.php") {
-      source = url;
-    } else if (parsed.hostname === "facebook.com" || parsed.hostname.endsWith(".facebook.com") || parsed.hostname === "fb.watch" || parsed.hostname.endsWith(".fb.watch")) {
-      source = `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(url)}&show_text=0`;
-    } else if (/\.(mp4|webm|ogg)$/i.test(parsed.pathname)) {
-      return `<video class="study-embedded-video" controls preload="metadata" src="${escapeHtml(url)}"></video>`;
-    } else {
-      return "";
-    }
-    return `<div class="study-video-frame"><iframe src="${escapeHtml(source)}" title="Embedded video" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div>`;
+    const host = parsed.hostname.toLowerCase();
+    const supported = host === "youtu.be" || host === "youtube.com" || host.endsWith(".youtube.com")
+      || host === "vimeo.com" || host.endsWith(".vimeo.com")
+      || host === "instagram.com" || host.endsWith(".instagram.com")
+      || host === "facebook.com" || host.endsWith(".facebook.com")
+      || host === "fb.watch" || /\\.(mp4|webm|ogg)$/i.test(parsed.pathname);
+    if (!supported) return "";
+    const safeUrl = escapeHtml(parsed.href);
+    const provider = /youtube|youtu\\.be/.test(host) ? "YouTube"
+      : /vimeo/.test(host) ? "Vimeo"
+      : /instagram/.test(host) ? "Instagram"
+      : /facebook|fb\\.watch/.test(host) ? "Facebook" : "Video file";
+    return `<a class="study-video-card" href="${safeUrl}" target="_blank" rel="noopener noreferrer"><span class="study-video-card-icon">▶</span><span><strong>Open ${provider} video</strong><small>Opens in your browser</small></span><span class="study-video-card-arrow">↗</span></a>`;
   } catch {
     return "";
   }
