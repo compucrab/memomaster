@@ -64,9 +64,18 @@ export default function NotebookView({ notebook, fsrsSettings, onUpdate, onBack,
   useEffect(() => {
     if (editingCardId || reviewing) return;
     const handleNotebookKeys = (event) => {
-      if (event.repeat || event.ctrlKey || event.metaKey || event.altKey) return;
-      if (event.target?.closest?.("input, textarea, select, [contenteditable='true'], [role='dialog']")) return;
+      if (event.repeat || event.ctrlKey || event.metaKey) return;
+      if (event.key === "Escape") {
+        if (confirmAction) { event.preventDefault(); setConfirmAction(null); return; }
+        if (tab === "browse" || tab === "study") { event.preventDefault(); onBack(); }
+        return;
+      }
+      const typing = event.target?.closest?.("input, textarea, select, [contenteditable='true'], [role='dialog'], [role='alertdialog']");
+      if (typing) return;
       const key = event.key.toLowerCase();
+      if (event.altKey && key === "b") { event.preventDefault(); setTab("browse"); return; }
+      if (event.altKey && key === "s") { event.preventDefault(); setTab("study"); return; }
+      if (event.altKey) return;
       if (key === "a") { event.preventDefault(); addCard(); }
       else if (key === "s") { event.preventDefault(); setTab("study"); }
       else if (key === "b") { event.preventDefault(); setTab("browse"); }
@@ -77,7 +86,7 @@ export default function NotebookView({ notebook, fsrsSettings, onUpdate, onBack,
     };
     window.addEventListener("keydown", handleNotebookKeys);
     return () => window.removeEventListener("keydown", handleNotebookKeys);
-  }, [editingCardId, reviewing, tab, selectedCardId, search, chapterFilter, cards]);
+  }, [editingCardId, reviewing, tab, selectedCardId, search, chapterFilter, cards, confirmAction, onBack]);
 
   const visibleCards = useMemo(() => {
     const needle = search.trim().toLocaleLowerCase();
@@ -245,7 +254,9 @@ export default function NotebookView({ notebook, fsrsSettings, onUpdate, onBack,
       onComplete={(session) => onUpdate({
         studySessions: [...(notebook.studySessions || []), session],
       })}
-      onExit={() => setReviewing(false)} />;
+      onExit={() => setReviewing(false)}
+      onEscape={onBack}
+      onBrowse={() => { setReviewing(false); setTab("browse"); }} />;
   }
 
   return (
