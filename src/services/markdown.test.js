@@ -36,3 +36,15 @@ test("renders markdown links as styled, safe links", () => {
   assert.ok(html.includes('<a href="https://example.com/docs"'));
   assert.ok(html.includes(">the reference</a>"));
 });
+
+test("renders escaped punctuation as normal characters", () => {
+  const html = renderMarkdown(String.raw`Square brackets: \\[Google\\] and parentheses \\(example\\).`);
+  assert.ok(html.includes("Square brackets: [Google] and parentheses (example)."));
+  assert.ok(!html.includes("\\[Google\\]"));
+});
+
+test("does not strip LaTeX and inline code backslashes", () => {
+  const html = renderMarkdown(String.raw`Formula: $\\frac{a}{b}$ and code: \`\\[literal]\\` `);
+  assert.ok(html.includes("\\frac{a}{b}"));
+  assert.ok(html.includes("<code>\\[literal]</code>"));
+});
