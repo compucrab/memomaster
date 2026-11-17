@@ -1,123 +1,80 @@
 import { useMemo } from "preact/hooks";
-import { ArrowLeft, Target, Clock3, Brain, TrendingUp, AlertCircle } from "lucide-preact";
-import { State } from "ts-fsrs";
+import { ArrowLeft, Flame, Trophy, CalendarDays, Layers3 } from "lucide-preact";
+import { getStudyActivity } from "../services/studyActivity";
 
-const dateKey = (date) => `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,"0")}-${String(date.getDate()).padStart(2,"0")}`;
-const studyDayKey = (value, rolloverHour) => {
-  const date = new Date(value);
-  date.setHours(date.getHours() - rolloverHour);
-  return dateKey(date);
-};
-const monthKey = (value) => { const d = new Date(value); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`; };
+const WEEKDAYS = ["", "Mon", "", "Wed", "", "Fri", ""];
 
-function classify(card) {
-  if (!card.fsrs || card.fsrs.state === State.New || !(card.fsrs.reps > 0)) return "new";
-  if (card.fsrs.state === State.Learning || card.fsrs.state === State.Relearning) return "learning";
-  return (card.fsrs.scheduled_days || 0) >= 21 ? "mature" : "young";
+function getDueCount(notebooks, now, rolloverHour) {
+  return notebooks.reduce((total, notebook) => {
+    return total + (notebook.flashcards || []).filter((card) => {
+      if (!card.fsrs?.due) return !card.fsrs;
+      const due = new Date(card.fsrs.due);
+      return Number.isNaN(due.getTime()) || due <= now;
+    }).length;
+  }, 0);
+}
+
+function formatDate(key) {
+  return new Date(`${key}T12:00:00`).toLocaleDateString(undefined, {
+    weekday: "short", month: "short", day: "numeric", year: "numeric",
+  });
 }
 
 export default function StudyStatus({ notebooks, settings, onBack }) {
   const data = useMemo(() => {
-    const history = notebooks.flatMap(n => (n.reviewHistory || []).map(log => ({ ...log, notebookTitle: n.title })));
-    const cards = notebooks.flatMap(n => (n.flashcards || []).map(card => ({ ...card, notebookTitle: n.title })));
-    const validHistory = history.filter(log => log.review && ["forgot","difficult","good","easy"].includes(log.rating));
-    const countedHistory = validHistory.filter(log => Number(log.nextFsrs?.scheduled_days) > 1);
-    const ratings = countedHistory.reduce((result, log) => { result[log.rating] = (result[log.rating] || 0) + 1; return result; }, {});
-    const remembered = (ratings.difficult || 0) + (ratings.good || 0) + (ratings.easy || 0);
     const now = new Date();
-    const retention = countedHistory.length ? remembered / countedHistory.length : null;
-    const monthCursor = new Date(now.getFullYear(), now.getMonth() - 11, 1);
-    const monthly = Array.from({ length: 12 }, (_, index) => {
-      const date = new Date(monthCursor.getFullYear(), monthCursor.getMonth() + index, 1);
-      const logs = countedHistory.filter(log => monthKey(log.review) === monthKey(date));
-      const passes = logs.filter(log => log.rating !== "forgot").length;
-      return { label: date.toLocaleDateString(undefined, { month: "short" }), count: logs.length, retention: logs.length ? passes / logs.length : null };
-    });
-    const rollover = settings?.rolloverHour ?? 4;
-    const firstStudyDay = new Date(now);
-    firstStudyDay.setHours(rollover, 0, 0, 0);
-    if (now < firstStudyDay) firstStudyDay.setDate(firstStudyDay.getDate() - 1);
-    const workload = Array.from({ length: 30 }, (_, index) => {
-      const date = new Date(firstStudyDay);
-      date.setDate(firstStudyDay.getDate() + index);
-      const key = studyDayKey(date, rollover);
-      return { key, label: index === 0 ? "Today" : date.toLocaleDateString(undefined, { month: "short", day: "numeric" }), count: 0 };
-    });
-    const workloadIndex = new Map(workload.map((item, index) => [item.key, index]));
-    cards.forEach(card => {
-      if (!card.fsrs || card.fsrs.state === State.New) return;
-      const due = card.fsrs.due ? new Date(card.fsrs.due) : null;
-      if (!due || Number.isNaN(due.getTime())) return;
-      const dueKey = studyDayKey(due < now ? now : due, rollover);
-      const index = workloadIndex.get(dueKey);
-      if (index !== undefined) workload[index].count++;
-    });
-    const breakdown = { new: 0, learning: 0, young: 0, mature: 0 };
-    cards.forEach(card => breakdown[classify(card)]++);
-    const forgotten = cards.filter(card => (card.fsrs?.lapses || 0) > 0)
-      .sort((a,b) => (b.fsrs?.lapses || 0) - (a.fsrs?.lapses || 0))
-      .slice(0, 8);
-    const dueNow = workload[0]?.count || 0;
-    return { countedHistory, ratings, remembered, retention, monthly, workload, breakdown, forgotten, cards, dueNow };
+    const activity = getStudyActivity(notebooks, now, settings?.rolloverHour ?? 4);
+    return { ...activity, dueCount: getDueCount(notebooks, now, settings?.rolloverHour ?? 4) };
   }, [notebooks, settings]);
 
-  const maxWorkload = Math.max(1, ...data.workload.map(item => item.count));
-  const monthlyPoints = data.monthly.map((item,index) => item.retention === null ? null : `${(index / 11) * 500},${90 - item.retention * 70}`).filter(Boolean).join(" ");
-  const target = settings?.desiredRetention ?? 0.9;
-  const retentionDelta = data.retention === null ? null : Math.round((data.retention - target) * 100);
+  const weeks = [];
+  for (let index = 0; index < data.days.length; index += 7) weeks.push(data.days.slice(index, index + 7));
+  const monthLabels = weeks.map((week, index) => {
+    const first = week[0];
+    if (!first) return "";
+    const date = new Date(`${first.key}T12:00:00`);
+    return date.getDate() <= 7 ? date.toLocaleDateString(undefined, { month: "short" }) : "";
+  });
 
   return (
     <section class="workspace status-workspace">
-      <header class="status-heading"><button class="back-link" onClick={onBack}><ArrowLeft size={14}/> LIBRARY</button><div><h1>Retention & memory</h1><p>How well your cards are retained, and what needs attention.</p></div></header>
+      <header class="status-heading">
+        <button class="back-link" onClick={onBack}><ArrowLeft size={14} /> LIBRARY</button>
+        <div><h1>Study activity</h1><p>Your consistency, progress, and what needs attention.</p></div>
+      </header>
+
       <div class="status-stats-grid">
-        <article class="status-stat"><span><Target size={15}/> ACTUAL RETENTION</span><strong>{data.retention === null ? "—" : `${Math.round(data.retention * 100)}%`}</strong><p>{data.retention === null ? "Complete reviews to measure retention" : `${retentionDelta >= 0 ? "+" : ""}${retentionDelta} points vs ${Math.round(target * 100)}% target`}</p></article>
-        <article class="status-stat"><span><Brain size={15}/> CARDS TRACKED</span><strong>{data.cards.length.toLocaleString()}</strong><p>{data.dueNow} due in the current study day</p></article>
-        <article class="status-stat"><span><Clock3 size={15}/> REVIEWS OVER 1 DAY</span><strong>{data.countedHistory.length.toLocaleString()}</strong><p>Cards scheduled beyond 1 day</p></article>
-        <article class="status-stat"><span><TrendingUp size={15}/> DESIRED RETENTION</span><strong>{Math.round(target * 100)}%</strong><p>Current FSRS target</p></article>
+        <article class="status-stat"><span><Flame size={15} /> CURRENT STREAK</span><strong>{data.currentStreak}<small> days</small></strong><p>Consecutive completed study days</p></article>
+        <article class="status-stat"><span><Trophy size={15} /> LONGEST STREAK</span><strong>{data.longestStreak}<small> days</small></strong><p>Your personal best</p></article>
+        <article class="status-stat"><span><CalendarDays size={15} /> STUDY DAYS</span><strong>{data.completedDays.toLocaleString()}</strong><p>Days with a completed review</p></article>
+        <article class="status-stat"><span><Layers3 size={15} /> CARDS REVIEWED</span><strong>{data.cardsReviewed.toLocaleString()}</strong><p>Across completed sessions</p></article>
       </div>
 
-      <div class="status-two-column">
-        <section class="status-panel">
-          <div class="status-panel-heading"><div><h2>Monthly retention</h2><p>Successful recall: Hard, Good and Easy</p></div><span>12 MONTHS</span></div>
-          <div class="retention-chart">
-            <div class="retention-chart-y"><span>100%</span><span>50%</span><span>0%</span></div>
-            <svg viewBox="0 0 500 90" preserveAspectRatio="none" role="img" aria-label="Monthly retention trend">
-              <line x1="0" x2="500" y1="20" y2="20"/><line x1="0" x2="500" y1="55" y2="55"/>
-              <line class="retention-target-line" x1="0" x2="500" y1={90 - target * 70} y2={90 - target * 70}/>
-              {data.monthly.map((item,index) => item.retention === null ? null : <circle cx={(index / 11) * 500} cy={90 - item.retention * 70} r="3.5"/> )}
-              {data.monthly.length && <polyline points={monthlyPoints} fill="none" stroke="var(--accent)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>}
-            </svg>
+      <section class="status-panel activity-panel">
+        <div class="status-panel-heading"><div><h2>Consistency</h2><p>Each square is a day you completed a notebook or chapter review.</p></div><span>LAST 12 MONTHS</span></div>
+        <div class="activity-scroll">
+          <div class="activity-months" style={{ gridTemplateColumns: `repeat(${weeks.length}, 12px)` }}>
+            {monthLabels.map((label, index) => <span key={index}>{label}</span>)}
           </div>
-          <div class="retention-month-labels">{data.monthly.map(item=><span>{item.label}</span>)}</div>
-          <p class="status-footnote">The dashed line represents your desired retention. Months without reviews have no data point.</p>
-        </section>
-        <section class="status-panel">
-          <div class="status-panel-heading"><div><h2>Rating distribution</h2><p>How your recall felt during reviews</p></div></div>
-          <div class="outcome-list">{[["Again",data.ratings.forgot || 0,"forgot"],["Hard",data.ratings.difficult || 0,"difficult"],["Good",data.ratings.good || 0,"good"],["Easy",data.ratings.easy || 0,"easy"]].map(([label,count,kind])=><div class="outcome-row"><span>{label}</span><div><i class={kind} style={{width:`${data.countedHistory.length ? count / data.countedHistory.length * 100 : 0}%`}}/></div><strong>{count}</strong></div>)}</div>
-          <p class="status-footnote">Only reviews that schedule the card beyond 1 day are included. Short learning and relearning repeats are excluded.</p>
-        </section>
-      </div>
-
-      <section class="status-panel">
-        <div class="status-panel-heading"><div><h2>Upcoming workload</h2><p>Scheduled cards grouped by study day · rollover {String(settings?.rolloverHour ?? 4).padStart(2,"0")}:00</p></div><span>NEXT 30 DAYS</span></div>
-        <div class="workload-chart">{data.workload.map((item,index)=><div class="workload-column" title={`${item.label}: ${item.count} cards`}><strong>{item.count || ""}</strong><i style={{height:`${Math.max(2,item.count / maxWorkload * 100)}%`}}/><small>{index % 5 === 0 || index === 29 ? item.label : ""}</small></div>)}</div>
-      </section>
-
-      <section class="status-panel">
-        <div class="status-panel-heading"><div><h2>Card maturity</h2><p>Learning state and review interval classification</p></div></div>
-        <div class="maturity-grid">
-          {[
-            ["New",data.breakdown.new,"Cards not yet reviewed","new"],
-            ["Learning",data.breakdown.learning,"In learning or relearning steps","learning"],
-            ["Young",data.breakdown.young,"Graduated, interval under 21 days","young"],
-            ["Mature",data.breakdown.mature,"Review interval of 21 days or longer","mature"],
-          ].map(([label,count,description,kind])=><article class={`maturity-card ${kind}`}><span>{label.toUpperCase()}</span><strong>{count}</strong><small>{description}</small></article>)}
+          <div class="activity-graph" role="img" aria-label="Study consistency over the last 12 months">
+            {weeks.map((week, index) => (
+              <div class="activity-week" key={index}>
+                {week.map((day) => <span
+                  key={day.key}
+                  class={`activity-day level-${day.level}`}
+                  title={`${formatDate(day.key)} · ${day.sessions} completed ${day.sessions === 1 ? "session" : "sessions"} · ${day.cards} cards`}
+                  aria-label={`${formatDate(day.key)}: ${day.sessions} completed sessions, ${day.cards} cards`}
+                />)}
+              </div>
+            ))}
+          </div>
+          <div class="activity-legend"><span>Less</span>{[0, 1, 2, 3, 4].map((level) => <i class={`activity-day level-${level}`} />)}<span>More</span></div>
         </div>
       </section>
 
-      <section class="status-panel">
-        <div class="status-panel-heading"><div><h2>Frequently forgotten</h2><p>Cards with the highest recorded lapse count</p></div><AlertCircle size={16}/></div>
-        {data.forgotten.length ? <div class="forgotten-list">{data.forgotten.map(card=><div class="forgotten-row"><div><strong>{String(card.front || "Untitled card").replace(/[#>*_\x60]/g,"").trim().split("\n")[0]}</strong><small>{card.notebookTitle}</small></div><span>{card.fsrs.lapses} lapses</span></div>)}</div> : <p class="status-empty">No forgotten cards recorded yet. Again responses will identify cards that need more attention.</p>}
+      <section class="status-panel status-next">
+        <div><h2>Ready to study?</h2><p>{data.dueCount ? `${data.dueCount.toLocaleString()} new or due cards across your library.` : "You're all caught up. No new or due cards right now."}</p></div>
+        <span class="status-due-count">{data.dueCount.toLocaleString()}<small> cards</small></span>
       </section>
     </section>
   );
