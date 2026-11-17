@@ -183,8 +183,8 @@ export default function NotebookView({ notebook, fsrsSettings, onUpdate, onBack,
 
   if (editingCard) {
     return <CardEditor key={editingCard.id} card={editingCard} chapters={chapters}
-      onSave={saveCard} existingCards={cards} onCancel={() => { setEditingCardId(null); setNewCard(null); }}
-      onAddChapter={addChapter} onDelete={() => { deleteCards([editingCard.id]); setEditingCardId(null); }}
+      onSave={saveCard} existingCards={cards} onCancel={() => { setEditingCardId(null); setNewCard(null); setCardAddedNotice(false); }}
+      addedNotice={cardAddedNotice} onAddChapter={addChapter} onDelete={() => { deleteCards([editingCard.id]); setEditingCardId(null); }}
       onResetSchedule={(id) => resetCardSchedules([id])} />;
   }
 
