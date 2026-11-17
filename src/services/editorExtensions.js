@@ -3,6 +3,7 @@ import Image from "@tiptap/extension-image";
 import Paragraph from "@tiptap/extension-paragraph";
 import Heading from "@tiptap/extension-heading";
 import { TextStyle } from "@tiptap/extension-text-style";
+import Link from "@tiptap/extension-link";
 import { Mathematics } from "@tiptap/extension-mathematics";
 const safeMediaUrl = (value = "") => /^(https?:|memomedia:\/\/[\w-]+$|data:image\/(png|jpe?g|gif|webp);base64,)/i.test(value) ? value : "";
 export const CardImage = Image.extend({
@@ -39,6 +40,25 @@ export const CardVideo = Node.create({
   },
   parseMarkdown: (token) => ({ type: "cardVideo", attrs: { url: token.href || "", provider: "video" } }),
   renderMarkdown: (node) => { const url = safeMediaUrl(node?.attrs?.url); return url ? `@[video](${url})` : ""; },
+});
+export const CardLink = Link.extend({
+  markdownTokenizer: {
+    name: "link",
+    level: "inline",
+    start: source => source.indexOf("["),
+    tokenize(source) {
+      const match = /^\\[([^\\]]+)\\]\\((https?:\\/\\/[^\\s)]+)\\)/.exec(source);
+      return match ? { type: "link", raw: match[0], text: match[1], href: match[2] } : undefined;
+    },
+  },
+  parseMarkdown(token) {
+    return { type: "text", text: token.text || "", marks: [{ type: "link", attrs: { href: token.href, target: null, rel: null, class: null } }] };
+  },
+  renderMarkdown(mark, helpers) {
+    const href = String(mark?.attrs?.href || "");
+    if (!/^https?:\\/\\//i.test(href)) return helpers.renderChildren(mark);
+    return "[" + helpers.renderChildren(mark) + "](" + href + ")";
+  },
 });
 export const CardMath = Mathematics.configure({ katexOptions: { throwOnError: false, strict: "ignore" } });
 
