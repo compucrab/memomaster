@@ -186,6 +186,7 @@ export default function Layout() {
     });
   }
   function startNewProject() {
+    setRecoveryRequired(false);
     setNotebooks([]);
     setActiveId(null);
     setView("library");
@@ -212,6 +213,7 @@ export default function Layout() {
       if (!path) return;
       const imported = await importMemz(await readBytes(path));
       setNotebooks(normalizeLibrary(imported));
+      setRecoveryRequired(false);
       setActiveId(null);
       setView("library");
       setProjectPath(path);
