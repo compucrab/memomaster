@@ -75,3 +75,55 @@ export const CardTextStyle = TextStyle.extend({
       : content;
   },
 });
+
+export const CardTable = Node.create({
+  name: "table",
+  group: "block",
+  content: "tableRow+",
+  isolating: true,
+  parseHTML() { return [{ tag: "table" }]; },
+  renderHTML({ HTMLAttributes }) { return ["table", HTMLAttributes, ["tbody", 0]]; },
+});
+export const CardTableRow = Node.create({
+  name: "tableRow",
+  content: "(tableHeader | tableCell)+",
+  tableRole: "row",
+  parseHTML() { return [{ tag: "tr" }]; },
+  renderHTML({ HTMLAttributes }) { return ["tr", HTMLAttributes, 0]; },
+});
+export const CardTableHeader = Node.create({
+  name: "tableHeader",
+  content: "block+",
+  isolating: true,
+  tableRole: "header_cell",
+  parseHTML() { return [{ tag: "th" }]; },
+  renderHTML({ HTMLAttributes }) { return ["th", HTMLAttributes, 0]; },
+});
+export const CardTableCell = Node.create({
+  name: "tableCell",
+  content: "block+",
+  isolating: true,
+  tableRole: "cell",
+  parseHTML() { return [{ tag: "td" }]; },
+  renderHTML({ HTMLAttributes }) { return ["td", HTMLAttributes, 0]; },
+});
+
+export function createCardExtensions() {
+  return [
+    StarterKit.configure({ paragraph: false, heading: false, undoRedo: { depth: 100 } }),
+    AlignedParagraph,
+    AlignedHeading,
+    Markdown,
+    Underline,
+    CardTextStyle,
+    Color,
+    CardLink.configure({ openOnClick: false, autolink: true, protocols: ["http", "https"] }),
+    CardImage.configure({ allowBase64: true }),
+    CardMath,
+    CardVideo,
+    CardTable,
+    CardTableRow,
+    CardTableHeader,
+    CardTableCell,
+  ];
+}
