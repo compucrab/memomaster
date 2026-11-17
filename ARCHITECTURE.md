@@ -6,7 +6,7 @@ MemoMaster is a desktop-first, local-first learning and revision app. The conten
 
 **Library → Notebook → Chapter → Flashcard**
 
-A notebook contains chapters, flashcards, scheduled review history, and unscheduled practice history. A card contains Markdown front/back content, an optional `chapterId`, and optional FSRS state. Topics are no longer part of the product model; legacy topic metadata is stripped when old library or archive data is loaded.
+A notebook contains chapters, flashcards, scheduled review history, and unscheduled practice history. The library displays each notebook’s New, Learning/Relearning, and Review cards remaining in the current study day, using the configured rollover hour. A card contains Markdown front/back content, an optional `chapterId`, and optional FSRS state. Topics are no longer part of the product model; legacy topic metadata is stripped when old library or archive data is loaded.
 
 Notebook view has two tabs:
 
@@ -83,7 +83,7 @@ Scheduled ratings map to FSRS as follows:
 | Good | Good | Successful recall. |
 | Easy | Easy | Successful recall with high confidence. |
 
-The active review queue starts with new cards, due cards, and learning/relearning cards due within the next 10 minutes. After a rating is saved, any card whose next interval is 10 minutes or less is immediately appended to the queue; it is not held until its timestamp. Cards with longer intervals leave the active queue and become available when due later. The queue is continuous and can grow or shrink as cards are rescheduled, so the review screen does not display a progress bar or completion percentage. Leaving review preserves all saved FSRS state and history.
+The library daily counts include all new cards and learning/relearning or review cards due before the next study-day rollover. The active review queue starts with new cards, due cards, and learning/relearning cards due within the next 10 minutes. After a rating is saved, any card whose next interval is 10 minutes or less is immediately appended to the queue; it is not held until its timestamp. Cards with longer intervals leave the active queue and become available when due later. The queue is continuous and can grow or shrink as cards are rescheduled, so the review screen does not display a progress bar or completion percentage. After revealing an answer, the review screen keeps the question above the answer with a horizontal divider and expands the card to the available workspace. Leaving review preserves all saved FSRS state and history.
 
 Unscheduled practice can include any cards in scope. Repeat moves a card to the end of the current queue; Done records an entry in `practiceHistory`. Unscheduled practice must not mutate FSRS state or due dates.
 
