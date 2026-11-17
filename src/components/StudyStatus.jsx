@@ -64,7 +64,7 @@ export default function StudyStatus({ notebooks, settings, onBack }) {
   const weeks = [];
   for (let index = 0; index < data.days.length; index += 7) weeks.push(data.days.slice(index, index + 7));
   const monthLabels = weeks.map((week) => {
-    const firstOfMonth = week.find((day) => new Date(`${day.key}T12:00:00`).getDate() === 1);
+    const firstOfMonth = week.find((day) => !day.empty && new Date(`${day.key}T12:00:00`).getDate() === 1);
     return firstOfMonth
       ? new Date(`${firstOfMonth.key}T12:00:00`).toLocaleDateString(undefined, { month: "short" })
       : "";
@@ -95,6 +95,7 @@ export default function StudyStatus({ notebooks, settings, onBack }) {
             <div class="activity-graph" role="img" aria-label="Study consistency over the last 12 months">
               {data.days.map((day) => <span key={day.key} class={`activity-day level-${day.level} ${day.empty ? "empty" : ""}`} title={day.empty ? "" : `${formatDate(day.key)} · ${day.sessions} completed sessions · ${day.cards} cards`} aria-label={day.empty ? "" : `${formatDate(day.key)}: ${day.sessions} sessions, ${day.cards} cards`} />)}
             </div>
+          </div>
           <div class="activity-legend"><span>Less</span>{[0, 1, 2, 3, 4].map((level) => <i class={`activity-day level-${level}`} />)}<span>More</span></div>
         </div>
       </section>
