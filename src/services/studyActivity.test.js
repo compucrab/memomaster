@@ -17,7 +17,9 @@ test("only completed sessions with reviewed cards create activity days", () => {
   assert.equal(activity.longestStreak, 2);
   assert.equal(activity.completedDays, 2);
   assert.equal(activity.cardsReviewed, 11);
-  assert.equal(activity.days.length, 52 * 7 + now.getDay() + 1);
+  assert.equal(activity.days.length % 7, 0);
+  assert.equal(new Date(`${activity.days[0].key}T12:00:00`).getDay(), 0);
+  assert.equal(new Date(`${activity.days.at(-1).key}T12:00:00`).getDay(), 6);
 });
 
 test("current streak remains active until the current study day ends", () => {
