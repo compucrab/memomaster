@@ -1,3 +1,7 @@
+import StarterKit from "@tiptap/starter-kit";
+import { Markdown } from "@tiptap/markdown";
+import Underline from "@tiptap/extension-underline";
+import Color from "@tiptap/extension-color";
 import { Node } from "@tiptap/core";
 import Image from "@tiptap/extension-image";
 import Paragraph from "@tiptap/extension-paragraph";
@@ -32,8 +36,8 @@ export const AlignedHeading = Heading.configure({ levels: [1, 2, 3, 4, 5] });
 export const CardVideo = Node.create({
   name: "cardVideo", group: "block", atom: true, selectable: true,
   addAttributes() { return { url: { default: "" }, provider: { default: "video" } }; },
-  parseHTML() { return [{ tag: "div[data-card-video]" }]; },
-  renderHTML({ HTMLAttributes }) { return ["div", { "data-card-video": "", "data-url": HTMLAttributes.url, "data-provider": HTMLAttributes.provider }, "Video link — opens in browser"]; },
+  parseHTML() { return [{ tag: "a[data-card-video]", getAttrs: element => ({ url: element.getAttribute("href") || element.getAttribute("data-url") || "", provider: element.getAttribute("data-provider") || "video" }) }, { tag: "div[data-card-video]", getAttrs: element => ({ url: element.getAttribute("data-url") || "", provider: element.getAttribute("data-provider") || "video" }) }]; },
+  renderHTML({ HTMLAttributes }) { const url = safeMediaUrl(HTMLAttributes.url); return url ? ["a", { href: url, target: "_blank", rel: "noopener noreferrer", class: "study-video-card", "data-card-video": "", "data-url": url, "data-provider": HTMLAttributes.provider || "video" }, ["span", { class: "study-video-card-icon" }, "▶"], ["span", {}, ["strong", {}, "Video link"], ["small", {}, "Open video in browser"]], ["span", { class: "study-video-card-arrow" }, "↗"]] : ["div", { "data-card-video": "" }, "Unsupported video link"]; },
   markdownTokenizer: {
     name: "cardVideo", level: "block", start: (source) => source.indexOf("@[video]("),
     tokenize(source) { const match = /^@\[video\]\((https?:\/\/[^\s)]+)\)/.exec(source); return match ? { type: "cardVideo", raw: match[0], href: match[1] } : undefined; },
@@ -63,27 +67,63 @@ export const CardLink = Link.extend({
 export const CardMath = Mathematics.configure({ katexOptions: { throwOnError: false, strict: "ignore" } });
 
 export const CardTextStyle = TextStyle.extend({
-  addAttributes() {
-    return {
-      ...this.parent?.(),
-      fontSize: {
-        default: null,
-        parseHTML: element => element.style.fontSize || null,
-        renderHTML: attributes => {
-          const size = String(attributes.fontSize || "");
-          return /^\d{1,2}(?:px|pt|rem|em)$/.test(size) ? { style: `font-size:${size}` } : {};
-        },
-      },
-    };
-  },
   renderMarkdown(mark, helpers) {
-    const attrs = mark?.attrs || {};
-    const styles = [];
-    const color = String(attrs.color || "");
-    const size = String(attrs.fontSize || "");
-    if (/^(#[0-9a-f]{3,8}|rgba?\([\d.% ,]+\)|hsla?\([\d.% ,]+\)|[a-z]{3,20})$/i.test(color)) styles.push("color:" + color);
-    if (/^\d{1,2}(?:px|pt|rem|em)$/.test(size)) styles.push("font-size:" + size);
+    const color = String(mark?.attrs?.color || "");
     const content = helpers.renderChildren(mark);
-    return styles.length ? '<span style="' + styles.join(";") + '">' + content + "</span>" : content;
+    return /^(#[0-9a-f]{3,8}|rgba?\([\d.% ,]+\)|hsla?\([\d.% ,]+\)|[a-z]{3,20})$/i.test(color)
+      ? '<span style="color:' + color + '">' + content + "</span>"
+      : content;
   },
 });
+
+export const CardTable = Node.create({
+  name: "table",
+  group: "block",
+  content: "tableRow+",
+  isolating: true,
+  parseHTML() { return [{ tag: "table" }]; },
+  renderHTML({ HTMLAttributes }) { return ["table", HTMLAttributes, ["tbody", 0]]; },
+});
+export const CardTableRow = Node.create({
+  name: "tableRow",
+  content: "(tableHeader | tableCell)+",
+  tableRole: "row",
+  parseHTML() { return [{ tag: "tr" }]; },
+  renderHTML({ HTMLAttributes }) { return ["tr", HTMLAttributes, 0]; },
+});
+export const CardTableHeader = Node.create({
+  name: "tableHeader",
+  content: "block+",
+  isolating: true,
+  tableRole: "header_cell",
+  parseHTML() { return [{ tag: "th" }]; },
+  renderHTML({ HTMLAttributes }) { return ["th", HTMLAttributes, 0]; },
+});
+export const CardTableCell = Node.create({
+  name: "tableCell",
+  content: "block+",
+  isolating: true,
+  tableRole: "cell",
+  parseHTML() { return [{ tag: "td" }]; },
+  renderHTML({ HTMLAttributes }) { return ["td", HTMLAttributes, 0]; },
+});
+
+export function createCardExtensions() {
+  return [
+    StarterKit.configure({ paragraph: false, heading: false, undoRedo: { depth: 100 } }),
+    AlignedParagraph,
+    AlignedHeading,
+    Markdown,
+    Underline,
+    CardTextStyle,
+    Color,
+    CardLink.configure({ openOnClick: false, autolink: true, protocols: ["http", "https"] }),
+    CardImage.configure({ allowBase64: true }),
+    CardMath,
+    CardVideo,
+    CardTable,
+    CardTableRow,
+    CardTableHeader,
+    CardTableCell,
+  ];
+}

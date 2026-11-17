@@ -126,7 +126,7 @@ export async function createMemz(notebooks) {
   }
   files.unshift({
     name: "manifest.json",
-    content: JSON.stringify({ format: "memomaster", version: 2, notebooks: notebookIds }, null, 2),
+    content: JSON.stringify({ format: "memomaster", version: 3, notebooks: notebookIds }, null, 2),
   });
   return createZip(files);
 }
@@ -178,7 +178,7 @@ export async function importMemz(input) {
   const manifestText = files.get("manifest.json");
   if (!manifestText) throw new Error("Missing MemoMaster manifest");
   const manifest = JSON.parse(manifestText);
-  if (manifest.format !== "memomaster" || ![1, 2].includes(manifest.version) || !Array.isArray(manifest.notebooks)) {
+  if (manifest.format !== "memomaster" || ![1, 2, 3].includes(manifest.version) || !Array.isArray(manifest.notebooks)) {
     throw new Error("Unsupported MemoMaster project format");
   }
   return manifest.notebooks.map((id) => {

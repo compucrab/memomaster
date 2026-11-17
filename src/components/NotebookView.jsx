@@ -7,9 +7,10 @@ import CardEditor from "./CardEditor";
 import ReviewSession from "./ReviewSession";
 import { getStudyQueueCounts } from "../services/studyQueue";
 import { createMediaAsset } from "../services/mediaLibrary";
+import { normalizeCardDocument, cardDocumentText } from "../services/cardDocument";
 
 function makeCard() {
-  return { id: crypto.randomUUID(), front: "## Your question\n\nWrite a prompt here.", back: "Write the answer here.", chapterId: "" };
+  return { id: crypto.randomUUID(), front: normalizeCardDocument("## Your question\n\nWrite a prompt here."), back: normalizeCardDocument("Write the answer here."), chapterId: "" };
 }
 const makeId = () => crypto.randomUUID();
 const normalizeName = (value) => String(value || "").trim().toLocaleLowerCase();
@@ -59,7 +60,7 @@ export default function NotebookView({ notebook, fsrsSettings, onUpdate, onBack,
     const needle = search.trim().toLocaleLowerCase();
     return cards.filter(card => {
       const chapter = chapters.find(item => item.id === card.chapterId);
-      const matchesSearch = !needle || [card.front, card.back, chapter?.name]
+      const matchesSearch = !needle || [cardDocumentText(card.front), cardDocumentText(card.back), chapter?.name]
         .some(value => String(value || "").toLocaleLowerCase().includes(needle));
       const matchesChapter = chapterFilter === "all" || card.chapterId === chapterFilter;
       return matchesSearch && matchesChapter;
@@ -266,7 +267,7 @@ export default function NotebookView({ notebook, fsrsSettings, onUpdate, onBack,
                     <input class="browse-card-checkbox" type="checkbox" aria-label="Select card" checked={selectedCardIds.includes(card.id)} onChange={() => toggleCardSelection(card.id)} />
                     <button type="button" class="browse-card-select" onClick={() => setSelectedCardId(card.id)}>
                       <span class="browse-card-index">{String(index + 1).padStart(2, "0")}</span>
-                      <span class="browse-card-copy"><strong>{String(card.front || "").replace(/[#>*_\x60]/g, "").trim().split("\n")[0] || "Untitled question"}</strong><small>{chapter?.name || "Unassigned"} · Due: {getDueLabel(card)}</small></span>
+                      <span class="browse-card-copy"><strong>{cardDocumentText(card.front).trim().split("\n")[0] || "Untitled question"}</strong><small>{chapter?.name || "Unassigned"} · Due: {getDueLabel(card)}</small></span>
                     </button>
                   </div>
                 );
