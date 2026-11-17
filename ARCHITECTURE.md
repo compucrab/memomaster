@@ -97,7 +97,7 @@ FSRS v5 measures elapsed time in fixed 24-hour blocks. MemoMaster normalizes sch
 
 Each completion record stores the completion timestamp, scope, chapter ID when applicable, and number of cards reviewed. Records live on the notebook and are included in SQLite saves and .memz project metadata. The configured study-day rollover is applied when grouping activity into days.
 
-The dashboard shows current and longest completed-day streaks, total completed study days, cards reviewed in completed sessions, a 12-month consistency graph, and the number of new or due cards across the library. The current streak remains active during the current study day if the previous study day was completed. Longest streak is calculated across all retained session records.
+The dashboard shows current and longest completed-day streaks, total completed study days, cards reviewed in completed sessions, a calendar-aligned 12-month consistency graph, and the number of new or due cards across the library. The Needs attention list ranks notebooks and chapters by overdue, due, and new cards, and shows the last completed study date for each area. The current streak remains active during the current study day if the previous study day was completed. Longest streak is calculated across all retained session records.
 
 Older projects without `studySessions` start with an empty activity history; existing review logs are not retroactively treated as completed notebook or chapter sessions because they cannot establish whether the full queue was completed.
 
