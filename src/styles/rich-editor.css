@@ -332,7 +332,11 @@
 /* Equation scale is stored per equation and adjusted from its Edit dialog. */
 .rich-editor-content .tiptap-mathematics-render[data-font-size],
 .study-card-prose .tiptap-mathematics-render[data-font-size] {
-  font-size: var(--equation-size, 1em);
+  font-size: attr(data-font-size px) !important;
+}
+.rich-editor-content .tiptap-mathematics-render[data-font-size] .katex,
+.study-card-prose .tiptap-mathematics-render[data-font-size] .katex {
+  font-size: 1em !important;
 }
 
 /* Equation size controls in the existing Edit popup. */
