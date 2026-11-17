@@ -47,7 +47,7 @@ export default function ReviewSession({ cards, mode = "scheduled", settings, med
 
   useEffect(() => {
     const handleReviewKeys = (event) => {
-      if (event.ctrlKey || event.metaKey || event.altKey || event.target?.closest?.("input, textarea, select, [contenteditable='true']")) return;
+      if (event.repeat || event.ctrlKey || event.metaKey || event.altKey || event.target?.closest?.("input, textarea, select, [contenteditable='true']")) return;
       if (!activeCard || processing) return;
       if (event.code === "Space" || event.key === " ") {
         event.preventDefault();
