@@ -17,6 +17,7 @@ test("only completed sessions with reviewed cards create activity days", () => {
   assert.equal(activity.longestStreak, 2);
   assert.equal(activity.completedDays, 2);
   assert.equal(activity.cardsReviewed, 11);
+  assert.equal(activity.days.length, 52 * 7 + now.getDay() + 1);
 });
 
 test("current streak remains active until the current study day ends", () => {
@@ -40,4 +41,17 @@ test("a gap resets the current streak but preserves the longest streak", () => {
   ], now, 4);
   assert.equal(activity.currentStreak, 1);
   assert.equal(activity.longestStreak, 3);
+});
+
+test("longest streak includes completed activity older than the graph window", () => {
+  const now = new Date(2026, 10, 17, 12);
+  const activity = getStudyActivity([
+    { studySessions: [
+      { completedAt: new Date(2025, 0, 10, 10).toISOString(), reviewedCards: 1 },
+      { completedAt: new Date(2025, 0, 11, 10).toISOString(), reviewedCards: 1 },
+      { completedAt: new Date(2025, 0, 12, 10).toISOString(), reviewedCards: 1 },
+    ] },
+  ], now, 4);
+  assert.equal(activity.longestStreak, 3);
+  assert.equal(activity.currentStreak, 0);
 });
