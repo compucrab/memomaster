@@ -3,7 +3,6 @@ import { Editor } from "@tiptap/core";
 import StarterKit from "@tiptap/starter-kit";
 import { Markdown } from "@tiptap/markdown";
 import Placeholder from "@tiptap/extension-placeholder";
-import TextAlign from "@tiptap/extension-text-align";
 import Underline from "@tiptap/extension-underline";
 import Color from "@tiptap/extension-color";
 import Link from "@tiptap/extension-link";
@@ -65,7 +64,7 @@ export default function RichTextEditor({ label, value = "", placeholder, onChang
     };
     const instance = new Editor({
       element: hostRef.current,
-      extensions: [StarterKit.configure({ paragraph: false, heading: false, undoRedo: { depth: 100 } }), AlignedParagraph, AlignedHeading, Markdown, Placeholder.configure({ placeholder: placeholder || "" }), Underline, CardTextStyle, Color, Link.configure({ openOnClick: false, autolink: true, protocols: ["http", "https"] }), CardImage.configure({ inline: true, allowBase64: true }), TextAlign.configure({ types: ["heading", "paragraph"], alignments: ["left", "center", "right"] }), CardMath, CardVideo],
+      extensions: [StarterKit.configure({ paragraph: false, heading: false, undoRedo: { depth: 100 } }), AlignedParagraph, AlignedHeading, Markdown, Placeholder.configure({ placeholder: placeholder || "" }), Underline, CardTextStyle, Color, Link.configure({ openOnClick: false, autolink: true, protocols: ["http", "https"] }), CardImage.configure({ allowBase64: true }), CardMath, CardVideo],
       content: value, contentType: "markdown",
       editorProps: {
         attributes: { class: "rich-editor-content", role: "textbox", "aria-label": label, "aria-multiline": "true", "data-placeholder": placeholder || "", spellcheck: "true" },
