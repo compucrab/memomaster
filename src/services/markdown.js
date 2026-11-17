@@ -9,7 +9,7 @@ function escapeHtml(value) {
     .replaceAll("'", "&#39;");
 }
 
-function unescapeMarkdownPunctuation(value) {
+export function unescapeMarkdownPunctuation(value) {
   const protectedParts = [];
   const protect = text => {
     const token = "\u0000PROTECTED" + protectedParts.length + "\u0000";
@@ -18,7 +18,7 @@ function unescapeMarkdownPunctuation(value) {
   };
   let source = String(value);
   source = source.replace(/[\x60]{3}[\s\S]*?[\x60]{3}/g, protect);
-  source = source.replace(/[\x60][^ \x60\n]*[\x60]/g, protect);
+  source = source.replace(/[\x60][^\x60\n]*[\x60]/g, protect);
   source = source.replace(/\$\$[\s\S]*?\$\$/g, protect);
   source = source.replace(/(?<!\$)\$[^$\n]+\$(?!\$)/g, protect);
   source = source.replace(/\\\[[\s\S]*?\\\]/g, protect);
