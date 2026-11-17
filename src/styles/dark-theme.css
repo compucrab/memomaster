@@ -1,35 +1,35 @@
 /* Dark palette overrides. */
 [data-theme="dark"] {
   color-scheme: dark;
-  --paper: #151b24;
-  --paper-deep: #1c2633;
-  --paper-card: #202c3a;
-  --surface: #1d2937;
-  --bar: #192330;
-  --hover: #29394d;
-  --ink: #e9f0f8;
-  --muted: #9baabd;
-  --line: #35465a;
-  --accent: #386fae;
-  --accent-hover: #2f5f98;
+  --paper: #111315;
+  --paper-deep: #181b1e;
+  --paper-card: #1d2023;
+  --surface: #191c1f;
+  --bar: #151719;
+  --hover: #25292d;
+  --ink: #edf0f2;
+  --muted: #9aa1a8;
+  --line: #34393e;
+  --accent: #6f9bc7;
+  --accent-hover: #5d86af;
   --olive: var(--accent);
-  --acid: #5d94d1;
-  --danger: #ef8585;
-  --danger-hover: #dc6e6e;
-  --success: #79c59b;
-  --warning: #e0b56f;
-  --heat-1: #29425d;
-  --heat-2: #365b80;
-  --heat-3: #477aa9;
-  --heat-4: #79a9e5;
-  --media-surface: #08090b;
+  --acid: #91aecb;
+  --danger: #e48686;
+  --danger-hover: #d66f6f;
+  --success: #82bd99;
+  --warning: #dfb777;
+  --heat-1: #30363b;
+  --heat-2: #46515a;
+  --heat-3: #61717e;
+  --heat-4: #7f9db7;
+  --media-surface: #08090a;
 }
 [data-theme="dark"] .topbar { background: var(--bar); border-color: var(--line); }
 [data-theme="dark"] .topbar-breadcrumb strong { color: var(--ink); }
 [data-theme="dark"] .topbar-breadcrumb b,
 [data-theme="dark"] .topbar-breadcrumb,
 [data-theme="dark"] .search-field { color: var(--muted); }
-[data-theme="dark"] .notebook-cover { background: #202c3a; border-color: var(--line); }
+[data-theme="dark"] .notebook-cover { background: var(--paper-card); border-color: var(--line); }
 [data-theme="dark"] .notebook-info p,
 [data-theme="dark"] .notebook-info footer,
 [data-theme="dark"] .notebook-detail-head input,

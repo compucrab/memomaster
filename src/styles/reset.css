@@ -41,8 +41,8 @@ textarea:focus-visible {
   --scroll-track: #edf1f6;
 }
 [data-theme="dark"] {
-  --scroll-thumb: #526a86;
-  --scroll-track: #1a2431;
+  --scroll-thumb: #50575e;
+  --scroll-track: #191c1f;
 }
 *::-webkit-scrollbar { width: 9px; height: 9px; }
 *::-webkit-scrollbar-track { background: var(--scroll-track); }
