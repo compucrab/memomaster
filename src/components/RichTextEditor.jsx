@@ -35,8 +35,6 @@ export default function RichTextEditor({ label, value = "", placeholder, onChang
   const [infoTitle, setInfoTitle] = useState("");
   const [imageWidth, setImageWidth] = useState(420);
   const [mathFontSize, setMathFontSize] = useState(16);
-  const [tablePreview, setTablePreview] = useState(null);
-  const [tableZoomHtml, setTableZoomHtml] = useState("");
   const colorInputRef = useRef(null);
   const [palettePosition, setPalettePosition] = useState({ left: 24, top: 24 }), [selectionPosition, setSelectionPosition] = useState(null);
   onChangeRef.current = onChange;
@@ -209,16 +207,7 @@ export default function RichTextEditor({ label, value = "", placeholder, onChang
     return () => { instance.destroy(); editorRef.current = null; setEditor(null); };
   }, []);
 
-  useEffect(() => {
-    if (!tableZoomHtml) return;
-    const closeOnEscape = event => {
-      if (event.key === "Escape") { event.preventDefault(); setTableZoomHtml(""); }
-    };
-    window.addEventListener("keydown", closeOnEscape, true);
-    return () => window.removeEventListener("keydown", closeOnEscape, true);
-  }, [tableZoomHtml]);
-
-    useEffect(() => { if (editor) syncMathSizes(editor); }, [editor, revision]);
+  useEffect(() => { if (editor) syncMathSizes(editor); }, [editor, revision]);
 
     useEffect(() => { if (paletteOpen) paletteInputRef.current?.focus(); }, [paletteOpen]);
 
@@ -309,18 +298,8 @@ export default function RichTextEditor({ label, value = "", placeholder, onChang
 
   return <section class="rich-editor">
     <div class="rich-editor-heading">{label} <span class="rich-editor-shortcut">Ctrl + Space for commands</span></div>
-    <div class="rich-editor-surface" onClick={() => hoverEdit && setHoverEdit(null)} onMouseOver={event => {
-      const table = event.target.closest("table");
-      if (!table) {
-        if (!event.target.closest(".rich-editor-table-zoom-trigger")) setTablePreview(null);
-        return;
-      }
-      const rect = table.getBoundingClientRect();
-      const html = table.outerHTML;
-      setTablePreview(current => current?.html === html && current?.left === rect.left && current?.right === rect.right && current?.top === rect.top && current?.bottom === rect.bottom ? current : { html, left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom });
-    }} onMouseLeave={() => setTablePreview(null)}>
+    <div class="rich-editor-surface" onClick={() => hoverEdit && setHoverEdit(null)}>
       <div ref={hostRef}/>
-      {tablePreview && <button type="button" class="rich-editor-table-zoom-trigger" style={{ left: Math.max(8, Math.min(window.innerWidth - 38, tablePreview.right - 34)) + "px", top: Math.max(8, tablePreview.top - 34) + "px" }} title="View table full screen" aria-label="View table full screen" onMouseDown={event => event.preventDefault()} onClick={() => setTableZoomHtml(tablePreview.html)}><span>⛶</span></button>}
     </div>
     {hoverEdit && <div class="rich-editor-context-menu" style={{ left: Math.max(8, Math.min(window.innerWidth - 150, hoverEdit.left)) + "px", top: Math.max(8, Math.min(window.innerHeight - 52, hoverEdit.top - 42)) + "px" }} onMouseDown={event => event.preventDefault()}>
       <span>{hoverEdit.type === "inlineMath" || hoverEdit.type === "blockMath" ? "Equation" : hoverEdit.type === "cardVideo" ? "Video" : hoverEdit.type === "cardInfo" ? "Info card" : hoverEdit.type === "table" ? "Table" : "Link"}</span>
@@ -356,12 +335,6 @@ export default function RichTextEditor({ label, value = "", placeholder, onChang
         {!filteredActions.length && <p>No matching commands</p>}
       </div>
       <div class="rich-editor-command-hint">↑↓ to navigate · Enter to select · Esc to close</div>
-    </div>}
-    {tableZoomHtml && <div class="rich-editor-table-zoom-backdrop" role="dialog" aria-modal="true" aria-label="Expanded table" onMouseDown={event => { if (event.target === event.currentTarget) setTableZoomHtml(""); }}>
-      <section class="rich-editor-table-zoom-panel">
-        <div class="rich-editor-table-zoom-heading"><strong>Table view</strong><button type="button" aria-label="Close expanded table" onClick={() => setTableZoomHtml("")}><X size={17}/></button></div>
-        <div class="rich-editor-table-zoom-content" dangerouslySetInnerHTML={{ __html: tableZoomHtml }}/>
-      </section>
     </div>}
     <input ref={fileRef} type="file" accept="image/*" hidden onChange={insertImage}/>
     <input ref={colorInputRef} type="color" aria-label="Choose text color" tabIndex={-1} style={{ position: "fixed", left: "-1000px", top: "0", width: "1px", height: "1px", opacity: 0 }} onInput={event => editor?.chain().focus().setColor(event.currentTarget.value).run()}/>
