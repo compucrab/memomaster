@@ -60,8 +60,10 @@ function renderInline(source) {
   });
   let value = escapeHtml(prepared);
   styledSpans.forEach(({ token, html }) => { value = value.replace(token, html); });
-  value = value.replace(/!\[([^\]]*)\]\(((?:https?:\/\/|data:image\/(?:png|jpe?g|gif|webp);base64,)[^\s)]+)(?:\s+&quot;([^&]*?)&quot;)?\)/gi, (_, alt, src, title) => {
-    const safe = safeImageSource(src.replaceAll("&amp;", "&"));
+  value = value.replace(/!\[([^\]]*)\]\(((?:https?:\/\/|memomedia:\/\/[\w-]+|data:image\/(?:png|jpe?g|gif|webp);base64,)[^\s)]+)(?:\s+&quot;([^&]*?)&quot;)?\)/gi, (_, alt, src, title) => {
+    const rawSrc = src.replaceAll("&amp;", "&");
+    const mediaId = rawSrc.match(/^memomedia:\/\/([\w-]+)$/)?.[1];
+    const safe = mediaId ? mediaMap.get(mediaId)?.data || "" : safeImageSource(rawSrc);
     const metadata = String(title || "").match(/width=(\d+);align=(left|center|right)/);
     const width = metadata ? Math.max(40, Math.min(1600, Number(metadata[1]))) : 420;
     const align = metadata ? metadata[2] : "center";
@@ -83,7 +85,7 @@ function renderInline(source) {
   );
 }
 
-export function renderMarkdown(source = "") {
+export function renderMarkdown(source = "", media = []) {\n  const mediaMap = new Map((Array.isArray(media) ? media : []).map(asset => [asset.id, asset]));
   const output = [];
   let paragraph = [];
   let list = null;
@@ -95,18 +97,18 @@ export function renderMarkdown(source = "") {
   const fence = String.fromCharCode(96).repeat(3);
 
   function flushParagraph() {
-    if (paragraph.length) output.push("<p>" + renderInline(paragraph.join(" ")) + "</p>");
+    if (paragraph.length) output.push("<p>" + renderInline(paragraph.join(" "), mediaMap) + "</p>");
     paragraph = [];
   }
   function flushList() {
     if (list) {
-      const items = list.items.map((item) => "<li>" + renderInline(item) + "</li>").join("");
+      const items = list.items.map((item) => "<li>" + renderInline(item, mediaMap) + "</li>").join("");
       output.push("<" + list.tag + (list.tag === "ol" && list.start > 1 ? ' start="' + list.start + '"' : "") + ">" + items + "</" + list.tag + ">");
     }
     list = null;
   }
   function flushQuote() {
-    if (quote.length) output.push("<blockquote>" + renderInline(quote.join(" ")) + "</blockquote>");
+    if (quote.length) output.push("<blockquote>" + renderInline(quote.join(" "), mediaMap) + "</blockquote>");
     quote = [];
   }
   function flushCode() {
@@ -152,7 +154,7 @@ export function renderMarkdown(source = "") {
     if (aligned) {
       flushParagraph(); flushList(); flushQuote();
       const tag = aligned[1].toLowerCase();
-      output.push(`<${tag} style="text-align:${aligned[2]}">${renderInline(aligned[3])}</${tag}>`);
+      output.push(`<${tag} style="text-align:${aligned[2]}">${renderInline(aligned[3], mediaMap)}</${tag}>`);
       continue;
     }
  
@@ -173,7 +175,7 @@ export function renderMarkdown(source = "") {
     if (heading) {
       flushList(); flushQuote();
       const level = heading[1].length;
-      output.push("<h" + level + ">" + renderInline(heading[2]) + "</h" + level + ">");
+      output.push("<h" + level + ">" + renderInline(heading[2], mediaMap) + "</h" + level + ">");
     } else if (bullet || ordered) {
       flushQuote();
       const tag = bullet ? "ul" : "ol";
