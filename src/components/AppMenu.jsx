@@ -10,7 +10,7 @@ const groups = [
     { label: "Open project…", shortcut: "Ctrl O", Icon: FolderOpen, action: "openProject" },
     { label: "Save project", shortcut: "Ctrl S", Icon: SaveAll, action: "saveProject" },
     { separator: true },
-    { label: "Preferences", Icon: Settings2, action: "preferences" },
+    { label: "Preferences", shortcut: "Ctrl ,", Icon: Settings2, action: "preferences" },
   ] },
   { name: "Help", items: [
     { label: "User guide", Icon: BookOpen, action: "guide" },
