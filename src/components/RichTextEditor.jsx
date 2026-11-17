@@ -34,6 +34,9 @@ export default function RichTextEditor({ label, value = "", placeholder, onChang
   const [hoverEdit, setHoverEdit] = useState(null);
   const [infoTitle, setInfoTitle] = useState("");
   const [imageWidth, setImageWidth] = useState(420);
+  const [mathFontSize, setMathFontSize] = useState(16);
+  const [tablePreview, setTablePreview] = useState(null);
+  const [tableZoomHtml, setTableZoomHtml] = useState("");
   const colorInputRef = useRef(null);
   const [palettePosition, setPalettePosition] = useState({ left: 24, top: 24 }), [selectionPosition, setSelectionPosition] = useState(null);
   onChangeRef.current = onChange;
@@ -87,7 +90,11 @@ export default function RichTextEditor({ label, value = "", placeholder, onChang
   function openInsert(type, nodePosition = null) {
     const instance = editorRef.current;
     if (!instance) return;
-    if (nodePosition !== null) { if (type === "link") instance.commands.setTextSelection({ from: nodePosition, to: nodePosition + 1 }); else instance.commands.setNodeSelection(nodePosition); }
+    if (nodePosition !== null) {
+      if (type === "link") instance.commands.setTextSelection({ from: nodePosition, to: nodePosition + 1 });
+      else if (type === "table") instance.commands.setTextSelection(nodePosition);
+      else instance.commands.setNodeSelection(nodePosition);
+    }
     const selection = instance.state.selection;
     let linkRange = { from: selection.from, to: selection.to, text: instance.state.doc.textBetween(selection.from, selection.to, " ") };
     let activeLink = instance.getAttributes("link");
@@ -99,7 +106,12 @@ export default function RichTextEditor({ label, value = "", placeholder, onChang
         linkRange = { from: pos, to: pos + node.nodeSize, text: node.text || "" };
       }
     });
-    const selectedNode = selection.node || instance.state.doc.nodeAt(selection.from) || selection.$from.nodeAfter;
+    let selectedNode = selection.node || instance.state.doc.nodeAt(selection.from) || selection.$from.nodeAfter;
+    if (type === "table") {
+      for (let depth = selection.$from.depth; depth > 0; depth--) {
+        if (selection.$from.node(depth).type.name === "table") { selectedNode = selection.$from.node(depth); break; }
+      }
+    }
     const editingMath = (type === "inlineMath" || type === "blockMath") && selectedNode?.type?.name === type;
     const editingVideo = type === "video" && selectedNode?.type?.name === "cardVideo";
     const editingInfo = type === "info" && selectedNode?.type?.name === "cardInfo";
@@ -110,6 +122,7 @@ export default function RichTextEditor({ label, value = "", placeholder, onChang
     setDialogText(type === "link" ? linkRange.text : editingVideo ? String(selectedNode.attrs.label || "") : "");
     if (editingInfo) setInfoTitle(String(selectedNode.attrs.title || "Additional information"));
     if (editingImage) setImageWidth(Number(selectedNode.attrs.width) || 420);
+    if (editingMath) setMathFontSize(Number(selectedNode.attrs.fontSize) || 16);
     setDialog({
       type, from, to: type === "link" ? linkRange.to : selection.to, editing: editingMath, editingVideo, editingInfo, editingImage, editingTable,
       title: editingMath ? "Edit equation" : type === "inlineMath" ? "Insert inline equation" : type === "blockMath" ? "Insert display equation" : type === "link" ? (activeLink.href ? "Edit link" : "Insert link") : editingVideo ? "Edit video card" : editingInfo ? "Edit info card" : editingImage ? "Edit image" : editingTable ? "Edit table" : "Insert video card",
@@ -156,7 +169,7 @@ export default function RichTextEditor({ label, value = "", placeholder, onChang
             });
             if (found && found.type !== "image") {
               const rect = target.getBoundingClientRect();
-              setHoverEdit({ type: found.type, pos: found.pos, left: rect.right, top: rect.top });
+              setHoverEdit({ type: found.type, pos: found.type === "table" ? coords.pos : found.pos, left: rect.right, top: rect.top });
             } else if (target.tagName === "A") {
               const anchorPos = view.posAtDOM(target, 0);
               const rect = target.getBoundingClientRect();
@@ -218,8 +231,9 @@ export default function RichTextEditor({ label, value = "", placeholder, onChang
     if (!editor || (dialog.type !== "info" && !["table","image"].includes(dialog.type) && !dialogValue.trim())) { setDialog({ type: "notice", title: "Nothing to insert", message: "Enter a value first." }); return; }
     if (dialog.type === "inlineMath" || dialog.type === "blockMath") {
       const nodeType = dialog.type, latex = dialogValue.trim();
-      if (dialog.editing) editor.chain().focus().setNodeSelection(dialog.from).updateAttributes(nodeType, { latex }).run();
-      else editor.chain().focus().setTextSelection({ from: dialog.from, to: dialog.to })[nodeType === "inlineMath" ? "insertInlineMath" : "insertBlockMath"]({ latex }).run();
+      const fontSize = Math.max(10, Math.min(48, Number(mathFontSize) || 16));
+      if (dialog.editing) editor.chain().focus().setNodeSelection(dialog.from).updateAttributes(nodeType, { latex, fontSize }).run();
+      else editor.chain().focus().setTextSelection({ from: dialog.from, to: dialog.to })[nodeType === "inlineMath" ? "insertInlineMath" : "insertBlockMath"]({ latex, fontSize }).run();
     } else if (dialog.type === "link") {
       let url;
       try { url = new URL(dialogValue.trim()); } catch { setDialog({ type: "notice", title: "Invalid link", message: "Enter a complete https:// or http:// link." }); return; }
@@ -231,7 +245,7 @@ export default function RichTextEditor({ label, value = "", placeholder, onChang
       const width = Math.max(40, Math.min(1600, Number(imageWidth) || 420));
       editor.chain().focus().setNodeSelection(dialog.from).updateAttributes("image", { width }).run();
     } else if (dialog.type === "table") {
-      editor.chain().focus().setNodeSelection(dialog.from).run();
+      editor.chain().focus().setTextSelection(dialog.from).run();
     } else if (dialog.type === "video") {
       const target = videoTarget(dialogValue);
       if (target.error) { setDialog({ type: "notice", title: "Unable to add video link", message: target.error }); return; }
@@ -273,7 +287,16 @@ export default function RichTextEditor({ label, value = "", placeholder, onChang
 
   return <section class="rich-editor">
     <div class="rich-editor-heading">{label} <span class="rich-editor-shortcut">Ctrl + Space for commands</span></div>
-    <div class="rich-editor-surface" onClick={() => hoverEdit && setHoverEdit(null)}><div ref={hostRef}/></div>
+    <div class="rich-editor-surface" onClick={() => hoverEdit && setHoverEdit(null)} onMouseOver={event => {
+      const table = event.target.closest("table");
+      if (!table) return;
+      const rect = table.getBoundingClientRect();
+      const html = table.outerHTML;
+      setTablePreview(current => current?.html === html && current?.left === rect.right ? current : { html, left: rect.right, top: rect.top });
+    }} onMouseLeave={() => setTablePreview(null)}>
+      <div ref={hostRef}/>
+      {tablePreview && <button type="button" class="rich-editor-table-zoom-trigger" style={{ left: Math.max(8, Math.min(window.innerWidth - 42, tablePreview.left - 38)) + "px", top: Math.max(8, tablePreview.top + 6) + "px" }} title="View table full screen" aria-label="View table full screen" onMouseDown={event => event.preventDefault()} onClick={() => setTableZoomHtml(tablePreview.html)}><span>⛶</span></button>}
+    </div>
     {hoverEdit && <div class="rich-editor-context-menu" style={{ left: Math.max(8, Math.min(window.innerWidth - 150, hoverEdit.left - 150)) + "px", top: Math.max(8, Math.min(window.innerHeight - 52, hoverEdit.top - 42)) + "px" }} onMouseDown={event => event.preventDefault()}>
       <span>{hoverEdit.type === "inlineMath" || hoverEdit.type === "blockMath" ? "Equation" : hoverEdit.type === "cardVideo" ? "Video" : hoverEdit.type === "cardInfo" ? "Info card" : hoverEdit.type === "table" ? "Table" : "Link"}</span>
       <button type="button" onClick={() => { const item = hoverEdit; setHoverEdit(null); openInsert(item.type === "cardInfo" ? "info" : item.type === "cardVideo" ? "video" : item.type, item.pos); }}>Edit</button>
@@ -309,6 +332,12 @@ export default function RichTextEditor({ label, value = "", placeholder, onChang
       </div>
       <div class="rich-editor-command-hint">↑↓ to navigate · Enter to select · Esc to close</div>
     </div>}
+    {tableZoomHtml && <div class="rich-editor-table-zoom-backdrop" role="dialog" aria-modal="true" aria-label="Expanded table" onMouseDown={event => { if (event.target === event.currentTarget) setTableZoomHtml(""); }}>
+      <section class="rich-editor-table-zoom-panel">
+        <div class="rich-editor-table-zoom-heading"><strong>Table view</strong><button type="button" aria-label="Close expanded table" onClick={() => setTableZoomHtml("")}><X size={17}/></button></div>
+        <div class="rich-editor-table-zoom-content" dangerouslySetInnerHTML={{ __html: tableZoomHtml }}/>
+      </section>
+    </div>}
     <input ref={fileRef} type="file" accept="image/*" hidden onChange={insertImage}/>
     <input ref={colorInputRef} type="color" aria-label="Choose text color" tabIndex={-1} style={{ position: "fixed", left: "-1000px", top: "0", width: "1px", height: "1px", opacity: 0 }} onInput={event => editor?.chain().focus().setColor(event.currentTarget.value).run()}/>
     {dialog && <div class="prompt-backdrop" onMouseDown={event => event.target === event.currentTarget && setDialog(null)} onKeyDown={event => { if (event.key === "Enter" && !event.shiftKey && dialog.type !== "notice") { event.preventDefault(); submitInsert(); } }}>
@@ -316,9 +345,10 @@ export default function RichTextEditor({ label, value = "", placeholder, onChang
         <div class="prompt-heading"><h2>{dialog.title}</h2><button type="button" aria-label="Close" onClick={() => setDialog(null)}><X size={16}/></button></div>
         <p>{dialog.message}</p>
         {dialog.type === "image" && <input ref={dialogFieldRef} type="number" min="40" max="1600" step="10" aria-label="Image width in pixels" value={imageWidth} onInput={event => setImageWidth(event.currentTarget.value)}/>}
+        {(dialog.type === "inlineMath" || dialog.type === "blockMath") && <label class="rich-editor-math-size">Equation size <input type="number" min="10" max="48" step="1" aria-label="Equation text size in pixels" value={mathFontSize} onInput={event => setMathFontSize(event.currentTarget.value)}/> px</label>}
         {dialog.type === "info" && <input ref={dialogFieldRef} aria-label="Info card title" placeholder="Additional information" value={infoTitle} onInput={event => setInfoTitle(event.currentTarget.value)}/>}
         {(dialog.type === "link" || dialog.type === "video") && <input aria-label={dialog.type === "link" ? "Link text" : "Video card text"} placeholder={dialog.type === "link" ? "Link text" : "Text shown on the video card"} value={dialogText} onInput={event => setDialogText(event.currentTarget.value)}/>}
-        {dialog.type === "table" && <div class="rich-editor-table-actions"><button type="button" onClick={() => editor?.chain().focus().setTextSelection(dialog.from + 4).addTableRowAfter().run()}>Add row</button><button type="button" onClick={() => editor?.chain().focus().setTextSelection(dialog.from + 4).addTableColumnAfter().run()}>Add column</button><button type="button" onClick={() => editor?.chain().focus().setTextSelection(dialog.from + 4).deleteTableRow().run()}>Delete row</button><button type="button" onClick={() => editor?.chain().focus().setTextSelection(dialog.from + 4).deleteTableColumn().run()}>Delete column</button></div>}
+        {dialog.type === "table" && <div class="rich-editor-table-actions"><button type="button" onClick={() => editor?.chain().focus().setTextSelection(dialog.from).addTableRowAfter().run()}>Add row at bottom</button><button type="button" onClick={() => editor?.chain().focus().setTextSelection(dialog.from).addTableColumnAfter().run()}>Add column</button><button type="button" onClick={() => editor?.chain().focus().setTextSelection(dialog.from).deleteTableRow().run()}>Delete current row</button><button type="button" onClick={() => editor?.chain().focus().setTextSelection(dialog.from).deleteTableColumn().run()}>Delete current column</button></div>}
         {dialog.type !== "notice" && !["info","image","table"].includes(dialog.type) && <textarea ref={dialogFieldRef} rows={dialog.type === "blockMath" ? 5 : 3} value={dialogValue} onInput={event => setDialogValue(event.currentTarget.value)} placeholder={dialog.type.includes("Math") ? "\\frac{a+b}{c}" : "https://example.com"}/>}
         <div class="prompt-actions"><button type="button" class="prompt-cancel" onClick={() => setDialog(null)}>{dialog.type === "notice" ? "Close" : "Cancel"}</button>{dialog.type !== "notice" && <button type="button" class="prompt-confirm" onClick={submitInsert}>{dialog.editing || dialog.editingVideo || dialog.editingInfo || dialog.editingImage || dialog.editingTable ? "Done" : "Insert"}</button>}</div>
       </section>
