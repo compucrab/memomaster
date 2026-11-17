@@ -32,16 +32,21 @@ export function getStudyActivity(notebooks = [], now = new Date(), rolloverHour 
 
   const today = studyDayKey(now, rolloverHour);
   const todayDate = dateFromKey(today);
-  const daysToShow = 52 * 7 + todayDate.getDay() + 1;
-  const start = shiftKey(today, -(daysToShow - 1));
-  const firstDate = dateFromKey(start);
-  const days = Array.from({ length: daysToShow }, (_, index) => {
-    const date = new Date(firstDate);
-    date.setDate(firstDate.getDate() + index);
+  const rangeStart = dateFromKey(shiftKey(today, -363));
+  rangeStart.setDate(rangeStart.getDate() - rangeStart.getDay());
+  const rangeEnd = new Date(todayDate);
+  rangeEnd.setDate(rangeEnd.getDate() + (6 - rangeEnd.getDay()));
+  const days = [];
+  for (const date = new Date(rangeStart); date <= rangeEnd; date.setDate(date.getDate() + 1)) {
     const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
     const value = activity.get(key) || { sessions: 0, cards: 0 };
-    return { key, ...value, level: value.cards === 0 ? 0 : value.cards < 5 ? 1 : value.cards < 15 ? 2 : value.cards < 30 ? 3 : 4 };
-  }).filter((day) => day.key <= today);
+    days.push({
+      key,
+      ...value,
+      empty: key < shiftKey(today, -363) || key > today,
+      level: value.cards === 0 ? 0 : value.cards < 5 ? 1 : value.cards < 15 ? 2 : value.cards < 30 ? 3 : 4,
+    });
+  }
 
   const activeDays = new Set(activity.keys());
   let streakAnchor = today;
