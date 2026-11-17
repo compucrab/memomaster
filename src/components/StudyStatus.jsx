@@ -27,11 +27,11 @@ export default function StudyStatus({ notebooks, settings, onBack }) {
 
   const weeks = [];
   for (let index = 0; index < data.days.length; index += 7) weeks.push(data.days.slice(index, index + 7));
-  const monthLabels = weeks.map((week, index) => {
-    const first = week[0];
-    if (!first) return "";
-    const date = new Date(`${first.key}T12:00:00`);
-    return date.getDate() <= 7 ? date.toLocaleDateString(undefined, { month: "short" }) : "";
+  const monthLabels = weeks.map((week) => {
+    const firstOfMonth = week.find((day) => new Date(`${day.key}T12:00:00`).getDate() === 1);
+    return firstOfMonth
+      ? new Date(`${firstOfMonth.key}T12:00:00`).toLocaleDateString(undefined, { month: "short" })
+      : "";
   });
 
   return (
