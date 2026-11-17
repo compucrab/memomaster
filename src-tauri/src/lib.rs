@@ -67,11 +67,20 @@ fn load_library(app: AppHandle) -> Result<Option<String>, String> {
         quarantine_database(&app)?;
         return Err("The local library database failed its integrity check and was preserved for recovery.".into());
     }
-    connection.query_row(
+    let saved: Option<String> = connection.query_row(
         "SELECT library_json FROM app_state WHERE id = 1",
         [],
         |row| row.get(0),
-    ).optional().map_err(|error| error.to_string())
+    ).optional().map_err(|error| error.to_string())?;
+    if let Some(data) = &saved {
+        let valid = serde_json::from_str::<Value>(data).map(|value| value.is_array()).unwrap_or(false);
+        if !valid {
+            drop(connection);
+            quarantine_database(&app)?;
+            return Err("The saved library data is invalid and the database was preserved for recovery.".into());
+        }
+    }
+    Ok(saved)
 }
 
 #[tauri::command]
@@ -158,12 +167,7 @@ fn read_project_file(path: String) -> Result<Vec<u8>, String> {
 
 #[tauri::command]
 fn write_project_file(path: String, bytes: Vec<u8>) -> Result<(), String> {
-    let target = PathBuf::from(path);
-    let temporary = target.with_extension("memz.tmp");
-    let mut file = File::create(&temporary).map_err(|error| error.to_string())?;
-    file.write_all(&bytes).and_then(|_| file.sync_all()).map_err(|error| error.to_string())?;
-    drop(file);
-    fs::rename(&temporary, &target).map_err(|error| error.to_string())?;
+    fs::write(PathBuf::from(path), bytes).map_err(|error| error.to_string())?;
     Ok(())
 }
 
