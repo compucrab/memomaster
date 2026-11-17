@@ -5,6 +5,7 @@ import { Markdown } from "@tiptap/markdown";
 import Placeholder from "@tiptap/extension-placeholder";
 import Underline from "@tiptap/extension-underline";
 import Color from "@tiptap/extension-color";
+import Link from "@tiptap/extension-link";
 import { Bold, Italic, Underline as UnderlineIcon, Link as LinkIcon, Heading1, Heading2, Heading3, Heading4, Heading5, List, ListOrdered, Quote, Code, Undo2, Redo2, ImagePlus, Sigma, Video, X, Minus, Plus, Pilcrow } from "lucide-preact";
 import { CardImage, CardVideo, CardMath, CardTextStyle, AlignedParagraph, AlignedHeading } from "../services/editorExtensions";
 import "katex/dist/katex.min.css";
@@ -70,7 +71,7 @@ export default function RichTextEditor({ label, value = "", placeholder, onChang
     };
     const instance = new Editor({
       element: hostRef.current,
-      extensions: [StarterKit.configure({ paragraph: false, heading: false, undoRedo: { depth: 100 } }), AlignedParagraph, AlignedHeading, Markdown, Placeholder.configure({ placeholder: placeholder || "" }), Underline, CardTextStyle, Color, CardImage.configure({ allowBase64: true }), CardMath, CardVideo],
+      extensions: [StarterKit.configure({ paragraph: false, heading: false, undoRedo: { depth: 100 } }), AlignedParagraph, AlignedHeading, Markdown, Placeholder.configure({ placeholder: placeholder || "" }), Underline, CardTextStyle, Color, Link.configure({ openOnClick: false, autolink: true, protocols: ["http", "https"] }), CardImage.configure({ allowBase64: true }), CardMath, CardVideo],
       content: toEditorMarkdown(value), contentType: "markdown",
       editorProps: {
         attributes: { class: "rich-editor-content", role: "textbox", "aria-label": label, "aria-multiline": "true", "data-placeholder": placeholder || "", spellcheck: "true" },
@@ -108,14 +109,23 @@ export default function RichTextEditor({ label, value = "", placeholder, onChang
   function openInsert(type) {
     if (!editor) return;
     const selection = editor.state.selection;
-    const activeLink = editor.getAttributes("link");
-    const selectedText = editor.state.doc.textBetween(selection.from, selection.to, " ");
+    let linkRange = { from: selection.from, to: selection.to, text: editor.state.doc.textBetween(selection.from, selection.to, " ") };
+    let activeLink = editor.getAttributes("link");
+    editor.state.doc.descendants((node, pos) => {
+      if (!node.isText || !node.marks.some(mark => mark.type.name === "link")) return;
+      const mark = node.marks.find(item => item.type.name === "link");
+      if (selection.from >= pos && selection.from <= pos + node.nodeSize && (!selection.empty || selection.from < pos + node.nodeSize)) {
+        activeLink = mark.attrs;
+        linkRange = { from: pos, to: pos + node.nodeSize, text: node.text || "" };
+      }
+    });
+    const selectedText = linkRange.text;
     const mathType = editor.isActive("inlineMath") ? "inlineMath" : editor.isActive("blockMath") ? "blockMath" : null;
     const editing = (type === "inlineMath" || type === "blockMath") && mathType === type;
     const node = editing ? editor.state.doc.nodeAt(selection.from) : null;
     setDialogValue(type === "link" ? String(activeLink.href || "") : editing ? String(node?.attrs?.latex || "") : "");
     setDialogText(type === "link" ? selectedText : "");
-    setDialog({ type, from: selection.from, to: selection.to, editing, title: editing ? "Edit equation" : type === "inlineMath" ? "Insert inline equation" : type === "blockMath" ? "Insert display equation" : type === "link" ? (activeLink.href ? "Edit link" : "Insert link") : "Insert video link card", message: type.includes("Math") ? "Enter a LaTeX expression." : type === "link" ? "Set the visible text and destination." : "Add a compact card that opens the video in your browser." });
+    setDialog({ type, from: type === "link" ? linkRange.from : selection.from, to: type === "link" ? linkRange.to : selection.to, editing, title: editing ? "Edit equation" : type === "inlineMath" ? "Insert inline equation" : type === "blockMath" ? "Insert display equation" : type === "link" ? (activeLink.href ? "Edit link" : "Insert link") : "Insert video link card", message: type.includes("Math") ? "Enter a LaTeX expression." : type === "link" ? "Set the visible text and destination." : "Add a compact card that opens the video in your browser." });
   }
   function submitInsert() {
     if (!editor || !dialogValue.trim()) { setDialog({ type: "notice", title: "Nothing to insert", message: "Enter a value first." }); return; }
