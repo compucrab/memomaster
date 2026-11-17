@@ -3,7 +3,7 @@ import { ArrowLeft, BookOpen, Keyboard, Info } from "lucide-preact";
 const pages = {
   guide: {
     title: "Getting started",
-    intro: "MemoMaster helps you remember information by turning it into question-and-answer cards. You do not need to understand the scheduling system to use it.",
+    intro: "MemoMaster works like Anki: it helps you remember information by turning it into question-and-answer cards and bringing each card back when it is useful to review. You do not need to understand the scheduling system to use it.",
     sections: [
       ["Notebooks keep subjects separate", "Create a notebook for a subject or goal, then open it to manage its cards. For example, you might have separate notebooks for history, programming, or a language."],
       ["Cards are questions and answers", "Write a clear question on the Question side and its answer on the Answer side. Keep one idea per card where possible. Use headings, lists, images, equations, tables, and video links when they help explain the idea."],
