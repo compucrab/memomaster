@@ -149,8 +149,16 @@ export default function RichTextEditor({ label, value = "", placeholder, onChang
             view.state.doc.nodesBetween(Math.max(0, coords.pos - 1), Math.min(view.state.doc.content.size, coords.pos + 2), (node, pos) => {
               if (["inlineMath", "blockMath", "cardVideo", "cardInfo", "table", "image"].includes(node.type.name)) found = { type: node.type.name, pos };
             });
-            if (found) { if (found.type === "cardVideo") openInsert("video", found.pos); else if (found.type === "cardInfo") openInsert("info", found.pos); else if (["inlineMath","blockMath"].includes(found.type)) openInsert(found.type, found.pos); else setHoverEdit({ type: found.type, pos: found.pos, x: event.clientX, y: event.clientY }); }
-            else if (target.tagName === "A") { const anchorPos = view.posAtDOM(target, 0); setHoverEdit({ type: "link", pos: anchorPos, x: event.clientX, y: event.clientY }); }
+            if (found && found.type !== "image") {
+              const rect = target.getBoundingClientRect();
+              setHoverEdit({ type: found.type, pos: found.pos, left: rect.right, top: rect.top });
+            } else if (target.tagName === "A") {
+              const anchorPos = view.posAtDOM(target, 0);
+              const rect = target.getBoundingClientRect();
+              setHoverEdit({ type: "link", pos: anchorPos, left: rect.right, top: rect.top });
+            } else {
+              setHoverEdit(null);
+            }
             return true;
           },
         },
@@ -260,9 +268,10 @@ export default function RichTextEditor({ label, value = "", placeholder, onChang
 
   return <section class="rich-editor">
     <div class="rich-editor-heading">{label} <span class="rich-editor-shortcut">Ctrl + Space for commands</span></div>
-    <div class="rich-editor-surface" onMouseOver={event => { const target = event.target.closest("a, img, table, .tiptap-mathematics-render, [data-card-info], [data-card-video]"); if (!target) { setHoverEdit(null); return; } const view = editorRef.current?.view; if (!view) return; try { const pos = view.posAtDOM(target, 0); let found = null; view.state.doc.nodesBetween(Math.max(0, pos - 1), Math.min(view.state.doc.content.size, pos + 2), (node, nodePos) => { if (["cardInfo","cardVideo","table","image","inlineMath","blockMath"].includes(node.type.name)) found = { type: node.type.name, pos: nodePos, x: event.clientX, y: event.clientY }; }); if (target.tagName === "A" && !found) { const link = view.state.doc.rangeHasMark(Math.max(0,pos), Math.min(view.state.doc.content.size,pos+1), view.state.schema.marks.link); if (link) found = { type: "link", pos, x: event.clientX, y: event.clientY }; } if (found) setHoverEdit(found); } catch {} }}><div ref={hostRef}/></div>
-    {hoverEdit && <div class="rich-editor-hover-tools" style={{ left: Math.max(8, Math.min(window.innerWidth - 100, hoverEdit.x)) + "px", top: Math.max(8, hoverEdit.y - 42) + "px" }} onMouseLeave={() => setHoverEdit(null)} onMouseDown={event => event.preventDefault()}>
-      <button type="button" class="rich-editor-edit-trigger" onClick={() => { const item = hoverEdit; setHoverEdit(null); openInsert(item.type === "cardInfo" ? "info" : item.type === "cardVideo" ? "video" : item.type, item.pos); }}>Edit</button>
+    <div class="rich-editor-surface" onClick={() => hoverEdit && setHoverEdit(null)}><div ref={hostRef}/></div>
+    {hoverEdit && <div class="rich-editor-context-menu" style={{ left: Math.max(8, Math.min(window.innerWidth - 150, hoverEdit.left - 150)) + "px", top: Math.max(8, Math.min(window.innerHeight - 52, hoverEdit.top - 42)) + "px" }} onMouseDown={event => event.preventDefault()}>
+      <span>{hoverEdit.type === "inlineMath" || hoverEdit.type === "blockMath" ? "Equation" : hoverEdit.type === "cardVideo" ? "Video" : hoverEdit.type === "cardInfo" ? "Info card" : hoverEdit.type === "table" ? "Table" : "Link"}</span>
+      <button type="button" onClick={() => { const item = hoverEdit; setHoverEdit(null); openInsert(item.type === "cardInfo" ? "info" : item.type === "cardVideo" ? "video" : item.type, item.pos); }}>Edit</button>
     </div>}
     {hasTextSelection && selectionPosition && !paletteOpen && !dialog && <div class="rich-editor-selection-tools" style={{ left: selectionPosition.left + "px", top: selectionPosition.top + "px" }} onMouseDown={event => { if (event.target.closest("button")) event.preventDefault(); }}>
       <button type="button" title="Bold" aria-label="Bold" class={editor.isActive("bold") ? "is-active" : ""} onClick={() => applySelectionFormat(chain => chain.toggleBold().run())}><Bold size={14}/></button>
