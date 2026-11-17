@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "preact/hooks";
+import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import {
   ArrowLeft, BookOpen, GraduationCap, Layers3, Plus, Search, PencilLine, Trash2, X,
 } from "lucide-preact";
@@ -36,6 +36,7 @@ export default function NotebookView({ notebook, fsrsSettings, onUpdate, onBack,
   const [previewSide, setPreviewSide] = useState("question");
   const [selectedCardId, setSelectedCardId] = useState(cards[0]?.id || null);
   const [search, setSearch] = useState("");
+  const searchInputRef = useRef(null);
   const [chapterFilter, setChapterFilter] = useState("all");
   const [editingCardId, setEditingCardId] = useState(null);
   const [studyType, setStudyType] = useState("scheduled");
@@ -49,6 +50,10 @@ export default function NotebookView({ notebook, fsrsSettings, onUpdate, onBack,
   const [targetChapterId, setTargetChapterId] = useState("");
 
   const editingCard = cards.find(card => card.id === editingCardId) || (newCard?.id === editingCardId ? newCard : null);
+
+  useEffect(() => {
+    if (tab === "browse" && !editingCardId && !reviewing) searchInputRef.current?.focus();
+  }, [tab, editingCardId, reviewing]);
 
   useEffect(() => {
     if (!cardAddedNotice) return;
@@ -65,10 +70,14 @@ export default function NotebookView({ notebook, fsrsSettings, onUpdate, onBack,
       if (key === "a") { event.preventDefault(); addCard(); }
       else if (key === "s") { event.preventDefault(); setTab("study"); }
       else if (key === "b") { event.preventDefault(); setTab("browse"); }
+      else if (key === "e" && tab === "browse" && selectedCard) {
+        event.preventDefault();
+        setEditingCardId(selectedCard.id);
+      }
     };
     window.addEventListener("keydown", handleNotebookKeys);
     return () => window.removeEventListener("keydown", handleNotebookKeys);
-  }, [editingCardId, reviewing]);
+  }, [editingCardId, reviewing, tab, selectedCardId, search, chapterFilter, cards]);
 
   const visibleCards = useMemo(() => {
     const needle = search.trim().toLocaleLowerCase();
@@ -225,6 +234,12 @@ export default function NotebookView({ notebook, fsrsSettings, onUpdate, onBack,
     return <ReviewSession key={`${studyType}-${scopeType}-${scopeChapterId}`}
       cards={studyCards} mode={studyType} settings={fsrsSettings} media={notebook.media || []}
       onReview={handleReview}
+      onEditCard={(cardId) => {
+        setSelectedCardId(cardId);
+        setTab("browse");
+        setReviewing(false);
+        setEditingCardId(cardId);
+      }}
       scopeType={scopeType}
       scopeChapterId={scopeChapterId}
       onComplete={(session) => onUpdate({
@@ -250,7 +265,7 @@ export default function NotebookView({ notebook, fsrsSettings, onUpdate, onBack,
         <div class="browse-workspace">
           <aside class="browse-list-panel">
             <div class="browse-tools">
-              <label class="browse-search"><Search size={14} /><input value={search} onInput={event => setSearch(event.currentTarget.value)} placeholder="Search question or answer..." /></label>
+              <label class="browse-search"><Search size={14} /><input ref={searchInputRef} value={search} onInput={event => setSearch(event.currentTarget.value)} placeholder="Search question or answer..." /></label>
               <div class="browse-filters">
                 <select value={chapterFilter} onChange={event => setChapterFilter(event.currentTarget.value)}>
                   <option value="all">All chapters</option>

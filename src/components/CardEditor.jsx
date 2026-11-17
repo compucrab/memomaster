@@ -34,7 +34,17 @@ export default function CardEditor({ card, chapters = [], existingCards = [], on
 
   useEffect(() => {
     const handleEditorShortcuts = (event) => {
-      if (event.repeat || event.target?.closest?.("[role='dialog'], [role='alertdialog']") || !(event.ctrlKey || event.metaKey) || event.altKey) return;
+      if (event.repeat || event.target?.closest?.("[role='dialog'], [role='alertdialog'], .chapter-picker")) return;
+      if (event.altKey && !event.ctrlKey && !event.metaKey) {
+        const key = event.key.toLowerCase();
+        if (key === "q" || key === "w") {
+          event.preventDefault();
+          event.stopPropagation();
+          setActiveSide(key === "q" ? "question" : "answer");
+          return;
+        }
+      }
+      if (!(event.ctrlKey || event.metaKey) || event.altKey) return;
       if (event.key.toLowerCase() === "d") {
         event.preventDefault();
         setChapterQuery("");
@@ -46,8 +56,8 @@ export default function CardEditor({ card, chapters = [], existingCards = [], on
         requestSave(true);
       }
     };
-    window.addEventListener("keydown", handleEditorShortcuts);
-    return () => window.removeEventListener("keydown", handleEditorShortcuts);
+    window.addEventListener("keydown", handleEditorShortcuts, true);
+    return () => window.removeEventListener("keydown", handleEditorShortcuts, true);
   }, [draft, existingCards, chapterPickerOpen, chapterOptions.length]);
 
   function chooseChapter(chapter) {

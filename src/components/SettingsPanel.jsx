@@ -1,4 +1,4 @@
-import { useEffect, useState } from "preact/hooks";
+import { useEffect, useRef, useState } from "preact/hooks";
 import { ArrowLeft, Palette, Moon, Sun, Brain, RotateCcw } from "lucide-preact";
 import { DEFAULT_FSRS_SETTINGS, normalizeFsrsSettings } from "../services/fsrsSettings";
 
@@ -7,6 +7,8 @@ export default function SettingsPanel({ theme, onThemeChange, fsrsSettings, onFs
   const [learningText, setLearningText] = useState(draft.learningSteps.join(", "));
   const [relearningText, setRelearningText] = useState(draft.relearningSteps.join(", "));
   const [maximumText, setMaximumText] = useState(String(draft.maximumInterval));
+  const firstSettingInputRef = useRef(null);
+  useEffect(() => { firstSettingInputRef.current?.focus(); }, []);
   useEffect(() => {
     const next = normalizeFsrsSettings(fsrsSettings || DEFAULT_FSRS_SETTINGS);
     setDraft(next);
@@ -36,7 +38,7 @@ export default function SettingsPanel({ theme, onThemeChange, fsrsSettings, onFs
         <div class="fsrs-settings-heading"><i><Brain size={18}/></i><div><h2>FSRS scheduling</h2><p>Shared scheduling preferences for all notebooks. Existing review history and due dates are preserved.</p></div></div>
         <div class="fsrs-settings-grid">
           <label>DESIRED RETENTION <strong>{Math.round(draft.desiredRetention * 100)}%</strong>
-            <input type="range" min="70" max="97" step="1" value={Math.round(draft.desiredRetention * 100)} onInput={event => update("desiredRetention", Number(event.currentTarget.value) / 100)} />
+            <input ref={firstSettingInputRef} type="range" min="70" max="97" step="1" value={Math.round(draft.desiredRetention * 100)} onInput={event => update("desiredRetention", Number(event.currentTarget.value) / 100)} />
             <small>Higher retention means more frequent reviews. Default: 90%.</small>
           </label>
           <label>MAXIMUM INTERVAL
