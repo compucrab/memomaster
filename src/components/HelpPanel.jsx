@@ -48,7 +48,7 @@ Ctrl + S — Save project (.memz) and choose a destination"]
   }
 };
 
-export default function HelpPanel({ page = "guide", onPageChange, onBack }) {
+export default function HelpPanel({ page = "guide", onPageChange, onBack, backLabel = "BACK" }) {
   const current = pages[page] || pages.guide;
   const nav = [
     { id: "guide", label: "User guide", Icon: BookOpen },
