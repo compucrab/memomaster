@@ -132,12 +132,14 @@ export default function RichTextEditor({ label, value = "", placeholder, onChang
       }
     });
     const selectedText = linkRange.text;
-    const mathType = editor.isActive("inlineMath") ? "inlineMath" : editor.isActive("blockMath") ? "blockMath" : null;
-    const editing = (type === "inlineMath" || type === "blockMath") && mathType === type;
-    const node = editing ? editor.state.doc.nodeAt(selection.from) : null;
-    setDialogValue(type === "link" ? String(activeLink.href || "") : editing ? String(node?.attrs?.latex || "") : "");
-    setDialogText(type === "link" ? selectedText : "");
-    setDialog({ type, from: type === "link" ? linkRange.from : selection.from, to: type === "link" ? linkRange.to : selection.to, editing, title: editing ? "Edit equation" : type === "inlineMath" ? "Insert inline equation" : type === "blockMath" ? "Insert display equation" : type === "link" ? (activeLink.href ? "Edit link" : "Insert link") : "Insert video link card", message: type.includes("Math") ? "Enter a LaTeX expression." : type === "link" ? "Set the visible text and destination." : "Add a compact card that opens the video in your browser." });
+    const selectedNode = selection.node || editor.state.doc.nodeAt(selection.from) || selection.$from.nodeAfter;
+    const selectedMathType = ["inlineMath", "blockMath"].includes(selectedNode?.type?.name) ? selectedNode.type.name : null;
+    const editing = (type === "inlineMath" || type === "blockMath") && selectedMathType === type;
+    const node = editing ? selectedNode : null;
+    const selectedVideo = selection.node?.type?.name === "cardVideo" ? selection.node : null;
+    setDialogValue(type === "link" ? String(activeLink.href || "") : editing ? String(node?.attrs?.latex || "") : type === "video" ? String(selectedVideo?.attrs?.url || "") : "");
+    setDialogText(type === "link" ? selectedText : type === "video" ? String(selectedVideo?.attrs?.label || "") : "");
+    setDialog({ type, from: type === "link" ? linkRange.from : selection.from, to: type === "link" ? linkRange.to : selection.to, editing, title: editing ? "Edit equation" : type === "inlineMath" ? "Insert inline equation" : type === "blockMath" ? "Insert display equation" : type === "link" ? (activeLink.href ? "Edit link" : "Insert link") : selectedVideo ? "Edit video link card" : "Insert video link card", message: type.includes("Math") ? "Enter a LaTeX expression." : type === "link" ? "Set the visible text and destination." : "Choose the text shown on the video card and add its destination." });
   }
   function submitInsert() {
     if (!editor || !dialogValue.trim()) { setDialog({ type: "notice", title: "Nothing to insert", message: "Enter a value first." }); return; }
@@ -154,7 +156,7 @@ export default function RichTextEditor({ label, value = "", placeholder, onChang
     if (dialog.type === "video") {
       const target = videoTarget(dialogValue);
       if (target.error) { setDialog({ type: "notice", title: "Unable to add video link", message: target.error }); return; }
-      editor.chain().focus().setTextSelection({ from: dialog.from, to: dialog.to }).insertContent({ type: "cardVideo", attrs: target }).run();
+      editor.chain().focus().setTextSelection({ from: dialog.from, to: dialog.to }).insertContent({ type: "cardVideo", attrs: { ...target, label: dialogText.trim() || "Video link" } }).run();
     }
     setDialog(null); setDialogValue(""); setDialogText("");
   }
@@ -164,6 +166,8 @@ export default function RichTextEditor({ label, value = "", placeholder, onChang
     { label: "Heading 1", detail: "Large section heading", run: () => editor.chain().focus().setHeading({ level: 1 }).run() },
     { label: "Heading 2", detail: "Section heading", run: () => editor.chain().focus().setHeading({ level: 2 }).run() },
     { label: "Heading 3", detail: "Small heading", run: () => editor.chain().focus().setHeading({ level: 3 }).run() },
+    { label: "Heading 4", detail: "Compact heading", run: () => editor.chain().focus().setHeading({ level: 4 }).run() },
+    { label: "Heading 5", detail: "Small label heading", run: () => editor.chain().focus().setHeading({ level: 5 }).run() },
     { label: "Code block", detail: "Monospaced code", run: () => editor.chain().focus().toggleCodeBlock().run() },
     { label: "Table", detail: "Insert a 2 × 2 table", run: () => editor.chain().focus().insertContent({ type: "table", content: [{ type: "tableRow", content: [{ type: "tableHeader", content: [{ type: "paragraph" }] }, { type: "tableHeader", content: [{ type: "paragraph" }] }] }, { type: "tableRow", content: [{ type: "tableCell", content: [{ type: "paragraph" }] }, { type: "tableCell", content: [{ type: "paragraph" }] }] }] }).run() },
     { label: "Link", detail: "Add or edit a hyperlink", run: () => openInsert("link") },
@@ -191,8 +195,8 @@ export default function RichTextEditor({ label, value = "", placeholder, onChang
       <span class="rich-editor-divider"/>
       {imageSelected && <><button type="button" class="rich-editor-tool" title="Decrease image size" aria-label="Decrease image size" disabled={!editor} onMouseDown={e=>e.preventDefault()} onClick={()=>resize(-60)}><Minus size={15}/></button><button type="button" class="rich-editor-tool" title="Increase image size" aria-label="Increase image size" disabled={!editor} onMouseDown={e=>e.preventDefault()} onClick={()=>resize(60)}><Plus size={15}/></button><span class="rich-editor-divider"/></>}
       <div class="rich-editor-colors" role="group" aria-label="Text colour">
-        {["#e6e6e6", "#e06c75", "#e5a14b", "#9bc66b", "#72a7e8", "#b18be0"].map(color => <button type="button" class={`rich-editor-color-swatch ${editor?.getAttributes("textStyle").color === color ? "is-active" : ""}`} style={{ backgroundColor: color }} title={`Text colour ${color}`} aria-label={`Text colour ${color}`} disabled={!editor} onMouseDown={e=>e.preventDefault()} onClick={()=>editor?.chain().focus().setColor(color).run()}/>)}
-        <button type="button" class="rich-editor-color-reset" title="Remove text colour" aria-label="Remove text colour" disabled={!editor} onMouseDown={e=>e.preventDefault()} onClick={()=>editor?.chain().focus().unsetColor().run()}>A</button>
+        {[["Blue", "#5797f5"], ["Green", "#55ad72"], ["Red", "#e06470"], ["Yellow", "#d8ad43"], ["Purple", "#a77be8"]].map(([name, color]) => <button type="button" class={`rich-editor-color-swatch ${editor?.getAttributes("textStyle").color === color ? "is-active" : ""}`} style={{ backgroundColor: color }} title={`${name} text`} aria-label={`${name} text`} disabled={!editor} onMouseDown={e=>e.preventDefault()} onClick={()=>editor?.chain().focus().setColor(color).run()}/>)}
+        <button type="button" class="rich-editor-color-reset" title="Default theme text colour" aria-label="Default theme text colour" disabled={!editor} onMouseDown={e=>e.preventDefault()} onClick={()=>editor?.chain().focus().unsetColor().run()}>A</button>
       </div>
       <button type="button" class="rich-editor-tool" title="Insert link" aria-label="Insert link" disabled={!editor} onMouseDown={e=>e.preventDefault()} onClick={()=>openInsert("link")}><LinkIcon size={15}/></button>
       <span class="rich-editor-divider"/>
@@ -218,8 +222,8 @@ export default function RichTextEditor({ label, value = "", placeholder, onChang
       <section class="prompt-panel rich-editor-insert-dialog" role="dialog" aria-modal="true" aria-label={dialog.title}>
         <div class="prompt-heading"><h2>{dialog.title}</h2><button type="button" aria-label="Close" onClick={()=>setDialog(null)}><X size={16}/></button></div>
         <p>{dialog.message}</p>
-        {dialog.type === "link" && <input aria-label="Link text" placeholder="Link text" value={dialogText} onInput={e=>setDialogText(e.currentTarget.value)}/>}
-        {dialog.type !== "notice" && <textarea rows={dialog.type==="blockMath" ? 5 : 3} value={dialogValue} onInput={e=>setDialogValue(e.currentTarget.value)} placeholder={dialog.type.includes("Math") ? "\\frac{a+b}{c}" : dialog.type === "link" ? "https://example.com" : "Paste the link"}/>}
+        {(dialog.type === "link" || dialog.type === "video") && <input aria-label={dialog.type === "link" ? "Link text" : "Video card text"} placeholder={dialog.type === "link" ? "Link text" : "Text shown on the video card"} value={dialogText} onInput={e=>setDialogText(e.currentTarget.value)}/>}
+        {dialog.type !== "notice" && <textarea rows={dialog.type==="blockMath" ? 5 : 3} value={dialogValue} onInput={e=>setDialogValue(e.currentTarget.value)} placeholder={dialog.type.includes("Math") ? "\\frac{a+b}{c}" : dialog.type === "link" || dialog.type === "video" ? "https://example.com" : "Paste the link"}/>}
         <div class="prompt-actions"><button type="button" class="prompt-cancel" onClick={()=>setDialog(null)}>{dialog.type==="notice" ? "Close" : "Cancel"}</button>{dialog.type!=="notice" && <button type="button" class="prompt-confirm" onClick={submitInsert}>Insert</button>}</div>
       </section>
     </div>}
