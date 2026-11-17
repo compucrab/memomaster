@@ -1,4 +1,5 @@
 import { useMemo, useState } from "preact/hooks";
+import { State } from "ts-fsrs";
 import {
   ArrowLeft, BookOpen, GraduationCap, Layers3, Plus, Search, PencilLine, Trash2, X,
 } from "lucide-preact";
@@ -70,12 +71,12 @@ export default function NotebookView({ notebook, fsrsSettings, onUpdate, onBack,
     return Number.isNaN(due.getTime()) || due <= now;
   });
   const queueCounts = scopedCards.reduce((counts, card) => {
-    const state = card.fsrs?.state ?? 0;
+    const state = card.fsrs?.state ?? State.New;
     const due = card.fsrs?.due ? new Date(card.fsrs.due) : null;
     const isDue = !due || Number.isNaN(due.getTime()) || due <= now;
-    if (!card.fsrs || state === 0) counts.new += 1;
-    else if ((state === 1 || state === 3) && isDue) counts.learning += 1;
-    else if (state === 2 && isDue) counts.review += 1;
+    if (!card.fsrs || state === State.New) counts.new += 1;
+    else if ((state === State.Learning || state === State.Relearning) && isDue) counts.learning += 1;
+    else if (state === State.Review && isDue) counts.review += 1;
     return counts;
   }, { new: 0, learning: 0, review: 0 });
   const studyCards = studyType === "scheduled" ? dueCards : scopedCards;
