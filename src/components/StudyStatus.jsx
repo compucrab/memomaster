@@ -36,7 +36,7 @@ function getAttentionItems(notebooks, now) {
     const cards = notebook.flashcards || [];
     const sessions = notebook.studySessions || [];
     addItem(notebook, "Whole notebook", cards, sessions);
-    (notebook.chapters || []).forEach((chapter) => {
+    (Array.isArray(notebook.chapters) ? notebook.chapters : []).forEach((chapter) => {
       const chapterCards = cards.filter((card) => card.chapterId === chapter.id);
       const chapterSessions = sessions.filter((session) => session.scopeType === "chapter" && session.chapterId === chapter.id);
       addItem(notebook, chapter.name, chapterCards, chapterSessions);
