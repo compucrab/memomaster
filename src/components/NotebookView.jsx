@@ -30,7 +30,7 @@ function getDueLabel(card) {
 }
 
 export default function NotebookView({ notebook, fsrsSettings, onUpdate, onBack, onRequestText }) {
-  const cards = notebook.flashcards ?? (notebook.markdown ? [{ id: "legacy-card", front: "What is this note about?", back: notebook.markdown }] : []);
+  const cards = Array.isArray(notebook.flashcards) ? notebook.flashcards : [];
   const chapters = Array.isArray(notebook.chapters) ? notebook.chapters : [];
   const [tab, setTab] = useState("browse");
   const [previewSide, setPreviewSide] = useState("question");
