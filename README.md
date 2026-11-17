@@ -86,7 +86,10 @@ The File menu provides New project, Open project, Save project, and Preferences.
 - **New project** replaces the active library with an empty one and clears the remembered project path. It does not delete existing backups.
 - **Open project** imports a .memz archive, replaces the active library, and makes that file the remembered Save project destination.
 - **Save project** always opens a native save dialog so you can choose the destination and filename. The selected .memz path becomes the remembered project path for the next save dialog.
-- **Automatic backup** creates a timestamped .memz snapshot in that same backups folder when the application closes successfully.
+- **Automatic backup** creates a timestamped .memz snapshot on successful close. The archive is reopened and checked before it is written; the write uses a temporary file and atomic rename.
+- **Retention** keeps the newest 10 automatic backups and removes older snapshots only after a new backup is safely written.
+- **Recovery** is available in Preferences → Backups & recovery. If SQLite fails its integrity check or cannot be opened, MemoMaster preserves the damaged database, offers available backups, and allows restoration from a verified snapshot.
+- SQLite uses WAL journaling, full synchronous commits, a transaction for each library save, and a short 100 ms autosave debounce. The app also requests a final save when it is suspended or closed. A forced power loss can still interrupt the small interval before a pending autosave completes.
 
 A .memz archive is a snapshot, not a live link to SQLite. Changes made after a snapshot do not update it. Keep independent backups; the SQLite working copy is not a substitute for an external backup.
 
@@ -131,9 +134,13 @@ Vite uses port 1420; the Tauri configuration expects that fixed development port
 - [ARCHITECTURE.md](ARCHITECTURE.md) — runtime, modules, state ownership, persistence, and data model.
 - [AGENTS.md](AGENTS.md) — coding conventions, safety rules, and implementation workflow.
 
+## Project archive format
+
+The current `.memz` format uses manifest version 3 only. The importer rejects older and unknown versions instead of silently migrating formats. Each archive is validated for ZIP structure, safe paths, decompressed size limits, supported compression, and CRC integrity. Automatic backups are additionally round-tripped through the importer before being committed to disk.
+
 ## Boundaries
 
 - Frontend code is JavaScript/JSX; do not introduce TypeScript without an explicit project decision.
 - MemoMaster is desktop-first and local-first. No cloud account, analytics, or sync backend is implemented.
 - Anki import/export and multi-device synchronization are not implemented.
-- Card front/back content is stored as Tiptap JSON. Keep Markdown conversion for legacy content and preserve supported .memz archive imports.
+- Card front/back content is stored as Tiptap JSON. Markdown conversion remains available for explicit text/Markdown import paths.
