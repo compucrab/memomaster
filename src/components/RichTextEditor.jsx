@@ -140,6 +140,14 @@ export default function RichTextEditor({ label, value = "", placeholder, onChang
       <input ref={fileRef} type="file" accept="image/*" hidden onChange={insertImage}/>
     </div>
     <div class="rich-editor-surface"><div ref={hostRef}/></div>
+    {mediaOpen && <div class="prompt-backdrop" onMouseDown={e=>e.target===e.currentTarget && setMediaOpen(false)}>
+      <section class="prompt-panel media-library-dialog" role="dialog" aria-modal="true" aria-label="Media library">
+        <div class="prompt-heading"><h2>Media library</h2><button type="button" aria-label="Close" onClick={()=>setMediaOpen(false)}><X size={16}/></button></div>
+        <p>Choose an image already stored in this notebook, or add a new one to reuse across cards.</p>
+        <div class="media-library-grid">{media.map(asset => <button type="button" class="media-library-item" key={asset.id} onClick={()=>{editor?.chain().focus().setImage({src:"memomedia://" + asset.id,alt:asset.name || "Image",width:420,align:"center"}).run();setMediaOpen(false);}}><img src={asset.data} alt={asset.name || "Stored media"}/><span>{asset.name || "Image"}</span></button>)}</div>
+        <div class="prompt-actions"><button type="button" class="prompt-cancel" onClick={()=>setMediaOpen(false)}>Close</button><button type="button" class="prompt-confirm" onClick={()=>fileRef.current?.click()}>Add image</button></div>
+      </section>
+    </div>}
     {dialog && <div class="prompt-backdrop" onMouseDown={e=>e.target===e.currentTarget && setDialog(null)}>
       <section class="prompt-panel rich-editor-insert-dialog" role="dialog" aria-modal="true" aria-label={dialog.title}>
         <div class="prompt-heading"><h2>{dialog.title}</h2><button type="button" aria-label="Close" onClick={()=>setDialog(null)}><X size={16}/></button></div>
