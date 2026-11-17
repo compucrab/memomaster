@@ -162,7 +162,3 @@
 @media(max-width:460px) { .fsrs-settings-grid { grid-template-columns:1fr; } }
 
 
-
-.status-undo-review { @apply inline-flex items-center gap-2; flex: 0 0 auto; padding: 8px 11px; border: 1px solid var(--line); color: var(--muted); background: var(--surface); font-size: 10px; transition: color .15s, border-color .15s; }
-.status-undo-review:hover { color: var(--ink); border-color: var(--muted); }
-@media (max-width: 600px) { .status-undo-review { margin-left: 0; } }
