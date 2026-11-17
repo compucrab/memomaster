@@ -12,6 +12,7 @@ export default function CardEditor({ card, chapters = [], existingCards = [], on
   const [chapterQuery, setChapterQuery] = useState("");
   const [highlightedChapter, setHighlightedChapter] = useState(0);
   const chapterSearchRef = useRef(null);
+  const highlightedChapterRef = useRef(null);
   const chapterOptions = [{ id: "", name: "Unassigned" }, ...chapters];
   const filteredChapterOptions = chapterOptions.filter(item => item.name.toLocaleLowerCase().includes(chapterQuery.toLocaleLowerCase()));
   const isNewCard = !existingCards.some(item => item.id === draft.id);
@@ -26,6 +27,10 @@ export default function CardEditor({ card, chapters = [], existingCards = [], on
   useEffect(() => {
     if (chapterPickerOpen) chapterSearchRef.current?.focus();
   }, [chapterPickerOpen]);
+
+  useEffect(() => {
+    if (chapterPickerOpen) highlightedChapterRef.current?.scrollIntoView?.({ block: "nearest" });
+  }, [highlightedChapter, chapterPickerOpen]);
 
   useEffect(() => {
     const handleEditorShortcuts = (event) => {
@@ -93,7 +98,7 @@ export default function CardEditor({ card, chapters = [], existingCards = [], on
             {chapterPickerOpen && <div class="chapter-picker-popover">
               <input ref={chapterSearchRef} value={chapterQuery} onInput={event => { setChapterQuery(event.currentTarget.value); setHighlightedChapter(0); }} onKeyDown={handleChapterKeyDown} placeholder="Search chapters..." aria-label="Search chapters"/>
               <div class="chapter-picker-options" role="listbox" aria-label="Chapters">
-                {filteredChapterOptions.map((chapter, index) => <button type="button" role="option" aria-selected={(draft.chapterId || "") === chapter.id} class={highlightedChapter === index ? "is-highlighted" : ""} onMouseEnter={() => setHighlightedChapter(index)} onClick={() => chooseChapter(chapter)}>{chapter.name}</button>)}
+                {filteredChapterOptions.map((chapter, index) => <button type="button" role="option" ref={highlightedChapter === index ? highlightedChapterRef : null} aria-selected={(draft.chapterId || "") === chapter.id} class={highlightedChapter === index ? "is-highlighted" : ""} onMouseEnter={() => setHighlightedChapter(index)} onClick={() => chooseChapter(chapter)}>{chapter.name}</button>)}
                 {!filteredChapterOptions.length && <p>No chapters found</p>}
               </div>
               <small>↑ ↓ to navigate · Enter to choose</small>
