@@ -215,7 +215,7 @@ export default function NotebookView({ notebook, fsrsSettings, onUpdate, onBack,
         return;
       }
     }
-    if (event?.ctrlKey || event?.metaKey) {
+    if (event?.ctrlKey || event?.metaKey || event?.target?.type === "checkbox") {
       setSelectedCardIds((items) => items.includes(id) ? items.filter((item) => item !== id) : [...items, id]);
       selectionAnchorRef.current = id;
       return;
