@@ -36,7 +36,7 @@ export const CardVideo = Node.create({
   renderHTML({ HTMLAttributes }) { return ["div", { "data-card-video": "", "data-url": HTMLAttributes.url, "data-provider": HTMLAttributes.provider }, "Video link — opens in browser"]; },
   markdownTokenizer: {
     name: "cardVideo", level: "block", start: (source) => source.indexOf("@[video]("),
-    tokenize(source) { const match = /^\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/.exec(source); return match ? { type: "cardVideo", raw: match[0], href: match[1] } : undefined; },
+    tokenize(source) { const match = /^@\[video\]\((https?:\/\/[^\s)]+)\)/.exec(source); return match ? { type: "cardVideo", raw: match[0], href: match[1] } : undefined; },
   },
   parseMarkdown: (token) => ({ type: "cardVideo", attrs: { url: token.href || "", provider: "video" } }),
   renderMarkdown: (node) => { const url = safeMediaUrl(node?.attrs?.url); return url ? `@[video](${url})` : ""; },
@@ -47,7 +47,7 @@ export const CardLink = Link.extend({
     level: "inline",
     start: source => source.indexOf("["),
     tokenize(source) {
-      const match = /^\\[([^\\]]+)\\]\\((https?:\\/\\/[^\\s)]+)\\)/.exec(source);
+      const match = /^\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/.exec(source);
       return match ? { type: "link", raw: match[0], text: match[1], href: match[2] } : undefined;
     },
   },
