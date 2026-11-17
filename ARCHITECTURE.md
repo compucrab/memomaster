@@ -67,7 +67,7 @@ Default scheduling preferences:
 | Setting | Default |
 | --- | --- |
 | Desired retention | 0.90 |
-| Learning steps | `10m` |
+| Learning steps | `1m`, `10m` |
 | Relearning steps | `10m` |
 | Maximum interval | 180 days |
 | Study-day rollover | 04:00 local time |
@@ -83,7 +83,7 @@ Scheduled ratings map to FSRS as follows:
 | Good | Good | Advances a learning step or continues the normal review schedule. |
 | Easy | Easy | Graduates a learning card or continues the normal review schedule. |
 
-The review session keeps a local snapshot of cards so a card remains available after its due date changes during the session. Cards in Learning/Relearning are held in a pending list and returned to the session only when their saved due timestamp has passed. If the session has no other cards, it displays a waiting state with the next learning-step due time. Exiting does not discard the schedule; the due card will appear in a later session.
+The review session keeps a local snapshot of cards so a card remains available after its due date changes during the session. Cards in Learning/Relearning are held in a pending list and returned to the session only when their saved due timestamp has passed. If the session has no other cards, it displays the normal completion state without a countdown. The pending queue remains active while the session stays open, so a card automatically returns when its learning step becomes due. Exiting does not discard the schedule; the due card will appear in a later session.
 
 Unscheduled practice can include any cards in scope. Repeat moves a card to the end of the current queue; Done records an entry in `practiceHistory`. Unscheduled practice must not mutate FSRS state or due dates.
 
@@ -128,7 +128,7 @@ Image insertion supports file selection and clipboard paste. Inserted images are
 | NotebookView.jsx | Browse, card selection, chapter operations, study setup |
 | CardEditor.jsx | Card metadata, Question/Answer tabs, duplicate warning, schedule reset |
 | RichTextEditor.jsx | Tiptap setup, formatting toolbar, media/math insertion, editor history |
-| ReviewSession.jsx | Timed scheduled learning/relearning queue and unscheduled practice queue |
+| ReviewSession.jsx | Anki-style scheduled learning/relearning queue with New/Learning/Review counts, plus unscheduled practice queue |
 | StudyStatus.jsx | Retention, rating, workload, maturity, and lapse analytics |
 | projectArchive.js | .memz ZIP export/import and legacy migration |
 | fsrs.js | FSRS scheduling, study-day rollover, memory estimates, interval calculation, review undo |

@@ -1,4 +1,5 @@
 import { useMemo, useState } from "preact/hooks";
+import { State } from "ts-fsrs";
 import {
   ArrowLeft, BookOpen, GraduationCap, Layers3, Plus, Search, PencilLine, Trash2, X,
 } from "lucide-preact";
@@ -63,11 +64,21 @@ export default function NotebookView({ notebook, fsrsSettings, onUpdate, onBack,
     if (scopeType === "chapter") return card.chapterId === scopeChapterId;
     return true;
   }), [cards, scopeType, scopeChapterId]);
+  const now = new Date();
   const dueCards = scopedCards.filter(card => {
     if (!card.fsrs?.due) return true;
     const due = new Date(card.fsrs.due);
-    return Number.isNaN(due.getTime()) || due <= new Date();
+    return Number.isNaN(due.getTime()) || due <= now;
   });
+  const queueCounts = scopedCards.reduce((counts, card) => {
+    const state = card.fsrs?.state ?? State.New;
+    const due = card.fsrs?.due ? new Date(card.fsrs.due) : null;
+    const isDue = !due || Number.isNaN(due.getTime()) || due <= now;
+    if (!card.fsrs || state === State.New) counts.new += 1;
+    else if (state === State.Learning || state === State.Relearning) counts.learning += 1;
+    else if (state === State.Review && isDue) counts.review += 1;
+    return counts;
+  }, { new: 0, learning: 0, review: 0 });
   const studyCards = studyType === "scheduled" ? dueCards : scopedCards;
 
   function handleReview(cardId, fsrs, log, mode) {
@@ -284,6 +295,11 @@ export default function NotebookView({ notebook, fsrsSettings, onUpdate, onBack,
                   {chapters.map(chapter => <option value={chapter.id}>{chapter.name}</option>)}
                 </select>
               </label>}
+            </div>
+            <div class="study-queue-counts flex items-center gap-6" aria-label="Card counts">
+              <span class="flex items-center gap-2 text-sky-500"><strong>{queueCounts.new}</strong><small>New</small></span>
+              <span class="flex items-center gap-2 text-red-500"><strong>{queueCounts.learning}</strong><small>Learning</small></span>
+              <span class="flex items-center gap-2 text-green-500"><strong>{queueCounts.review}</strong><small>Review</small></span>
             </div>
             <div class="study-scope-summary"><span>{studyCards.length} cards in this session</span><span>{studyType === "scheduled" ? "Due cards only" : "All cards · timeline unchanged"}</span></div>
             <button class="study-primary study-start-button" disabled={!studyCards.length} onClick={() => setReviewing(true)}>

@@ -24,7 +24,9 @@ function matureCard(now) {
   };
 }
 
-test("FSRS defaults to a 180-day maximum interval", () => {
+test("FSRS defaults to Anki-style learning steps and a 180-day maximum interval", () => {
+  assert.deepEqual(DEFAULT_FSRS_SETTINGS.learningSteps, ["1m", "10m"]);
+  assert.deepEqual(DEFAULT_FSRS_SETTINGS.relearningSteps, ["10m"]);
   assert.equal(DEFAULT_FSRS_SETTINGS.maximumInterval, 180);
 });
 
@@ -52,10 +54,23 @@ test("Good and Easy continue the review schedule", () => {
   }
 });
 
-test("new cards graduate on Good with the configured single learning step", () => {
+test("new cards follow the 1-minute and 10-minute learning steps before graduating", () => {
   const now = new Date("2026-01-10T12:00:00.000Z");
-  const result = scheduleReview({ id: "new-card" }, "good", now);
-  assert.equal(result.fsrs.state, State.Review);
+  const first = scheduleReview({ id: "new-card" }, "good", now);
+  assert.equal(first.fsrs.state, State.Learning);
+  assert.equal(new Date(first.fsrs.due).getTime() - now.getTime(), 10 * 60000);
+
+  const secondTime = new Date(first.fsrs.due);
+  const second = scheduleReview({ id: "new-card", fsrs: first.fsrs }, "good", secondTime);
+  assert.equal(second.fsrs.state, State.Review);
+  assert.ok(new Date(second.fsrs.due) >= new Date(secondTime.getTime() + DAY));
+});
+
+test("Again on a new card starts at the first 1-minute learning step", () => {
+  const now = new Date("2026-01-10T12:00:00.000Z");
+  const result = scheduleReview({ id: "new-card" }, "forgot", now);
+  assert.equal(result.fsrs.state, State.Learning);
+  assert.equal(new Date(result.fsrs.due).getTime() - now.getTime(), 60000);
 });
 
 test("preview intervals match committed intervals", () => {

@@ -44,8 +44,8 @@ export default function SettingsPanel({ theme, onThemeChange, fsrsSettings, onFs
             <small>Maximum time between scheduled reviews.</small>
           </label>
           <label>LEARNING STEPS
-            <input value={learningText} onInput={event => setLearningText(event.currentTarget.value)} onBlur={() => update("learningSteps", learningText)} placeholder="10m, 1h"/>
-            <small>Comma-separated steps, e.g. 10m, 1h.</small>
+            <input value={learningText} onInput={event => setLearningText(event.currentTarget.value)} onBlur={() => update("learningSteps", learningText)} placeholder="1m, 10m"/>
+            <small>Comma-separated steps. Default: 1m, 10m.</small>
           </label>
           <label>RELEARNING STEPS
             <input value={relearningText} onInput={event => setRelearningText(event.currentTarget.value)} onBlur={() => update("relearningSteps", relearningText)} placeholder="10m"/>
