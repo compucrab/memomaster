@@ -70,12 +70,12 @@ export default function NotebookView({ notebook, fsrsSettings, onUpdate, onBack,
         if (tab === "browse" || tab === "study") { event.preventDefault(); onBack(); }
         return;
       }
-      const typing = event.target?.closest?.("input, textarea, select, [contenteditable='true'], [role='dialog'], [role='alertdialog']");
-      if (typing) return;
       const key = event.key.toLowerCase();
       if (event.altKey && key === "b") { event.preventDefault(); setTab("browse"); return; }
       if (event.altKey && key === "s") { event.preventDefault(); setTab("study"); return; }
       if (event.altKey) return;
+      const typing = event.target?.closest?.("input, textarea, select, [contenteditable='true'], [role='dialog'], [role='alertdialog']");
+      if (typing) return;
       if (key === "a") { event.preventDefault(); addCard(); }
       else if (key === "s") { event.preventDefault(); setTab("study"); }
       else if (key === "b") { event.preventDefault(); setTab("browse"); }
