@@ -155,7 +155,7 @@ export function renderMarkdown(source = "") {
       continue;
     }
 
-    const heading = line.match(/^(#{1,3})\s+(.+)$/);
+    const heading = line.match(/^(#{1,5})\s+(.+)$/);
     const bullet = line.match(/^\s*[-*+]\s+(.+)$/);
     const ordered = line.match(/^\s*(\d+)\.\s+(.+)$/);
     const rule = /^\s*(---+|___+|\*\*\*+)\s*$/.test(line);
