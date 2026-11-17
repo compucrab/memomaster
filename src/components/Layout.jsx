@@ -228,6 +228,11 @@ export default function Layout() {
 
   async function restoreAutomaticBackup(backup) {
     try {
+      if (!recoveryRequired) {
+        const safetyArchive = await createMemz(notebooksRef.current);
+        await importMemz(safetyArchive);
+        await invoke("create_automatic_backup", { bytes: Array.from(safetyArchive) });
+      }
       const imported = normalizeLibrary(await importMemz(await readBytes(backup.path)));
       await persistLibrary(imported);
       setNotebooks(imported);
