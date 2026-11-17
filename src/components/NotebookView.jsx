@@ -66,6 +66,7 @@ export default function NotebookView({ notebook, fsrsSettings, onUpdate, onBack,
     if (editingCardId || reviewing) return;
     const handleNotebookKeys = (event) => {
       if (event.repeat) return;
+      const key = event.key.toLowerCase();
       const typing = event.target?.closest?.("input, textarea, select, [contenteditable='true'], [role='dialog'], [role='alertdialog']");
       if (event.key === "Escape") {
         if (confirmAction) { event.preventDefault(); setConfirmAction(null); return; }
