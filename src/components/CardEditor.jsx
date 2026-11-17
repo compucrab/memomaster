@@ -86,7 +86,7 @@ export default function CardEditor({ card, chapters = [], existingCards = [], on
     <footer class="card-editor-footer">
       <div class="card-editor-organization">
         <label class="chapter-picker-label">CHAPTER
-          <div class="chapter-picker" onKeyDown={handleChapterKeyDown}>
+          <div class="chapter-picker">
             <button type="button" class="chapter-picker-trigger" aria-expanded={chapterPickerOpen} onClick={() => { setChapterQuery(""); setChapterPickerOpen(open => !open); }}>
               <span>{chapterOptions.find(item => item.id === (draft.chapterId || ""))?.name || "Unassigned"}</span><span class="chapter-picker-caret">⌄</span>
             </button>
