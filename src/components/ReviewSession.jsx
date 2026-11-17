@@ -14,8 +14,16 @@ export default function ReviewSession({ cards, mode = "scheduled", settings, onR
   const [sessionCards, setSessionCards] = useState(() => cards.map((card) => ({ ...card })));
   const [queue, setQueue] = useState(() => {
     const now = new Date();
+    const priority = (card) => {
+      const state = card.fsrs?.state ?? State.New;
+      if (state === State.Learning || state === State.Relearning) return 0;
+      if (state === State.Review) return 1;
+      return 2;
+    };
     return cards.filter((card) => mode === "unscheduled" || isDue(card, now))
-      .sort((a, b) => new Date(a.fsrs?.due || 0) - new Date(b.fsrs?.due || 0))
+      .sort((a, b) => mode === "scheduled"
+        ? priority(a) - priority(b) || new Date(a.fsrs?.due || 0) - new Date(b.fsrs?.due || 0)
+        : 0)
       .map((card) => card.id);
   });
   const [pending, setPending] = useState([]);
@@ -99,7 +107,7 @@ export default function ReviewSession({ cards, mode = "scheduled", settings, onR
         <div class="review-complete">
           <Check size={30} />
           <h1>{reviewed ? "Review complete" : "Nothing due right now"}</h1>
-          <p>{reviewed ? `You completed ${reviewed} ${reviewed === 1 ? "review" : "reviews"}.` : "All caught up. New cards and due reviews will appear here."}</p>
+          <p>{pending.length ? "You’ve finished all currently available cards. Learning cards will return when their steps are due." : reviewed ? `You completed ${reviewed} ${reviewed === 1 ? "review" : "reviews"}.` : "All caught up. New cards and due reviews will appear here."}</p>
           <button class="study-primary" onClick={onExit}>Back to notebook</button>
         </div>
       </section>
