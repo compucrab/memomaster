@@ -59,18 +59,8 @@ export default function StudyStatus({ notebooks, settings, onBack }) {
           <div class="activity-graph-wrap">
             <div class="activity-weekday-labels" aria-hidden="true">{["", "Mon", "", "Wed", "", "Fri", ""].map((label) => <span>{label}</span>)}</div>
             <div class="activity-graph" role="img" aria-label="Study consistency over the last 12 months">
-            {weeks.map((week, index) => (
-              <div class="activity-week" key={index}>
-                {week.map((day) => <span
-                  key={day.key}
-                  class={`activity-day level-${day.level}`}
-                  title={`${formatDate(day.key)} · ${day.sessions} completed ${day.sessions === 1 ? "session" : "sessions"} · ${day.cards} cards`}
-                  aria-label={`${formatDate(day.key)}: ${day.sessions} completed sessions, ${day.cards} cards`}
-                />)}
-              </div>
-            ))}
+              {data.days.map((day) => <span key={day.key} class={`activity-day level-${day.level} ${day.empty ? "empty" : ""}`} title={day.empty ? "" : `${formatDate(day.key)} · ${day.sessions} completed sessions · ${day.cards} cards`} aria-label={day.empty ? "" : `${formatDate(day.key)}: ${day.sessions} sessions, ${day.cards} cards`} />)}
             </div>
-          </div>
           <div class="activity-legend"><span>Less</span>{[0, 1, 2, 3, 4].map((level) => <i class={`activity-day level-${level}`} />)}<span>More</span></div>
         </div>
       </section>
