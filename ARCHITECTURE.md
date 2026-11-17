@@ -72,7 +72,7 @@ Default scheduling preferences:
 | Maximum interval | 180 days |
 | Study-day rollover | 04:00 local time |
 
-The scheduler uses deterministic intervals (`enable_fuzz: false`) so the interval shown before a rating matches the due date saved after that rating. Existing due dates are not rescheduled when preferences change; the new preferences apply on subsequent reviews. Each scheduled review log also stores the exact pre-review and post-review FSRS snapshots, state, stability, and difficulty. This supports a safe undo of the latest scheduled review across the library. Legacy review logs without snapshots are preserved but are not eligible for destructive undo.
+The scheduler uses deterministic intervals (`enable_fuzz: false`) so the interval shown before a rating matches the due date saved after that rating. Existing due dates are not rescheduled when preferences change; the new preferences apply on subsequent reviews. Each scheduled review log also stores the exact pre-review and post-review FSRS snapshots, state, stability, and difficulty. These snapshots preserve the complete transition for analytics and optimizer export.
 
 Scheduled ratings map to FSRS as follows:
 
@@ -95,9 +95,9 @@ FSRS v5 measures elapsed time in fixed 24-hour blocks. MemoMaster normalizes sch
 
 `StudyStatus.jsx` derives its analytics from scheduled review history and current card FSRS state:
 
-- Actual retention: Again is a failure; Hard, Good, and Easy are successful recall.
+- Actual retention: calculated only from reviews whose resulting FSRS scheduled interval is greater than one day; short learning/relearning repetitions are excluded. Again is a failure; Hard, Good, and Easy are successful recall.
 - Monthly retention trend over the most recent 12 months, compared with the desired-retention target.
-- Again/Hard/Good/Easy rating distribution.
+- Again/Hard/Good/Easy rating distribution for reviews scheduled beyond one day.
 - 30-day due workload forecast grouped by study day.
 - New, Learning/Relearning, Young, and Mature card breakdown. Mature uses a 21-day-or-longer review interval.
 - Frequently forgotten cards ranked by FSRS lapse count.
@@ -131,7 +131,7 @@ Image insertion supports file selection and clipboard paste. Inserted images are
 | ReviewSession.jsx | Continuous FSRS review queue, four rating controls, and unscheduled practice queue |
 | StudyStatus.jsx | Retention, rating, workload, maturity, and lapse analytics |
 | projectArchive.js | .memz ZIP export/import and legacy migration |
-| fsrs.js | FSRS scheduling, study-day rollover, interval calculation, review undo |
+| fsrs.js | FSRS scheduling, study-day rollover, interval calculation |
 | fsrsOptimizerData.js | Converts complete FSRS-6 review history into the official optimizer CSV input format |
 | fsrsSettings.js | Default and validated app-wide FSRS preferences |
 | markdown.js | Safe read-only Markdown/media rendering |
@@ -146,7 +146,7 @@ npm run build
 npm test
 ```
 
-The test suite covers Again/relearning, Hard semantics, Good/Easy scheduling, preview-versus-saved intervals, retention and maximum-interval configuration, study-day rollover, review snapshots, and undo. `fsrsCompatibility.test.js` adds a scheduler-contract matrix for all ratings, late reviews, counters, maximum interval enforcement, and minute-level learning steps. These tests do not yet establish exact Anki parity; shared golden fixtures must still be executed against Anki’s own scheduler.
+The test suite covers Again/relearning, Hard semantics, Good/Easy scheduling, preview-versus-saved intervals, retention and maximum-interval configuration, study-day rollover, review snapshots. `fsrsCompatibility.test.js` adds a scheduler-contract matrix for all ratings, late reviews, counters, maximum interval enforcement, and minute-level learning steps. These tests do not yet establish exact Anki parity; shared golden fixtures must still be executed against Anki’s own scheduler.
 
 ## Data flow
 

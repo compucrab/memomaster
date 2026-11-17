@@ -12,7 +12,6 @@ import TextPrompt from "./TextPrompt";
 import StudyStatus from "./StudyStatus";
 import { createMemz, importMemz } from "../services/projectArchive";
 import { loadFsrsSettings, saveFsrsSettings } from "../services/fsrsSettings";
-import { undoLatestReview } from "../services/fsrs.js";
 import { buildFsrsOptimizerDataset } from "../services/fsrsOptimizerData.js";
 
 const savedTheme = () => {
@@ -133,15 +132,6 @@ export default function Layout() {
   function updateNotebook(id, changes) {
     setNotebooks((items) => items.map((item) => item.id === id ? { ...item, ...changes } : item));
   }
-  function undoLastScheduledReview() {
-    const result = undoLatestReview(notebooksRef.current);
-    if (!result.undone) {
-      setNotice(result.reason);
-      return;
-    }
-    setNotebooks(result.notebooks);
-    setNotice("Last scheduled review undone.");
-  }
   function createNotebook() {
     requestText({
       title: "New notebook",
@@ -261,7 +251,7 @@ export default function Layout() {
           {view === "settings" ? (
             <SettingsPanel theme={theme} onThemeChange={setTheme} fsrsSettings={fsrsSettings} onFsrsSettingsChange={setFsrsSettings} onExportFsrsHistory={exportFsrsHistory} onBack={() => setView("library")} />
           ) : view === "status" ? (
-            <StudyStatus notebooks={notebooks} settings={fsrsSettings} onUndoLastReview={undoLastScheduledReview} onBack={() => setView("library")} />
+            <StudyStatus notebooks={notebooks} settings={fsrsSettings} onBack={() => setView("library")} />
           ) : view === "notebook" && activeNotebook ? (
             <NotebookView
               notebook={activeNotebook}
