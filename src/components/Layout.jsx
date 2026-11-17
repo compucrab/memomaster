@@ -263,6 +263,7 @@ export default function Layout() {
           ) : (
             <NotebookGrid
               notebooks={filteredNotebooks}
+              settings={fsrsSettings}
               onOpen={openNotebook}
               onContextMenu={(event, notebook) => {
                 event.preventDefault();
