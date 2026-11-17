@@ -21,7 +21,7 @@ export function unescapeMarkdownPunctuation(value) {
   source = source.replace(/[\x60][^\x60\n]*[\x60]/g, protect);
   source = source.replace(/\$\$[\s\S]*?\$\$/g, protect);
   source = source.replace(/(?<!\$)\$[^$\n]+\$(?!\$)/g, protect);
-  source = source.replace(/\\([\\\x60*_{}\[\]<>#+\-.!|~])/g, "$1");
+  source = source.replace(/\\([\\\x60*_{}\[\]()<>#+\-.!|~])/g, "$1");
   return source.replace(/\u0000PROTECTED(\d+)\u0000/g, (_, index) => protectedParts[Number(index)] ?? "");
 }
 
