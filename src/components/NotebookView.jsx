@@ -1,11 +1,11 @@
-import { useMemo, useState } from "preact/hooks";
-import { State } from "ts-fsrs";
+import { useEffect, useMemo, useState } from "preact/hooks";
 import {
   ArrowLeft, BookOpen, GraduationCap, Layers3, Plus, Search, PencilLine, Trash2, X,
 } from "lucide-preact";
 import CardContent from "./CardContent";
 import CardEditor from "./CardEditor";
 import ReviewSession from "./ReviewSession";
+import { getStudyQueueCounts } from "../services/studyQueue";
 
 function makeCard() {
   return { id: crypto.randomUUID(), front: "## Your question\n\nWrite a prompt here.", back: "Write the answer here.", chapterId: "" };
@@ -41,11 +41,18 @@ export default function NotebookView({ notebook, fsrsSettings, onUpdate, onBack,
   const [scopeChapterId, setScopeChapterId] = useState(chapters[0]?.id || "");
   const [reviewing, setReviewing] = useState(false);
   const [newCard, setNewCard] = useState(null);
+  const [cardAddedNotice, setCardAddedNotice] = useState(false);
   const [selectedCardIds, setSelectedCardIds] = useState([]);
   const [confirmAction, setConfirmAction] = useState(null);
   const [targetChapterId, setTargetChapterId] = useState("");
 
   const editingCard = cards.find(card => card.id === editingCardId) || (newCard?.id === editingCardId ? newCard : null);
+
+  useEffect(() => {
+    if (!cardAddedNotice) return;
+    const timeout = window.setTimeout(() => setCardAddedNotice(false), 1800);
+    return () => window.clearTimeout(timeout);
+  }, [cardAddedNotice]);
 
   const visibleCards = useMemo(() => {
     const needle = search.trim().toLocaleLowerCase();
@@ -72,15 +79,7 @@ export default function NotebookView({ notebook, fsrsSettings, onUpdate, onBack,
     if (Number.isNaN(due.getTime()) || due <= now) return true;
     return due.getTime() - now.getTime() <= shortTermWindow;
   });
-  const queueCounts = scopedCards.reduce((counts, card) => {
-    const state = card.fsrs?.state ?? State.New;
-    const due = card.fsrs?.due ? new Date(card.fsrs.due) : null;
-    const isDue = !due || Number.isNaN(due.getTime()) || due <= now;
-    if (!card.fsrs || state === State.New) counts.new += 1;
-    else if (state === State.Learning || state === State.Relearning) counts.learning += 1;
-    else if (state === State.Review && isDue) counts.review += 1;
-    return counts;
-  }, { new: 0, learning: 0, review: 0 });
+  const queueCounts = getStudyQueueCounts(scopedCards, now, fsrsSettings?.rolloverHour ?? 4);
   const studyCards = studyType === "scheduled" ? dueCards : scopedCards;
 
   function handleReview(cardId, fsrs, log, mode) {
@@ -92,18 +91,28 @@ export default function NotebookView({ notebook, fsrsSettings, onUpdate, onBack,
   }
 
   function saveCard(draft) {
+    const isAdding = !cards.some(card => card.id === draft.id);
     const cleanDraft = { ...draft };
     delete cleanDraft.topicId;
-    const next = cards.some(card => card.id === draft.id)
-      ? cards.map(card => {
+    const next = isAdding
+      ? [...cards, cleanDraft]
+      : cards.map(card => {
         if (card.id !== draft.id) return card;
         const cleanCard = { ...card };
         delete cleanCard.topicId;
         return { ...cleanCard, ...cleanDraft };
-      })
-      : [...cards, cleanDraft];
+      });
     onUpdate({ flashcards: next, cards: next.length, markdown: undefined });
     setSelectedCardId(draft.id);
+
+    if (isAdding) {
+      const nextDraft = { ...makeCard(), chapterId: draft.chapterId || "" };
+      setNewCard(nextDraft);
+      setEditingCardId(nextDraft.id);
+      setCardAddedNotice(true);
+      return;
+    }
+
     setNewCard(null);
     setEditingCardId(null);
   }
@@ -174,15 +183,21 @@ export default function NotebookView({ notebook, fsrsSettings, onUpdate, onBack,
 
   if (editingCard) {
     return <CardEditor key={editingCard.id} card={editingCard} chapters={chapters}
-      onSave={saveCard} existingCards={cards} onCancel={() => { setEditingCardId(null); setNewCard(null); }}
-      onAddChapter={addChapter} onDelete={() => { deleteCards([editingCard.id]); setEditingCardId(null); }}
+      onSave={saveCard} existingCards={cards} onCancel={() => { setEditingCardId(null); setNewCard(null); setCardAddedNotice(false); }}
+      addedNotice={cardAddedNotice} onAddChapter={addChapter} onDelete={() => { deleteCards([editingCard.id]); setEditingCardId(null); }}
       onResetSchedule={(id) => resetCardSchedules([id])} />;
   }
 
   if (reviewing) {
     return <ReviewSession key={`${studyType}-${scopeType}-${scopeChapterId}`}
       cards={studyCards} mode={studyType} settings={fsrsSettings}
-      onReview={handleReview} onExit={() => setReviewing(false)} />;
+      onReview={handleReview}
+      scopeType={scopeType}
+      scopeChapterId={scopeChapterId}
+      onComplete={(session) => onUpdate({
+        studySessions: [...(notebook.studySessions || []), session],
+      })}
+      onExit={() => setReviewing(false)} />;
   }
 
   return (

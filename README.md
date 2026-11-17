@@ -4,7 +4,7 @@ MemoMaster is a local-first desktop learning and revision app built with Tauri 2
 
 ## Features
 
-- Notebook library with notebook creation, rename, deletion, and cover-strip colour selection.
+- Notebook library with notebook creation, rename, deletion, and cover-strip colour selection. Each notebook shows New, Learning/Relearning, and Review cards remaining before the next study-day rollover.
 - Notebook workspace with Browse and Study tabs.
 - Browse cards with question/answer search, chapter filtering, preview, editing, multi-selection, bulk deletion, chapter reassignment, and schedule reset.
 - Duplicate-question detection: exact duplicates are blocked and close matches are flagged before saving.
@@ -15,8 +15,7 @@ MemoMaster is a local-first desktop learning and revision app built with Tauri 2
 - Video embeds for YouTube, Vimeo, Instagram public posts/reels, Facebook, and direct MP4/WebM/OGG URLs. Playback depends on the provider's embedding policy.
 - Separate undo/redo history for the Question and Answer editors.
 - FSRS-6 scheduled reviews and unscheduled practice for a whole notebook or a chapter.
-- Anki-style Again/Hard/Good/Easy ratings backed by FSRS-6, with configurable learning and relearning steps.
-- Export complete FSRS-6 review history as CSV for use with the official FSRS optimizer (the optimizer runtime is not yet integrated into the app).
+- Anki-style review screen with the question above the revealed answer, separated by a horizontal divider, plus Again/Hard/Good/Easy ratings backed by FSRS-6 and configurable learning/relearning steps.
 - Configurable desired retention, learning/relearning steps, maximum interval, and study-day rollover.
 - Retention dashboard with actual versus desired retention, monthly trend, rating distribution, daily workload forecast, card maturity, and frequently forgotten cards. Dashboard review metrics count only reviews that schedule the card beyond one day; short learning/relearning repetitions are excluded.
 - Light and dark themes.
@@ -44,7 +43,7 @@ Review buttons follow these rules:
 
 The active review queue includes new cards, due cards, and learning/relearning cards whose next due time is within 10 minutes. After a rating, a card whose next interval is 10 minutes or less is placed at the end of the queue immediately instead of making you wait for its timestamp. Cards scheduled beyond that short-term window leave the active queue and become available when due later. The queue is continuous rather than a fixed batch, so the review screen intentionally has no progress bar or completion percentage.
 
-Use **Export CSV** in FSRS scheduling preferences to export complete review logs in the official optimizer input format. Logs without reliable pre-review state data are excluded and reported. The in-app optimizer is not yet integrated. Changing FSRS preferences affects future scheduling. Existing due dates are not silently recalculated. Review history retains the before-and-after FSRS snapshots for audit and optimizer export. Preferences are shared across notebooks and stored locally in the application webview; they are not currently embedded in .memz archives. Per-notebook presets are a later iteration.
+Changing FSRS preferences affects future scheduling. Existing due dates are not silently recalculated. Review history retains the before-and-after FSRS snapshots for audit and optimizer export. Preferences are shared across notebooks and stored locally in the application webview; they are not currently embedded in .memz archives. Per-notebook presets are a later iteration.
 
 ## Local storage and backups
 

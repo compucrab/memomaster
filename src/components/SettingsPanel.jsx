@@ -1,8 +1,8 @@
 import { useEffect, useState } from "preact/hooks";
-import { ArrowLeft, Palette, Moon, Sun, Brain, RotateCcw, Download } from "lucide-preact";
+import { ArrowLeft, Palette, Moon, Sun, Brain, RotateCcw } from "lucide-preact";
 import { DEFAULT_FSRS_SETTINGS, normalizeFsrsSettings } from "../services/fsrsSettings";
 
-export default function SettingsPanel({ theme, onThemeChange, fsrsSettings, onFsrsSettingsChange, onExportFsrsHistory, onBack }) {
+export default function SettingsPanel({ theme, onThemeChange, fsrsSettings, onFsrsSettingsChange, onBack }) {
   const [draft, setDraft] = useState(() => normalizeFsrsSettings(fsrsSettings || DEFAULT_FSRS_SETTINGS));
   const [learningText, setLearningText] = useState(draft.learningSteps.join(", "));
   const [relearningText, setRelearningText] = useState(draft.relearningSteps.join(", "));
@@ -59,7 +59,6 @@ export default function SettingsPanel({ theme, onThemeChange, fsrsSettings, onFs
           </label>
         </div>
         <p class="fsrs-settings-note"><RotateCcw size={13}/> Changing retention or interval limits affects future scheduling only. Existing cards are not silently rescheduled.</p>
-        <div class="fsrs-export-row"><div><strong>Training history</strong><small>Export complete review logs in the official FSRS-6 optimizer CSV format.</small></div><button type="button" onClick={onExportFsrsHistory}><Download size={14}/> Export CSV</button></div>
       </section>
     </section>
   );

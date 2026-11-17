@@ -176,3 +176,29 @@
 
 .card-editor-footer .card-reset-schedule { display: inline-flex; height: 38px; min-height: 38px; align-items: center; justify-content: center; gap: 7px; padding: 0 12px; border: 1px solid var(--line); background: transparent; color: var(--muted); cursor: pointer; font: 10px var(--sans); }
 .card-editor-footer .card-reset-schedule:hover { border-color: var(--accent); color: var(--ink); }
+
+
+/* Brief confirmation while the next new-card form stays open. */
+.card-editor-page { position: relative; }
+.card-added-toast {
+  position: absolute;
+  z-index: 5;
+  top: 62px;
+  right: clamp(18px, 3vw, 42px);
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 12px;
+  border: 1px solid color-mix(in srgb, var(--success) 35%, var(--line));
+  border-radius: 4px;
+  background: var(--paper-card);
+  color: var(--success);
+  box-shadow: 0 6px 20px rgb(0 0 0 / 10%);
+  font: 11px var(--sans);
+  pointer-events: none;
+  animation: card-added-in 160ms ease-out;
+}
+@keyframes card-added-in {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}

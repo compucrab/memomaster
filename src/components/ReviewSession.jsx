@@ -1,4 +1,4 @@
-import { useState } from "preact/hooks";
+import { useRef, useState } from "preact/hooks";
 import { State } from "ts-fsrs";
 import { Check, RotateCw } from "lucide-preact";
 import CardContent from "./CardContent";
@@ -19,7 +19,7 @@ function isDue(card, now) {
   return Number.isNaN(due.getTime()) || due <= now;
 }
 
-export default function ReviewSession({ cards, mode = "scheduled", settings, onReview, onExit }) {
+export default function ReviewSession({ cards, mode = "scheduled", settings, onReview, onComplete, scopeType, scopeChapterId, onExit }) {
   const [sessionCards, setSessionCards] = useState(() => cards.map((card) => ({ ...card })));
   const [queue, setQueue] = useState(() => {
     const now = new Date();
@@ -37,14 +37,13 @@ export default function ReviewSession({ cards, mode = "scheduled", settings, onR
   });
   const [revealed, setRevealed] = useState(false);
   const [reviewed, setReviewed] = useState(0);
+  const reviewedCardIds = useRef(new Set());
   const [processing, setProcessing] = useState(false);
   const [reviewError, setReviewError] = useState("");
   const activeCard = sessionCards.find((card) => card.id === queue[0]);
   const options = activeCard && mode === "scheduled"
     ? getReviewOptions(activeCard, new Date(), settings)
     : null;
-
-
 
   function removeActiveCard() {
     setQueue((items) => items.slice(1));
@@ -60,6 +59,7 @@ export default function ReviewSession({ cards, mode = "scheduled", settings, onR
         const reviewedAt = new Date();
         const result = scheduleReview(activeCard, choice, reviewedAt, settings);
         onReview(activeCard.id, result.fsrs, result.log, mode);
+        reviewedCardIds.current.add(activeCard.id);
         setSessionCards((items) => items.map((card) => card.id === activeCard.id ? { ...card, fsrs: result.fsrs } : card));
         setReviewed((count) => count + 1);
         if (isShortTermPending({ fsrs: result.fsrs }, reviewedAt)) {
@@ -75,6 +75,14 @@ export default function ReviewSession({ cards, mode = "scheduled", settings, onR
         }, mode);
         setReviewed((count) => count + 1);
       }
+      if (mode === "scheduled" && queue.length === 1) {
+        onComplete?.({
+          completedAt: new Date().toISOString(),
+          reviewedCards: reviewedCardIds.current.size,
+          scopeType,
+          chapterId: scopeType === "chapter" ? scopeChapterId : null,
+        });
+      }
       removeActiveCard();
     } catch (error) {
       console.error("Unable to save review:", error);
@@ -89,8 +97,6 @@ export default function ReviewSession({ cards, mode = "scheduled", settings, onR
     setQueue((items) => [...items.slice(1), activeCard.id]);
     setRevealed(false);
   }
-
-
 
   if (!queue.length) {
     return (
@@ -117,8 +123,19 @@ export default function ReviewSession({ cards, mode = "scheduled", settings, onR
       </header>
       <div class="review-card">
         <div class="review-card-content">
-          <p class="study-side-label">{revealed ? "ANSWER" : "QUESTION"}</p>
-          <CardContent content={revealed ? activeCard.back : activeCard.front} />
+          <section class="review-card-side review-question">
+            <p class="study-side-label">QUESTION</p>
+            <CardContent content={activeCard.front} />
+          </section>
+          {revealed && (
+            <>
+              <div class="review-answer-divider" role="separator" />
+              <section class="review-card-side review-answer">
+                <p class="study-side-label">ANSWER</p>
+                <CardContent content={activeCard.back} />
+              </section>
+            </>
+          )}
         </div>
         {!revealed ? (
           <div class="study-card-actions">

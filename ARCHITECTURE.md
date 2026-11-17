@@ -6,7 +6,7 @@ MemoMaster is a desktop-first, local-first learning and revision app. The conten
 
 **Library → Notebook → Chapter → Flashcard**
 
-A notebook contains chapters, flashcards, scheduled review history, and unscheduled practice history. A card contains Markdown front/back content, an optional `chapterId`, and optional FSRS state. Topics are no longer part of the product model; legacy topic metadata is stripped when old library or archive data is loaded.
+A notebook contains chapters, flashcards, scheduled review history, and unscheduled practice history. The library displays each notebook’s New, Learning/Relearning, and Review cards remaining in the current study day, using the configured rollover hour. A card contains Markdown front/back content, an optional `chapterId`, and optional FSRS state. Topics are no longer part of the product model; legacy topic metadata is stripped when old library or archive data is loaded.
 
 Notebook view has two tabs:
 
@@ -83,7 +83,7 @@ Scheduled ratings map to FSRS as follows:
 | Good | Good | Successful recall. |
 | Easy | Easy | Successful recall with high confidence. |
 
-The active review queue starts with new cards, due cards, and learning/relearning cards due within the next 10 minutes. After a rating is saved, any card whose next interval is 10 minutes or less is immediately appended to the queue; it is not held until its timestamp. Cards with longer intervals leave the active queue and become available when due later. The queue is continuous and can grow or shrink as cards are rescheduled, so the review screen does not display a progress bar or completion percentage. Leaving review preserves all saved FSRS state and history.
+The library daily counts include all new cards and learning/relearning or review cards due before the next study-day rollover. The active review queue starts with new cards, due cards, and learning/relearning cards due within the next 10 minutes. After a rating is saved, any card whose next interval is 10 minutes or less is immediately appended to the queue; it is not held until its timestamp. Cards with longer intervals leave the active queue and become available when due later. The queue is continuous and can grow or shrink as cards are rescheduled, so the review screen does not display a progress bar or completion percentage. After revealing an answer, the review screen keeps the question above the answer with a horizontal divider and expands the card to the available workspace. Leaving review preserves all saved FSRS state and history.
 
 Unscheduled practice can include any cards in scope. Repeat moves a card to the end of the current queue; Done records an entry in `practiceHistory`. Unscheduled practice must not mutate FSRS state or due dates.
 
@@ -91,18 +91,15 @@ Unscheduled practice can include any cards in scope. Repeat moves a card to the 
 
 FSRS v5 measures elapsed time in fixed 24-hour blocks. MemoMaster normalizes scheduler timestamps to local study-day boundaries using the configured rollover hour before calculating elapsed review days, then converts review due dates back to local rollover boundaries. Learning/relearning steps retain their exact minute-based timing. The same rollover hour is used for daily workload grouping.
 
-## Retention and memory analytics
+## Study activity and streaks
 
-`StudyStatus.jsx` derives its analytics from scheduled review history and current card FSRS state:
+`StudyStatus.jsx` is a concise activity dashboard. Its GitHub-style consistency graph is built from persisted `studySessions` records. A record is created only when a scheduled review queue is fully completed for a whole notebook or one chapter; exiting early, reviewing only part of the queue, and unscheduled practice do not create activity or extend a streak.
 
-- Actual retention: calculated only from reviews whose resulting FSRS scheduled interval is greater than one day; short learning/relearning repetitions are excluded. Again is a failure; Hard, Good, and Easy are successful recall.
-- Monthly retention trend over the most recent 12 months, compared with the desired-retention target.
-- Again/Hard/Good/Easy rating distribution for reviews scheduled beyond one day.
-- 30-day due workload forecast grouped by study day.
-- New, Learning/Relearning, Young, and Mature card breakdown. Mature uses a 21-day-or-longer review interval.
-- Frequently forgotten cards ranked by FSRS lapse count.
+Each completion record stores the completion timestamp, scope, chapter ID when applicable, and number of cards reviewed. Records live on the notebook and are included in SQLite saves and .memz project metadata. The configured study-day rollover is applied when grouping activity into days.
 
-FSRS parameter optimization from review history is not yet executable in the app. `fsrsOptimizerData.js` prepares the official FSRS-6 optimizer CSV schema from complete review logs, including study-day rollover and timezone metadata; legacy logs without a recorded pre-review state are skipped rather than guessed. Settings exposes an export action that writes this CSV using the native save dialog. The remaining step is integrating the official optimizer binding in a Tauri-compatible worker/runtime. Do not substitute hand-written parameter fitting for the official FSRS optimizer. Modern Anki does not impose a fixed 1,000-review minimum, so readiness should be based on data quality and the optimizer evaluation rather than an arbitrary hard threshold.
+The dashboard shows current and longest completed-day streaks, total completed study days, cards reviewed in completed sessions, a calendar-aligned 12-month consistency graph, and the number of new or due cards across the library. The Needs attention list ranks notebooks and chapters by overdue, due, and new cards, and shows the last completed study date for each area. The current streak remains active during the current study day if the previous study day was completed. Longest streak is calculated across all retained session records.
+
+Older projects without `studySessions` start with an empty activity history; existing review logs are not retroactively treated as completed notebook or chapter sessions because they cannot establish whether the full queue was completed.
 
 ## Card editor and content formats
 
@@ -132,7 +129,6 @@ Image insertion supports file selection and clipboard paste. Inserted images are
 | StudyStatus.jsx | Retention, rating, workload, maturity, and lapse analytics |
 | projectArchive.js | .memz ZIP export/import and legacy migration |
 | fsrs.js | FSRS scheduling, study-day rollover, interval calculation |
-| fsrsOptimizerData.js | Converts complete FSRS-6 review history into the official optimizer CSV input format |
 | fsrsSettings.js | Default and validated app-wide FSRS preferences |
 | markdown.js | Safe read-only Markdown/media rendering |
 | lib.rs | SQLite commands, native file I/O, automatic backup writing |
