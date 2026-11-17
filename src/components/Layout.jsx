@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import { open } from "@tauri-apps/plugin-dialog";
+import { open, save } from "@tauri-apps/plugin-dialog";
 import Topbar from "./Topbar";
 import Titlebar from "./Titlebar";
 import NotebookGrid from "./NotebookGrid";
@@ -191,14 +191,17 @@ export default function Layout() {
 
   async function saveProject() {
     try {
+      const path = await save({
+        defaultPath: projectPath || "MemoMaster.memz",
+        filters: projectFilter,
+      });
+      if (!path) return;
+
       const archive = await createMemz(notebooks);
-      if (projectPath) {
-        await writeBytes(projectPath, archive);
-        setNotice("Project backup saved.");
-      } else {
-        const path = await invoke("create_automatic_backup", { bytes: Array.from(archive) });
-        setNotice(`Backup saved: ${path.split(/[\\\\/]/).pop()}`);
-      }
+      const targetPath = path.toLowerCase().endsWith(".memz") ? path : `${path}.memz`;
+      await writeBytes(targetPath, archive);
+      setProjectPath(targetPath);
+      setNotice(`Project saved: ${targetPath.split(/[\\\\/]/).pop()}`);
     } catch (error) {
       setNotice(`Could not save project: ${error.message || error}`);
     }
