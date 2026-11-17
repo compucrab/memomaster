@@ -122,6 +122,24 @@ export const CardLink = Link.extend({
   },
 });
 export const CardMath = Mathematics.configure({ katexOptions: { throwOnError: false, strict: "ignore" } });
+const CardMathSizing = Node.create({
+  name: "cardMathSizing",
+  addGlobalAttributes() {
+    return [{
+      types: ["inlineMath", "blockMath"],
+      attributes: {
+        fontSize: {
+          default: 16,
+          parseHTML: element => Number(element.getAttribute("data-font-size")) || 16,
+          renderHTML: attributes => {
+            const size = Math.max(10, Math.min(48, Number(attributes.fontSize) || 16));
+            return { "data-font-size": size, style: `font-size:${size}px` };
+          },
+        },
+      },
+    }];
+  },
+});
 
 export const CardTextStyle = TextStyle.extend({
   renderMarkdown(mark, helpers) {
@@ -148,15 +166,15 @@ export const CardTable = Node.create({
     };
     return {
       addTableRowAfter: () => ({ state, dispatch }) => {
-        const found = findTable(state); if (!found) return false;
-        const $from = state.selection.$from;
-        let rowDepth = $from.depth;
-        while (rowDepth > found.depth && $from.node(rowDepth).type.name !== "tableRow") rowDepth--;
-        if (rowDepth <= found.depth) return false;
-        const row = $from.node(rowDepth);
-        const cells = row.content.content.map(cell => cell.type.createAndFill());
-        const nextRow = row.type.create(null, cells);
-        if (dispatch) dispatch(state.tr.insert($from.after(rowDepth), nextRow));
+        const found = findTable(state);
+        if (!found || !found.node.childCount) return false;
+        const lastRow = found.node.lastChild;
+        const cellType = state.schema.nodes.tableCell;
+        const cells = Array.from({ length: lastRow.childCount }, () => cellType.createAndFill());
+        if (cells.some(cell => !cell)) return false;
+        const nextRow = state.schema.nodes.tableRow.create(null, cells);
+        const insertAt = found.pos + found.node.nodeSize - 1;
+        if (dispatch) dispatch(state.tr.insert(insertAt, nextRow));
         return true;
       },
       addTableColumnAfter: () => ({ state, dispatch }) => {
@@ -232,6 +250,7 @@ export function createCardExtensions() {
     CardLink.configure({ openOnClick: false, autolink: true, protocols: ["http", "https"] }),
     CardImage.configure({ allowBase64: true }),
     CardMath,
+    CardMathSizing,
     CardVideo,
     CardInfo,
     CardTable,
