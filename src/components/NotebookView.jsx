@@ -5,7 +5,7 @@ import {
 } from "lucide-preact";
 import CardContent from "./CardContent";
 import CardEditor from "./CardEditor";
-import ReviewSession from "./ReviewSession";
+import ReviewSession from "./ReviewSession";\nimport { getStudyQueueCounts } from "../services/studyQueue";
 
 function makeCard() {
   return { id: crypto.randomUUID(), front: "## Your question\n\nWrite a prompt here.", back: "Write the answer here.", chapterId: "" };
@@ -72,15 +72,7 @@ export default function NotebookView({ notebook, fsrsSettings, onUpdate, onBack,
     if (Number.isNaN(due.getTime()) || due <= now) return true;
     return due.getTime() - now.getTime() <= shortTermWindow;
   });
-  const queueCounts = scopedCards.reduce((counts, card) => {
-    const state = card.fsrs?.state ?? State.New;
-    const due = card.fsrs?.due ? new Date(card.fsrs.due) : null;
-    const isDue = !due || Number.isNaN(due.getTime()) || due <= now;
-    if (!card.fsrs || state === State.New) counts.new += 1;
-    else if (state === State.Learning || state === State.Relearning) counts.learning += 1;
-    else if (state === State.Review && isDue) counts.review += 1;
-    return counts;
-  }, { new: 0, learning: 0, review: 0 });
+  const queueCounts = getStudyQueueCounts(scopedCards, now, fsrsSettings?.rolloverHour ?? 4);
   const studyCards = studyType === "scheduled" ? dueCards : scopedCards;
 
   function handleReview(cardId, fsrs, log, mode) {
