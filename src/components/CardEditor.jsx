@@ -40,6 +40,7 @@ export default function CardEditor({ card, chapters = [], existingCards = [], on
         if (chapterPickerOpen) { event.preventDefault(); event.stopPropagation(); setChapterPickerOpen(false); return; }
         if (similarQuestion) { event.preventDefault(); event.stopPropagation(); setSimilarQuestion(null); return; }
         if (confirmDelete || confirmDiscard) { event.preventDefault(); event.stopPropagation(); setConfirmDelete(false); setConfirmDiscard(false); return; }
+        if (event.target?.closest?.("[role='dialog'], .rich-editor-command-palette, .rich-editor-insert-dialog")) return;
         event.preventDefault(); event.stopPropagation(); setConfirmDiscard(true); return;
       }
       if (event.target?.closest?.("[role='dialog'], [role='alertdialog'], .chapter-picker")) return;
