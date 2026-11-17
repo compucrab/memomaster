@@ -65,15 +65,12 @@ export default function NotebookView({ notebook, fsrsSettings, onUpdate, onBack,
     return true;
   }), [cards, scopeType, scopeChapterId]);
   const now = new Date();
-  const studyDayEnd = new Date(now);
-  studyDayEnd.setHours(fsrsSettings.rolloverHour ?? 4, 0, 0, 0);
-  if (studyDayEnd <= now) studyDayEnd.setDate(studyDayEnd.getDate() + 1);
+  const shortTermWindow = 10 * 60 * 1000;
   const dueCards = scopedCards.filter(card => {
     if (!card.fsrs?.due) return true;
     const due = new Date(card.fsrs.due);
     if (Number.isNaN(due.getTime()) || due <= now) return true;
-    const state = card.fsrs.state;
-    return (state === State.Learning || state === State.Relearning) && due < studyDayEnd;
+    return due.getTime() - now.getTime() <= shortTermWindow;
   });
   const queueCounts = scopedCards.reduce((counts, card) => {
     const state = card.fsrs?.state ?? State.New;
