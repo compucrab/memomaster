@@ -23,11 +23,10 @@ input,
 textarea { font: inherit; }
 button { color: inherit; }
 
-button:focus-visible,
-input:focus-visible,
-textarea:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 3px;
+/* Keep keyboard navigation functional without showing browser-style focus rings. */
+:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 ::selection { background: color-mix(in srgb, var(--accent) 30%, transparent); color: var(--ink); }
