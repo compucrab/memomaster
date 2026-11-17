@@ -252,3 +252,23 @@
 .study-info-card-heading > span { color: var(--accent); }
 .study-info-card-content > :first-child { margin-top: 0; }
 .study-info-card-content > :last-child { margin-bottom: 0; }
+
+/* Responsive tables never expand the card or editor beyond its available width. */
+.study-table-scroll { display:block; width:100%; max-width:100%; overflow-x:auto; overscroll-behavior-inline:contain; }
+.rich-editor-surface, .study-card-prose { min-width:0; max-width:100%; overflow-wrap:anywhere; }
+.rich-editor-content table, .study-card-prose table { width:max-content; min-width:100%; max-width:none; table-layout:fixed; }
+.rich-editor-content th, .rich-editor-content td, .study-card-prose th, .study-card-prose td { min-width:100px; max-width:280px; overflow-wrap:anywhere; word-break:break-word; }
+.rich-editor-content h5, .study-card-prose h5 { color:var(--ink) !important; }
+.rich-editor-content h1, .rich-editor-content h2, .rich-editor-content h3, .rich-editor-content h4, .rich-editor-content h5,
+.study-card-prose h1, .study-card-prose h2, .study-card-prose h3, .study-card-prose h4, .study-card-prose h5 { color:var(--ink); }
+.study-image-frame { position:relative; display:block; width:max-content; max-width:100%; margin:12px 0; line-height:0; }
+.study-image-frame img { display:block; height:auto; max-width:100%; margin:0 !important; }
+.study-image-resize-handle { position:absolute; right:-5px; bottom:-5px; width:12px; height:12px; border:2px solid var(--paper-card); border-radius:2px; background:var(--accent); cursor:nwse-resize; opacity:0; transition:opacity .12s ease; }
+.study-image-frame:hover .study-image-resize-handle, .study-image-frame:focus-within .study-image-resize-handle { opacity:1; }
+.rich-editor-content .study-image-frame.ProseMirror-selectednode { outline:2px solid var(--accent); outline-offset:3px; }
+.rich-editor-color-picker { display:inline-flex; align-items:center; gap:5px; padding:0 6px; color:var(--muted); font:10px var(--sans); cursor:pointer; }
+.rich-editor-color-picker input { width:20px; height:20px; padding:0; border:0; background:transparent; cursor:pointer; }
+.rich-editor-hover-tools { position:fixed; z-index:120; display:flex; align-items:center; gap:4px; padding:6px; border:1px solid var(--line); background:var(--paper-card); color:var(--ink); box-shadow:0 8px 24px rgb(0 0 0 / 20%); }
+.rich-editor-hover-tools strong { padding:0 5px; color:var(--muted); font:10px var(--sans); }
+.rich-editor-hover-tools button { padding:5px 7px; border:0; background:var(--paper-deep); color:var(--ink); font:10px var(--sans); cursor:pointer; white-space:nowrap; }
+.rich-editor-hover-tools button:hover { background:var(--hover); color:var(--accent); }
