@@ -20,7 +20,8 @@ export default function CardEditor({ card, chapters = [], existingCards = [], on
       <button class="back-link" type="button" onClick={onCancel}><ArrowLeft size={14}/> Back to cards</button>
       <div class="card-editor-heading"><span>{isNewCard ? "NEW CARD" : "EDIT MODE"}</span></div>
     </header>
-    {addedNotice && <div class="card-added-toast" role="status" aria-live="polite"><Check size={13} /> Card added</div>}\n    <div class="card-editor-body">
+    {addedNotice && <div class="card-added-toast" role="status" aria-live="polite"><Check size={13} /> Card added</div>}
+    <div class="card-editor-body">
       <div class="card-editor-tabs" role="tablist" aria-label="Card content">
         <button type="button" role="tab" aria-selected={activeSide === "question"} class={activeSide === "question" ? "is-active" : ""} onClick={() => setActiveSide("question")}>Question</button>
         <button type="button" role="tab" aria-selected={activeSide === "answer"} class={activeSide === "answer" ? "is-active" : ""} onClick={() => setActiveSide("answer")}>Answer</button>
