@@ -75,7 +75,6 @@ export default function NotebookView({ notebook, fsrsSettings, onUpdate, onBack,
         return;
       }
       if (event.altKey && !event.ctrlKey && !event.metaKey) {
-        const key = event.key.toLowerCase();
         if (key === "b") { event.preventDefault(); setTab("browse"); return; }
         if (key === "s") { event.preventDefault(); setTab("study"); return; }
         if (key === "a") { event.preventDefault(); addCard(); return; }
