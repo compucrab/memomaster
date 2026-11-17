@@ -122,6 +122,24 @@ export const CardLink = Link.extend({
   },
 });
 export const CardMath = Mathematics.configure({ katexOptions: { throwOnError: false, strict: "ignore" } });
+const CardMathSizing = Node.create({
+  name: "cardMathSizing",
+  addGlobalAttributes() {
+    return [{
+      types: ["inlineMath", "blockMath"],
+      attributes: {
+        fontSize: {
+          default: 16,
+          parseHTML: element => Number(element.getAttribute("data-font-size")) || 16,
+          renderHTML: attributes => {
+            const size = Math.max(10, Math.min(48, Number(attributes.fontSize) || 16));
+            return { "data-font-size": size, style: `font-size:${size}px` };
+          },
+        },
+      },
+    }];
+  },
+});
 
 export const CardTextStyle = TextStyle.extend({
   renderMarkdown(mark, helpers) {
@@ -232,6 +250,7 @@ export function createCardExtensions() {
     CardLink.configure({ openOnClick: false, autolink: true, protocols: ["http", "https"] }),
     CardImage.configure({ allowBase64: true }),
     CardMath,
+    CardMathSizing,
     CardVideo,
     CardInfo,
     CardTable,
