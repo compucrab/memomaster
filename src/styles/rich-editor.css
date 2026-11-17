@@ -446,3 +446,19 @@
   .rich-editor-table-zoom-backdrop { padding: 8px; }
   .rich-editor-table-zoom-content { padding: 10px; }
 }
+
+
+/* Keep the table zoom affordance inside each table, including rendered study cards. */
+.study-table-frame { position:relative; display:table; width:max-content; min-width:100%; max-width:100%; }
+.study-table-frame > table { margin:0 !important; }
+.study-table-frame > .study-table-zoom-trigger {
+  position:absolute;
+  top:6px;
+  right:6px;
+  z-index:4;
+  width:28px;
+  height:28px;
+  opacity:.88;
+}
+.study-table-frame:hover > .study-table-zoom-trigger,
+.study-table-frame:focus-within > .study-table-zoom-trigger { opacity:1; }
