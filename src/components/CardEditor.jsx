@@ -15,11 +15,11 @@ export default function CardEditor({ card, chapters = [], existingCards = [], on
   const chapterOptions = [{ id: "", name: "Unassigned" }, ...chapters];
   const filteredChapterOptions = chapterOptions.filter(item => item.name.toLocaleLowerCase().includes(chapterQuery.toLocaleLowerCase()));
   const isNewCard = !existingCards.some(item => item.id === draft.id);
-  function requestSave() {
+  function requestSave(addAnother = false) {
     const match = findSimilarQuestion(draft.front, existingCards, draft.id);
-    if (match?.exact) { setSimilarQuestion({ ...match, blocked: true }); return; }
-    if (match) { setSimilarQuestion(match); return; }
-    onSave(draft);
+    if (match?.exact) { setSimilarQuestion({ ...match, blocked: true, addAnother }); return; }
+    if (match) { setSimilarQuestion({ ...match, addAnother }); return; }
+    (addAnother ? (onSaveAndAdd || onSave) : onSave)(draft);
   }
   function update(changes) { setDraft(current => ({ ...current, ...changes })); }
 
@@ -36,8 +36,9 @@ export default function CardEditor({ card, chapters = [], existingCards = [], on
         setHighlightedChapter(Math.max(0, chapterOptions.findIndex(item => item.id === (draft.chapterId || ""))));
         setChapterPickerOpen(true);
       } else if (event.key === "Enter" && !event.shiftKey) {
+        if (event.target?.closest?.(".chapter-picker, input, textarea, [role='dialog']")) return;
         event.preventDefault();
-        if (!event.target?.closest?.("[role='dialog']")) requestSave(true);
+        requestSave(true);
       }
     };
     window.addEventListener("keydown", handleEditorShortcuts);
