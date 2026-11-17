@@ -65,6 +65,17 @@ export default function ReviewSession({ cards, mode = "scheduled", settings, med
         onEditCard?.(activeCard.id);
         return;
       }
+      if (mode === "unscheduled" && event.key === "2") {
+        event.preventDefault();
+        if (!revealed) setRevealed(true);
+        else finishCard("done");
+        return;
+      }
+      if (mode === "unscheduled" && revealed && event.key === "1") {
+        event.preventDefault();
+        repeatCard();
+        return;
+      }
       if (event.code === "Space" || event.key === " ") {
         event.preventDefault();
         if (!revealed) setRevealed(true);
