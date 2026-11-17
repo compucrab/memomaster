@@ -89,7 +89,7 @@ Scheduled ratings map to FSRS as follows:
 
 The library daily counts include all new cards and learning/relearning or review cards due before the next study-day rollover. The active review queue starts with new cards, due cards, and learning/relearning cards due within the next 10 minutes. After a rating is saved, any card whose next interval is 10 minutes or less is immediately appended to the queue; it is not held until its timestamp. Cards with longer intervals leave the active queue and become available when due later. The queue is continuous and can grow or shrink as cards are rescheduled, so the review screen does not display a progress bar or completion percentage. After revealing an answer, the review screen keeps the question above the answer with a horizontal divider and expands the card to the available workspace. Leaving review preserves all saved FSRS state and history.
 
-Unscheduled practice can include any cards in scope. Repeat moves a card to the end of the current queue; Done records an entry in `practiceHistory`. Unscheduled practice must not mutate FSRS state or due dates.
+Unscheduled practice can include any cards in scope. Before revealing, `2` or Space reveals the answer. Once revealed, `1` moves the card to the end of the current queue (Repeat), while `2` or Space marks it Done and records an entry in `practiceHistory`. Unscheduled practice must not mutate FSRS state or due dates.
 
 ### Study-day rollover
 
