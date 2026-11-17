@@ -27,8 +27,11 @@ const projectFilter = [{ name: "MemoMaster project", extensions: ["memz"] }];
 const normalizeName = (value) => String(value || "").trim().toLocaleLowerCase();
 const normalizeLibrary = (items) => items.map((notebook) => ({
   ...notebook,
-  chapters: (notebook.chapters || []).map(({ topics, ...chapter }) => chapter),
-  ...(Array.isArray(notebook.flashcards) ? { flashcards: notebook.flashcards.map((card) => { const cleanCard = { ...card }; delete cleanCard.topicId; cleanCard.front = normalizeCardDocument(cleanCard.front); cleanCard.back = normalizeCardDocument(cleanCard.back); return cleanCard; }) } : {}),
+  ...(Array.isArray(notebook.flashcards) ? { flashcards: notebook.flashcards.map((card) => ({
+    ...card,
+    front: normalizeCardDocument(card.front),
+    back: normalizeCardDocument(card.back),
+  })) } : {}),
 }));
 
 export default function Layout() {
