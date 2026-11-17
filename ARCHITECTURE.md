@@ -6,7 +6,7 @@ MemoMaster is a desktop-first, local-first learning and revision app. The conten
 
 **Library → Notebook → Chapter → Flashcard**
 
-A notebook contains chapters, flashcards, scheduled review history, and unscheduled practice history. The library displays each notebook’s New, Learning/Relearning, and Review cards remaining in the current study day, using the configured rollover hour. A card contains Markdown front/back content, an optional `chapterId`, and optional FSRS state. Topics are no longer part of the product model; legacy topic metadata is stripped when old library or archive data is loaded.
+A notebook contains chapters, flashcards, scheduled review history, and unscheduled practice history. The library displays each notebook’s New, Learning/Relearning, and Review cards remaining in the current study day, using the configured rollover hour. A card contains Tiptap JSON front/back documents, an optional `chapterId`, and optional FSRS state. Topics are no longer part of the product model; legacy topic metadata is stripped when old library or archive data is loaded.
 
 Notebook view has two tabs:
 
@@ -45,7 +45,7 @@ The portable .memz format is a ZIP archive generated and parsed by `src/services
 - `notebooks/{notebookId}/notebook.json` contains notebook metadata, chapters, and study histories.
 - `notebooks/{notebookId}/cards/{cardId}.json` contains individual cards, including FSRS state.
 
-Version 2 stores JSON card records. Version 1 import remains supported through a legacy Markdown-card migration. The importer validates the manifest, identifiers, ZIP paths, decompressed size limits, compression methods, and CRC checksums. Keep these checks when changing archive handling.
+Version 3 stores JSON card records whose `front` and `back` fields are canonical Tiptap documents. Version 1 and 2 archives remain importable; legacy Markdown content is converted to Tiptap JSON when the library is normalized. The importer validates the manifest, identifiers, ZIP paths, decompressed size limits, compression methods, and CRC checksums. Keep these checks when changing archive handling.
 
 The File menu provides:
 
@@ -105,13 +105,13 @@ Older projects without `studySessions` start with an empty activity history; exi
 
 `src/components/CardEditor.jsx` provides separate Question and Answer tabs. Each tab mounts its own RichTextEditor instance, so undo/redo history is isolated per side.
 
-Card content remains Markdown for SQLite and .memz portability. The editor supports five heading levels, emphasis, underline, lists, quotes, inline code, links, text color, text sizing, inline/display LaTeX, and left-aligned block images with contextual resize controls. Text and headings use a consistent left-aligned document flow. The preview renderer preserves supported text color and font-size spans and uses the same five heading levels. Inline equations use the surrounding text size; display equations remain visually distinct.
+Card content is stored as Tiptap JSON in SQLite and .memz archives. `src/services/cardDocument.js` normalizes legacy Markdown strings to JSON, renders JSON using the same extension schema as the editor, and resolves notebook media references for display. Browse previews and review sessions use this shared renderer, so editing and previewing use one content model.\n\nThe editor supports five semantic heading levels, emphasis, underline, lists, quotes, inline code, links, a fixed text-color palette, editable tables, inline/display LaTeX, images with contextual resize controls, and video link cards. Arbitrary text sizing and text alignment controls are not exposed; document content remains left-aligned with a shared typography scale.
 
-Each notebook has a reusable `media` collection. Image files are stored once as media assets in notebook metadata and card Markdown stores a `memomedia://{assetId}` reference. The media picker can reuse an image in multiple cards. Media assets are included in SQLite library saves and .memz archives because they are part of notebook metadata. Clipboard image paste also adds the image to the media collection.
+Each notebook has a reusable `media` collection. Image files are stored once as media assets in notebook metadata and card JSON stores a `memomedia://{assetId}` reference. The media picker can reuse an image in multiple cards. Media assets are included in SQLite library saves and .memz archives because they are part of notebook metadata. Clipboard image paste also adds the image to the media collection.
 
 Video content is stored as a link card using `@[video](URL)`; previews never embed or autoplay the video. Selecting the card opens the original supported video URL in the user's browser.
 
-`src/services/markdown.js` renders saved Markdown for browse previews and review sessions. It escapes user-authored text, resolves notebook media references, validates media URL schemes, and only restores a small allowlist of inline style properties. Keep renderer changes security-reviewed and cover hostile input.
+`src/services/cardDocument.js` renders canonical Tiptap JSON for browse previews and review sessions. `src/services/markdown.js` remains as the legacy Markdown conversion/renderer path. Keep renderer changes security-reviewed and cover hostile input.
 
 ## Important modules
 
@@ -126,7 +126,7 @@ Video content is stored as a link card using `@[video](URL)`; previews never emb
 | projectArchive.js | .memz ZIP export/import and legacy migration |
 | fsrs.js | FSRS scheduling, study-day rollover, interval calculation |
 | fsrsSettings.js | Default and validated app-wide FSRS preferences |
-| markdown.js | Safe read-only Markdown/media rendering |
+| cardDocument.js | Tiptap JSON normalization, media resolution, and shared HTML rendering |\n| editorExtensions.js | Shared Tiptap schema for editing and rendering |\n| markdown.js | Legacy Markdown rendering and conversion support |
 | lib.rs | SQLite commands, native file I/O, automatic backup writing |
 
 ## Verification
