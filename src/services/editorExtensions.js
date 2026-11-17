@@ -14,7 +14,7 @@ export const CardImage = Image.extend({
     return ["img", { ...this.options.HTMLAttributes, ...HTMLAttributes, style, "data-image-width": width }];
   },
   parseMarkdown(token) {
-    const metadata = String(token.title || "").match(/width=(\\d+)/);
+    const metadata = String(token.title || "").match(/width=(\d+)/);
     return { type: "image", attrs: { src: safeMediaUrl(token.href), alt: token.text || "", title: null, width: metadata ? Number(metadata[1]) : 420 } };
   },
   renderMarkdown(node) {
