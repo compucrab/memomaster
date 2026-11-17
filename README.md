@@ -31,7 +31,7 @@ The scheduler uses `ts-fsrs` (FSRS-6). Default preferences:
 | Setting | Default |
 | --- | --- |
 | Desired retention | 90% |
-| Learning steps | 10 minutes |
+| Learning steps | 1 minute, 10 minutes |
 | Relearning steps | 10 minutes |
 | Maximum interval | 180 days |
 | Study-day rollover | 04:00 local time |
