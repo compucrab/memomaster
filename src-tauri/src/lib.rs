@@ -67,11 +67,18 @@ fn load_library(app: AppHandle) -> Result<Option<String>, String> {
         quarantine_database(&app)?;
         return Err("The local library database failed its integrity check and was preserved for recovery.".into());
     }
-    let saved: Option<String> = connection.query_row(
+    let saved: Option<String> = match connection.query_row(
         "SELECT library_json FROM app_state WHERE id = 1",
         [],
         |row| row.get(0),
-    ).optional().map_err(|error| error.to_string())?;
+    ).optional() {
+        Ok(saved) => saved,
+        Err(error) => {
+            drop(connection);
+            quarantine_database(&app)?;
+            return Err(format!("The saved library could not be read and the database was preserved for recovery. {error}"));
+        }
+    };
     if let Some(data) = &saved {
         let valid = serde_json::from_str::<Value>(data).map(|value| value.is_array()).unwrap_or(false);
         if !valid {
