@@ -1,11 +1,13 @@
 import { useMemo } from "preact/hooks";
 import { ArrowLeft, Flame, Trophy, CalendarDays, Layers3 } from "lucide-preact";
+import { State } from "ts-fsrs";
 import { getStudyActivity } from "../services/studyActivity";
 
 function getDueCount(notebooks, now) {
   return notebooks.reduce((total, notebook) => {
     return total + (notebook.flashcards || []).filter((card) => {
-      if (!card.fsrs?.due) return !card.fsrs;
+      if (!card.fsrs || card.fsrs.state === State.New) return true;
+      if (!card.fsrs.due) return false;
       const due = new Date(card.fsrs.due);
       return Number.isNaN(due.getTime()) || due <= now;
     }).length;
