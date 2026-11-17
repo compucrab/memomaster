@@ -18,36 +18,45 @@
 .review-complete h1 { margin: 16px 0 5px; color: var(--ink); font: 750 26px var(--display); }
 .review-complete p { margin: 0 0 20px; font-size: 11px; }
 
-.status-workspace { display: block; }
-.status-heading { @apply flex items-start gap-8; margin-bottom: 28px; }
+.status-workspace { display: block; max-width: 1240px; }
+.status-heading { @apply flex items-start gap-8; margin-bottom: 24px; }
 .status-heading > div { flex: 1; margin-top: -5px; }
 .status-heading h1 { margin: 0; color: var(--ink); font: 750 26px var(--display); letter-spacing: -.05em; }
 .status-heading p { margin: 5px 0 0; color: var(--muted); font-size: 11px; }
-.status-stats-grid { @apply grid grid-cols-4 gap-3; margin-bottom: 18px; }
+.status-stats-grid { @apply grid grid-cols-4 gap-3; margin-bottom: 16px; }
 .status-stat, .status-panel { border: 1px solid var(--line); background: var(--surface); }
-.status-stat { min-width: 0; padding: 17px 18px; }
+.status-stat { min-width: 0; padding: 16px 18px; }
 .status-stat > span { @apply flex items-center gap-2; color: var(--muted); font: 9px var(--mono); letter-spacing: .06em; }
-.status-stat > strong { display: block; margin-top: 12px; color: var(--ink); font: 750 27px var(--display); letter-spacing: -.05em; }
+.status-stat > strong { display: block; margin-top: 10px; color: var(--ink); font: 750 27px var(--display); letter-spacing: -.05em; }
 .status-stat > strong small { color: var(--muted); font: 11px var(--sans); letter-spacing: 0; }
 .status-stat > p { margin: 4px 0 0; color: var(--muted); font-size: 10px; }
-.status-panel { min-width: 0; padding: 19px; margin-bottom: 16px; }
-.status-panel-heading { @apply flex items-start justify-between gap-4; margin-bottom: 18px; }
-.status-panel-heading h2 { margin: 0; color: var(--ink); font: 650 14px var(--display); }
-.status-panel-heading p { margin: 4px 0 0; color: var(--muted); font-size: 10px; }
+.status-panel { min-width: 0; padding: 18px; margin-bottom: 14px; }
+.status-panel-heading { @apply flex items-start justify-between gap-4; margin-bottom: 16px; }
+.status-panel-heading h2, .status-next h2 { margin: 0; color: var(--ink); font: 650 14px var(--display); }
+.status-panel-heading p, .status-next p { margin: 4px 0 0; color: var(--muted); font-size: 10px; }
 .status-panel-heading > span { color: var(--muted); font: 9px var(--mono); }
-.status-two-column { @apply grid grid-cols-2 gap-4; }
-.outcome-list { @apply flex flex-col gap-4; }
-.outcome-row { @apply grid items-center gap-3; grid-template-columns: 75px minmax(0,1fr) 30px; color: var(--muted); font-size: 10px; }
-.outcome-row > div { height: 7px; overflow: hidden; background: var(--hover); }
-.outcome-row > div i { display: block; height: 100%; }
-.outcome-row > div i.good { background: var(--accent); }
-.outcome-row > div i.easy { background: var(--success); }
-.outcome-row > div i.difficult { background: var(--warning); }
-.outcome-row > div i.forgot { background: var(--danger); }
-.outcome-row strong { color: var(--ink); font: 10px var(--mono); text-align: right; }
-.status-footnote, .status-empty { margin: 17px 0 0; color: var(--muted); font-size: 9px; }
-@media (max-width: 850px) { .status-stats-grid { @apply grid-cols-2; } .status-two-column { @apply grid-cols-1; } }
-@media (max-width: 600px) { .status-heading { @apply flex-col gap-4; } .status-stat { padding: 13px; } .status-panel { padding: 14px; } .notebook-progress-title { @apply items-start flex-col gap-1; } }
+.activity-scroll { overflow-x: auto; padding-bottom: 4px; }
+.activity-months { display: grid; gap: 4px; margin: 0 0 6px 32px; color: var(--muted); font: 9px var(--mono); }
+.activity-months span { white-space: nowrap; }
+.activity-graph-wrap { display: flex; align-items: flex-start; gap: 8px; width: max-content; }
+.activity-weekday-labels { width: 24px; display: grid; grid-template-rows: repeat(7, 12px); gap: 4px; color: var(--muted); font: 8px/12px var(--mono); text-align: right; }
+.activity-graph { display: grid; grid-auto-flow: column; grid-auto-columns: 12px; grid-template-rows: repeat(7, 12px); gap: 4px; width: max-content; }
+.activity-week { display: grid; grid-template-rows: repeat(7, 12px); gap: 4px; }
+.activity-day { display: block; width: 12px; height: 12px; border: 1px solid color-mix(in srgb, var(--line) 70%, transparent); border-radius: 3px; }
+.activity-day.level-0 { background: var(--paper); }
+.activity-day.level-1 { background: color-mix(in srgb, var(--success) 24%, var(--surface)); }
+.activity-day.level-2 { background: color-mix(in srgb, var(--success) 45%, var(--surface)); }
+.activity-day.level-3 { background: color-mix(in srgb, var(--success) 68%, var(--surface)); }
+.activity-day.level-4 { background: var(--success); }
+.activity-legend { display: flex; align-items: center; justify-content: flex-end; gap: 5px; margin-top: 12px; color: var(--muted); font: 9px var(--mono); }
+.activity-legend .activity-day { width: 10px; height: 10px; }
+.status-next { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+.status-next p { font-size: 11px; }
+.status-due-count { color: var(--ink); font: 750 24px var(--display); white-space: nowrap; }
+.status-due-count small { color: var(--muted); font: 10px var(--sans); }
+
+@media (max-width: 850px) { .status-stats-grid { @apply grid-cols-2; } }
+@media (max-width: 600px) { .status-heading { @apply flex-col gap-4; } .status-stat { padding: 13px; } .status-panel { padding: 14px; } .status-next { align-items: flex-start; } }
 @media (max-height: 720px) { .review-card { height: min(70vh,640px); } }
 
 

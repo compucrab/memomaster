@@ -91,18 +91,15 @@ Unscheduled practice can include any cards in scope. Repeat moves a card to the 
 
 FSRS v5 measures elapsed time in fixed 24-hour blocks. MemoMaster normalizes scheduler timestamps to local study-day boundaries using the configured rollover hour before calculating elapsed review days, then converts review due dates back to local rollover boundaries. Learning/relearning steps retain their exact minute-based timing. The same rollover hour is used for daily workload grouping.
 
-## Retention and memory analytics
+## Study activity and streaks
 
-`StudyStatus.jsx` derives its analytics from scheduled review history and current card FSRS state:
+`StudyStatus.jsx` is a concise activity dashboard. Its GitHub-style consistency graph is built from persisted `studySessions` records. A record is created only when a scheduled review queue is fully completed for a whole notebook or one chapter; exiting early, reviewing only part of the queue, and unscheduled practice do not create activity or extend a streak.
 
-- Actual retention: calculated only from reviews whose resulting FSRS scheduled interval is greater than one day; short learning/relearning repetitions are excluded. Again is a failure; Hard, Good, and Easy are successful recall.
-- Monthly retention trend over the most recent 12 months, compared with the desired-retention target.
-- Again/Hard/Good/Easy rating distribution for reviews scheduled beyond one day.
-- 30-day due workload forecast grouped by study day.
-- New, Learning/Relearning, Young, and Mature card breakdown. Mature uses a 21-day-or-longer review interval.
-- Frequently forgotten cards ranked by FSRS lapse count.
+Each completion record stores the completion timestamp, scope, chapter ID when applicable, and number of cards reviewed. Records live on the notebook and are included in SQLite saves and .memz project metadata. The configured study-day rollover is applied when grouping activity into days.
 
-FSRS parameter optimization is not currently integrated into the app. Do not substitute hand-written parameter fitting for the official FSRS optimizer if optimization is added later. Modern Anki does not impose a fixed 1,000-review minimum, so readiness should be based on data quality and optimizer evaluation rather than an arbitrary hard threshold.
+The dashboard shows current and longest completed-day streaks, total completed study days, cards reviewed in completed sessions, a 12-month consistency graph, and the number of new or due cards across the library. The current streak remains active during the current study day if the previous study day was completed. Longest streak is calculated across all retained session records.
+
+Older projects without `studySessions` start with an empty activity history; existing review logs are not retroactively treated as completed notebook or chapter sessions because they cannot establish whether the full queue was completed.
 
 ## Card editor and content formats
 
