@@ -146,3 +146,62 @@
 .rich-editor-color-reset { display: inline-flex; align-items: center; justify-content: center; font-weight: 650; }
 .rich-editor-insert-dialog input { width: 100%; height: 36px; margin-bottom: 8px; padding: 0 10px; border: 1px solid var(--line); outline: none; background: var(--paper); color: var(--ink); font: 12px/1.5 var(--sans); }
 .rich-editor-insert-dialog input:focus { border-color: var(--accent); }
+
+
+/* Contextual Notion-style editing: no permanent formatting toolbar. */
+.rich-editor { grid-template-rows: auto minmax(120px, 1fr); }
+.rich-editor-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.rich-editor-shortcut { color: var(--muted); font: 10px var(--mono); opacity: .75; }
+.rich-editor-selection-tools,
+.rich-editor-command-palette {
+  position: fixed;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 6px;
+  border: 1px solid var(--line);
+  background: var(--paper-card);
+  color: var(--ink);
+  box-shadow: 0 10px 32px rgb(0 0 0 / 22%);
+}
+.rich-editor-selection-tools { transform: translateX(-50%); white-space: nowrap; }
+.rich-editor-selection-tools button {
+  display: inline-flex;
+  width: 27px;
+  height: 27px;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+.rich-editor-selection-tools button:hover,
+.rich-editor-selection-tools button.is-active { background: var(--hover); color: var(--accent); }
+.rich-editor-selection-tools select {
+  max-width: 112px;
+  height: 27px;
+  padding: 0 5px;
+  border: 0;
+  outline: 0;
+  background: var(--paper-card);
+  color: var(--ink);
+  font: 10px var(--sans);
+}
+.rich-editor-selection-divider { width: 1px; height: 18px; margin: 0 3px; background: var(--line); }
+.rich-editor-selection-color { width: 13px !important; height: 13px !important; border-radius: 50%; }
+.rich-editor-selection-reset { width: 20px !important; height: 20px !important; border: 1px solid var(--line) !important; font: 10px var(--sans); }
+.rich-editor-command-palette { width: min(340px, calc(100vw - 24px)); flex-direction: column; align-items: stretch; padding: 7px; }
+.rich-editor-command-search { display: flex; height: 36px; align-items: center; gap: 9px; padding: 0 9px; border: 1px solid var(--line); background: var(--paper); color: var(--muted); }
+.rich-editor-command-search > span { font: 12px var(--mono); }
+.rich-editor-command-search input { width: 100%; min-width: 0; border: 0; outline: 0; background: transparent; color: var(--ink); font: 12px var(--sans); }
+.rich-editor-command-results { display: flex; max-height: min(320px, 48vh); flex-direction: column; gap: 2px; overflow-y: auto; margin-top: 6px; }
+.rich-editor-command-results button { display: flex; min-height: 42px; flex-direction: column; align-items: flex-start; justify-content: center; gap: 3px; padding: 6px 9px; border: 0; background: transparent; color: var(--ink); cursor: pointer; text-align: left; }
+.rich-editor-command-results button:hover,
+.rich-editor-command-results button:focus { outline: 0; background: var(--hover); }
+.rich-editor-command-results strong { font: 550 11px var(--sans); }
+.rich-editor-command-results span,
+.rich-editor-command-results p { margin: 0; color: var(--muted); font: 9px var(--sans); }
+.rich-editor-command-results p { padding: 12px 9px; }
+.rich-editor-command-hint { padding: 7px 8px 2px; border-top: 1px solid var(--line); color: var(--muted); font: 9px var(--mono); }
