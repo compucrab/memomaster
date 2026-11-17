@@ -44,8 +44,6 @@ export default function ReviewSession({ cards, mode = "scheduled", settings, onR
     ? getReviewOptions(activeCard, new Date(), settings)
     : null;
 
-
-
   function removeActiveCard() {
     setQueue((items) => items.slice(1));
     setRevealed(false);
@@ -90,8 +88,6 @@ export default function ReviewSession({ cards, mode = "scheduled", settings, onR
     setRevealed(false);
   }
 
-
-
   if (!queue.length) {
     return (
       <section class="review-session">
@@ -117,8 +113,19 @@ export default function ReviewSession({ cards, mode = "scheduled", settings, onR
       </header>
       <div class="review-card">
         <div class="review-card-content">
-          <p class="study-side-label">{revealed ? "ANSWER" : "QUESTION"}</p>
-          <CardContent content={revealed ? activeCard.back : activeCard.front} />
+          <section class="review-card-side review-question">
+            <p class="study-side-label">QUESTION</p>
+            <CardContent content={activeCard.front} />
+          </section>
+          {revealed && (
+            <>
+              <div class="review-answer-divider" role="separator" />
+              <section class="review-card-side review-answer">
+                <p class="study-side-label">ANSWER</p>
+                <CardContent content={activeCard.back} />
+              </section>
+            </>
+          )}
         </div>
         {!revealed ? (
           <div class="study-card-actions">
