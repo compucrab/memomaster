@@ -8,7 +8,7 @@ const pages = {
       ["Notebooks keep subjects separate", "Create a notebook for a subject or goal, then open it to manage its cards. For example, you might have separate notebooks for history, programming, or a language."],
       ["Cards are questions and answers", "Write a clear question on the Question side and its answer on the Answer side. Keep one idea per card where possible. Use headings, lists, images, equations, tables, and video links when they help explain the idea."],
       ["Chapters organise cards", "Assign a card to a chapter when you want to group related material. Leave it as Unassigned if you do not need chapters. You can search for a chapter while editing a card."],
-      ["Browse to find and edit", "The Browse tab lists your cards. Select a card to preview it, switch between Question and Answer, or choose Edit card to make changes. Press Alt + B to open Browse from Study. Press Escape to return to the library. The search field is focused when Browse opens, so you can start typing immediately."],
+      ["Browse to find, select, and edit", "The Browse tab lists your cards. Select a card to preview it, switch between Question and Answer, or choose Edit card to make changes. Use Ctrl-click to add or remove cards from a selection, or Shift-click to select a continuous range. Ctrl + Shift + click adds a range to the current selection. Press Delete to delete selected cards after confirmation. Press Escape once to clear a selection; press it again to return to the library. The search field is focused when Browse opens, so you can start typing immediately."],
       ["Edit questions and answers quickly", "While editing a card, press Alt + Q to switch to the Question side or Alt + W to switch to the Answer side. Press Escape and confirm to discard a new card or unsaved edits. The text editor is focused when the card editor opens. Search fields and text boxes in dialogs are focused automatically when they appear."],
       ["Study to practise remembering", "Open the Study tab or press Alt + S to choose Scheduled reviews or Unscheduled practice. Reveal the answer before rating how well you remembered it. Press Alt + B to return to Browse, or Escape to return to the library."],
       ["Understand the four ratings", "Again means you forgot or could not recall the answer. Hard means you remembered it with difficulty. Good means you recalled it correctly. Easy means it was effortless. MemoMaster uses these ratings to plan future scheduled reviews."],
@@ -17,7 +17,7 @@ const pages = {
   },
   shortcuts: {
     title: "Keyboard shortcuts",
-    intro: "Shortcuts are available when the relevant notebook, editor, or review screen is active. Use Alt + B and Alt + S for navigation; plain B and S are not navigation shortcuts. Text-entry fields keep their normal typing behaviour.",
+    intro: "Shortcuts are available when the relevant notebook, editor, or review screen is active. Alt-based shortcuts work even when a text field has focus, unless the editor is handling a discard confirmation. Plain B and S are not navigation shortcuts. Text-entry fields otherwise keep their normal typing behaviour.",
     sections: [
       ["Notebook", `A — Add a new card
 E — Edit the selected card in Browse
