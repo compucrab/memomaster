@@ -24,14 +24,14 @@ function videoEmbed(url) {
     const parsed = new URL(url);
     if (parsed.protocol !== "https:" && parsed.protocol !== "http:") return "";
     const host = parsed.hostname.toLowerCase();
-    const supported = host === "youtu.be" || host === "youtube.com" || host.endsWith(".youtube.com")
+    const supported = host === "youtu.be" || host === "youtube.com" || host.endsWith(".youtube.com") || host === "vimeo.com" || host.endsWith(".vimeo.com") || host === "instagram.com" || host.endsWith(".instagram.com") || host === "facebook.com" || host.endsWith(".facebook.com") || host === "fb.watch" || [".mp4", ".webm", ".ogg"].some(extension => parsed.pathname.toLowerCase().endsWith(extension));
       || host === "vimeo.com" || host.endsWith(".vimeo.com")
       || host === "instagram.com" || host.endsWith(".instagram.com")
       || host === "facebook.com" || host.endsWith(".facebook.com")
       || host === "fb.watch" || /\\.(mp4|webm|ogg)$/i.test(parsed.pathname);
     if (!supported) return "";
     const safeUrl = escapeHtml(parsed.href);
-    const provider = /youtube|youtu\\.be/.test(host) ? "YouTube"
+    const provider = (host.includes("youtube") || host === "youtu.be") ? "YouTube" : host.includes("vimeo") ? "Vimeo" : host.includes("instagram") ? "Instagram" : (host.includes("facebook") || host === "fb.watch") ? "Facebook" : "Video file";
       : /vimeo/.test(host) ? "Vimeo"
       : /instagram/.test(host) ? "Instagram"
       : /facebook|fb\\.watch/.test(host) ? "Facebook" : "Video file";
