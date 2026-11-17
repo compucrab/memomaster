@@ -47,16 +47,17 @@ function videoTarget(value) {
   return { error: "This video host does not provide a supported embed. Try YouTube, Instagram, Facebook, Vimeo, or a direct MP4/WebM/OGG link. Some providers block playback outside their own website." };
 }
 export default function RichTextEditor({ label, value = "", placeholder, onChange, media = [], onAddMedia }) {
-  const hostRef = useRef(null), editorRef = useRef(null), fileRef = useRef(null), onChangeRef = useRef(onChange);
+  const hostRef = useRef(null), editorRef = useRef(null), fileRef = useRef(null), onChangeRef = useRef(onChange), onAddMediaRef = useRef(onAddMedia);
   const [revision, setRevision] = useState(0), [editor, setEditor] = useState(null), [dialog, setDialog] = useState(null), [dialogValue, setDialogValue] = useState(""), [mediaOpen, setMediaOpen] = useState(false);
   onChangeRef.current = onChange;
+  onAddMediaRef.current = onAddMedia;
   useEffect(() => {
     const insertFiles = async (files, instance) => {
       const images = Array.from(files || []).filter(file => file.type?.startsWith("image/"));
       if (!images.length) return false;
       for (const file of images) {
         if (file.size > 12 * 1024 * 1024) { setDialog({ type: "notice", title: "Image is too large", message: `“${file.name}” exceeds the 12 MB image limit.` }); continue; }
-        try { const asset = onAddMedia ? await onAddMedia(file) : { data: await readImage(file) }; const src = asset.id ? "memomedia://" + asset.id : asset.data; instance.chain().focus().setImage({ src, alt: asset.name || file.name.replace(/\.[^.]+$/, ""), width: 420, align: "center" }).run(); }
+        try { const asset = onAddMediaRef.current ? await onAddMediaRef.current(file) : { data: await readImage(file) }; const src = asset.id ? "memomedia://" + asset.id : asset.data; instance.chain().focus().setImage({ src, alt: asset.name || file.name.replace(/\.[^.]+$/, ""), width: 420, align: "center" }).run(); }
         catch (error) { setDialog({ type: "notice", title: "Could not paste image", message: error.message }); }
       }
       return true;
