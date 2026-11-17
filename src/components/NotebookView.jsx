@@ -65,10 +65,14 @@ export default function NotebookView({ notebook, fsrsSettings, onUpdate, onBack,
       if (key === "a") { event.preventDefault(); addCard(); }
       else if (key === "s") { event.preventDefault(); setTab("study"); }
       else if (key === "b") { event.preventDefault(); setTab("browse"); }
+      else if (key === "e" && tab === "browse" && selectedCard) {
+        event.preventDefault();
+        setEditingCardId(selectedCard.id);
+      }
     };
     window.addEventListener("keydown", handleNotebookKeys);
     return () => window.removeEventListener("keydown", handleNotebookKeys);
-  }, [editingCardId, reviewing]);
+  }, [editingCardId, reviewing, tab, selectedCardId, visibleCards]);
 
   const visibleCards = useMemo(() => {
     const needle = search.trim().toLocaleLowerCase();
@@ -225,6 +229,12 @@ export default function NotebookView({ notebook, fsrsSettings, onUpdate, onBack,
     return <ReviewSession key={`${studyType}-${scopeType}-${scopeChapterId}`}
       cards={studyCards} mode={studyType} settings={fsrsSettings} media={notebook.media || []}
       onReview={handleReview}
+      onEditCard={(cardId) => {
+        setSelectedCardId(cardId);
+        setTab("browse");
+        setReviewing(false);
+        setEditingCardId(cardId);
+      }}
       scopeType={scopeType}
       scopeChapterId={scopeChapterId}
       onComplete={(session) => onUpdate({
