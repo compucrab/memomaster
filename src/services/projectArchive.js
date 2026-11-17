@@ -116,7 +116,7 @@ export async function createMemz(notebooks) {
       });
     });
     media.forEach((asset, index) => {
-      const mediaId = /^[\\w-]{1,100}$/.test(asset.id) ? asset.id : `media-${index + 1}`;
+      const mediaId = /^[A-Za-z0-9_-]{1,100}$/.test(asset.id) ? asset.id : `media-${index + 1}`;
       files.push({
         name: `notebooks/${notebook.id}/media/${mediaId}.json`,
         content: JSON.stringify({ ...asset, id: mediaId }, null, 2),
