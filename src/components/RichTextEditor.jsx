@@ -82,6 +82,7 @@ export default function RichTextEditor({ label, value = "", placeholder, onChang
     if (!instance) return;
     positionAt(instance.state.selection.from);
     setPaletteQuery("");
+    setPaletteIndex(0);
     setPaletteOpen(true);
   }
   function updateSelectionPosition(instance) {
