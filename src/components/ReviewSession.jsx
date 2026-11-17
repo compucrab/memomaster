@@ -4,15 +4,13 @@ import { Check, Clock3, RotateCw } from "lucide-preact";
 import CardContent from "./CardContent";
 import { formatInterval, getReviewOptions, scheduleReview } from "../services/fsrs";
 
-function getStudyDayEnd(now, rolloverHour) {
-  const end = new Date(now);
-  end.setHours(rolloverHour ?? 4, 0, 0, 0);
-  if (end <= now) end.setDate(end.getDate() + 1);
-  return end;
-}
+const SHORT_TERM_WINDOW = 10 * 60 * 1000;
 
-function isLearning(card) {
-  return card.fsrs?.state === State.Learning || card.fsrs?.state === State.Relearning;
+function isShortTermPending(card, now) {
+  if (!card.fsrs?.due) return false;
+  const due = new Date(card.fsrs.due);
+  const remaining = due.getTime() - now.getTime();
+  return Number.isFinite(remaining) && remaining > 0 && remaining <= SHORT_TERM_WINDOW;
 }
 
 function isDue(card, now) {
@@ -29,7 +27,6 @@ function isLearningDueToday(card, now, studyDayEnd) {
 
 export default function ReviewSession({ cards, mode = "scheduled", settings, onReview, onExit }) {
   const [sessionCards, setSessionCards] = useState(() => cards.map((card) => ({ ...card })));
-  const [studyDayEnd] = useState(() => getStudyDayEnd(new Date(), settings?.rolloverHour));
   const [queue, setQueue] = useState(() => {
     const now = new Date();
     const priority = (card) => {
@@ -46,7 +43,7 @@ export default function ReviewSession({ cards, mode = "scheduled", settings, onR
   });
   const [pending, setPending] = useState(() => {
     const now = new Date();
-    return mode === "scheduled" ? cards.filter((card) => isLearningDueToday(card, now, studyDayEnd)).map((card) => card.id) : [];
+    return mode === "scheduled" ? cards.filter((card) => isShortTermPending(card, now)).map((card) => card.id) : [];
   });
   const [clockNow, setClockNow] = useState(() => new Date());
   const [revealed, setRevealed] = useState(false);
@@ -63,28 +60,18 @@ export default function ReviewSession({ cards, mode = "scheduled", settings, onR
     if (!pending.length) return undefined;
     const timer = window.setInterval(() => {
       const now = new Date();
-      const dayEnd = studyDayEnd;
-      const dayEnded = now >= dayEnd;
-      const dueIds = dayEnded ? [] : pending.filter((id) => {
+      const dueIds = pending.filter((id) => {
         const card = sessionCards.find((item) => item.id === id);
         return card && isDue(card, now);
       });
-      const expiredIds = dayEnded ? pending : pending.filter((id) => {
-        const card = sessionCards.find((item) => item.id === id);
-        const due = new Date(card?.fsrs?.due);
-        return !card || Number.isNaN(due.getTime()) || due >= dayEnd;
-      });
-      if (!queue.length || dueIds.length || expiredIds.length) setClockNow(now);
+      if (!queue.length || dueIds.length) setClockNow(now);
       if (dueIds.length) {
         setQueue((items) => [...items, ...dueIds.filter((id) => !items.includes(id))]);
+        setPending((items) => items.filter((id) => !dueIds.includes(id)));
       }
-      if (dueIds.length || expiredIds.length) {
-        const finishedIds = new Set([...dueIds, ...expiredIds]);
-        setPending((items) => items.filter((id) => !finishedIds.has(id)));
-      }
-    }, 1000);
+    }, 500);
     return () => window.clearInterval(timer);
-  }, [pending, sessionCards, queue.length, studyDayEnd]);
+  }, [pending, sessionCards, queue.length]);
 
   function removeActiveCard() {
     setQueue((items) => items.slice(1));
@@ -102,8 +89,7 @@ export default function ReviewSession({ cards, mode = "scheduled", settings, onR
         onReview(activeCard.id, result.fsrs, result.log, mode);
         setSessionCards((items) => items.map((card) => card.id === activeCard.id ? { ...card, fsrs: result.fsrs } : card));
         setReviewed((count) => count + 1);
-        const inLearningStep = result.fsrs.state === State.Learning || result.fsrs.state === State.Relearning;
-        if (inLearningStep && isLearningDueToday({ fsrs: result.fsrs }, reviewedAt, studyDayEnd)) {
+        if (isShortTermPending({ fsrs: result.fsrs }, reviewedAt)) {
           setPending((items) => items.includes(activeCard.id) ? items : [...items, activeCard.id]);
           removeActiveCard();
           return;
@@ -140,11 +126,11 @@ export default function ReviewSession({ cards, mode = "scheduled", settings, onR
       .sort((a, b) => a - b)[0];
     return (
       <section class="review-session">
-        <header class="review-session-header"><button class="back-link" onClick={onExit}>← EXIT REVIEW</button><span>{reviewed} REVIEWS</span></header>
+        <header class="review-session-header"><button class="back-link" onClick={onExit}>← EXIT REVIEW</button><span>{reviewed} REVIEWS · {pending.length} WAITING</span></header>
         <div class="review-complete">
           <Clock3 size={30} />
-          <h1>Next card is not due yet</h1>
-          <p>{nextDue ? "The next learning card is due at " + nextDue.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) + ". It will return automatically." : "The remaining learning cards are scheduled for another study day."}</p>
+          <h1>Waiting for the next card</h1>
+          <p>{nextDue ? "The next learning card is due at " + nextDue.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) + ". It will return automatically." : "No short-step cards are waiting right now."}</p>
         </div>
       </section>
     );
