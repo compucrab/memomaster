@@ -205,3 +205,39 @@
 .rich-editor-command-results p { margin: 0; color: var(--muted); font: 9px var(--sans); }
 .rich-editor-command-results p { padding: 12px 9px; }
 .rich-editor-command-hint { padding: 7px 8px 2px; border-top: 1px solid var(--line); color: var(--muted); font: 9px var(--mono); }
+
+
+/* Searchable command palette: clear icon + label hierarchy. */
+.rich-editor-command-results button {
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  min-height: 44px;
+}
+.rich-editor-command-icon {
+  display: inline-flex;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 28px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line);
+  background: var(--paper-deep);
+  color: var(--muted);
+}
+.rich-editor-command-results button:hover .rich-editor-command-icon,
+.rich-editor-command-results button:focus .rich-editor-command-icon {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.rich-editor-command-copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+}
+.rich-editor-command-copy strong { color: var(--ink); font: 550 11px var(--sans); }
+.rich-editor-command-copy small { color: var(--muted); font: 9px var(--sans); }
+.rich-editor-shortcut { white-space: nowrap; }

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "preact/hooks";
 import { Editor } from "@tiptap/core";
 import Placeholder from "@tiptap/extension-placeholder";
-import { Bold, Italic, Underline as UnderlineIcon, Link as LinkIcon, ImagePlus, Sigma, Video, X } from "lucide-preact";
+import { Bold, Italic, Underline as UnderlineIcon, Link as LinkIcon, Image as ImageIcon, Sigma, Video, X, Pilcrow, Heading1, Heading2, Heading3, Heading4, Heading5, List, ListOrdered, Quote, Code, Table, Palette, Undo2, Redo2 } from "lucide-preact";
 import { createCardExtensions } from "../services/editorExtensions";
 import { normalizeCardDocument } from "../services/cardDocument";
 import "katex/dist/katex.min.css";
@@ -25,7 +25,7 @@ function videoTarget(value) {
 }
 
 export default function RichTextEditor({ label, value = "", placeholder, onChange, media = [], onAddMedia }) {
-  const hostRef = useRef(null), fileRef = useRef(null), paletteInputRef = useRef(null), editorRef = useRef(null);
+  const hostRef = useRef(null), fileRef = useRef(null), paletteInputRef = useRef(null), dialogFieldRef = useRef(null), editorRef = useRef(null);
   const onChangeRef = useRef(onChange), onAddMediaRef = useRef(onAddMedia), mediaRef = useRef(media);
   mediaRef.current = media;
   const [editor, setEditor] = useState(null), [revision, setRevision] = useState(0);
@@ -125,8 +125,8 @@ export default function RichTextEditor({ label, value = "", placeholder, onChang
       editorProps: {
         attributes: { class: "rich-editor-content", role: "textbox", "aria-label": label, "aria-multiline": "true", "data-placeholder": placeholder || "", spellcheck: "true" },
         handleKeyDown(view, event) {
-          if ((event.ctrlKey || event.metaKey) && event.key === ".") { event.preventDefault(); openPalette(); return true; }
-          if (event.key === "Escape" && paletteOpen) { setPaletteOpen(false); return true; }
+          if (event.ctrlKey && (event.code === "Space" || event.key === " ")) { event.preventDefault(); openPalette(); return true; }
+          if (event.key === "Escape") { setPaletteOpen(false); return true; }
           return false;
         },
         handleDOMEvents: {
@@ -164,6 +164,21 @@ export default function RichTextEditor({ label, value = "", placeholder, onChang
 
   useEffect(() => { if (paletteOpen) paletteInputRef.current?.focus(); }, [paletteOpen]);
 
+  useEffect(() => {
+    if (!dialog || dialog.type === "notice") return;
+    dialogFieldRef.current?.focus();
+    dialogFieldRef.current?.select?.();
+  }, [dialog]);
+
+  useEffect(() => {
+    if (!paletteOpen) return;
+    const closeOnEscape = event => {
+      if (event.key === "Escape") { event.preventDefault(); event.stopPropagation(); setPaletteOpen(false); }
+    };
+    window.addEventListener("keydown", closeOnEscape, true);
+    return () => window.removeEventListener("keydown", closeOnEscape, true);
+  }, [paletteOpen]);
+
   async function insertImage(event) {
     const file = event.currentTarget.files?.[0];
     event.currentTarget.value = "";
@@ -198,25 +213,25 @@ export default function RichTextEditor({ label, value = "", placeholder, onChang
   }
 
   const actions = [
-    { label: "Paragraph", detail: "Convert the current block to normal text", run: () => editor.chain().focus().setParagraph().run() },
-    ...[1, 2, 3, 4, 5].map(level => ({ label: "Heading " + level, detail: "Format the current block as heading " + level, run: () => editor.chain().focus().setHeading({ level }).run() })),
-    { label: "Bold", detail: "Bold selected text", run: () => editor.chain().focus().toggleBold().run() },
-    { label: "Italic", detail: "Italic selected text", run: () => editor.chain().focus().toggleItalic().run() },
-    { label: "Underline", detail: "Underline selected text", run: () => editor.chain().focus().toggleUnderline().run() },
-    { label: "Bullet list", detail: "Create a bullet list", run: () => editor.chain().focus().toggleBulletList().run() },
-    { label: "Numbered list", detail: "Create a numbered list", run: () => editor.chain().focus().toggleOrderedList().run() },
-    { label: "Quote", detail: "Turn the current block into a quote", run: () => editor.chain().focus().toggleBlockquote().run() },
-    { label: "Code block", detail: "Insert an editable raw code block", run: () => editor.chain().focus().toggleCodeBlock().run() },
-    { label: "Link", detail: "Add or edit a hyperlink", run: () => openInsert("link") },
-    { label: "Image", detail: "Insert an image", run: () => fileRef.current?.click() },
-    { label: "Inline equation", detail: "Insert or edit raw LaTeX inline", run: () => openInsert("inlineMath") },
-    { label: "Block equation", detail: "Insert or edit raw LaTeX display math", run: () => openInsert("blockMath") },
-    { label: "Video card", detail: "Insert or edit a video link card", run: () => openInsert("video") },
-    { label: "Table", detail: "Insert a 2 × 2 table", run: () => editor.chain().focus().insertContent({ type: "table", content: [{ type: "tableRow", content: [{ type: "tableHeader", content: [{ type: "paragraph" }] }, { type: "tableHeader", content: [{ type: "paragraph" }] }] }, { type: "tableRow", content: [{ type: "tableCell", content: [{ type: "paragraph" }] }, { type: "tableCell", content: [{ type: "paragraph" }] }] }] }).run() },
-    ...COLORS.map(([name, color]) => ({ label: name + " text", detail: "Apply " + name.toLowerCase() + " to selected text", run: () => editor.chain().focus().setColor(color).run() })),
-    { label: "Default text color", detail: "Use the current theme text color", run: () => editor.chain().focus().unsetColor().run() },
-    { label: "Undo", detail: "Undo the last edit", run: () => editor.chain().focus().undo().run() },
-    { label: "Redo", detail: "Redo the last undone edit", run: () => editor.chain().focus().redo().run() },
+    { label: "Paragraph", icon: Pilcrow, detail: "Convert the current block to normal text", run: () => editor.chain().focus().setParagraph().run() },
+    ...[1, 2, 3, 4, 5].map(level => ({ label: "Heading " + level, icon: [Heading1, Heading2, Heading3, Heading4, Heading5][level - 1], detail: "Format the current block as heading " + level, run: () => editor.chain().focus().setHeading({ level }).run() })),
+    { label: "Bold", icon: Bold, detail: "Bold selected text", run: () => editor.chain().focus().toggleBold().run() },
+    { label: "Italic", icon: Italic, detail: "Italic selected text", run: () => editor.chain().focus().toggleItalic().run() },
+    { label: "Underline", icon: UnderlineIcon, detail: "Underline selected text", run: () => editor.chain().focus().toggleUnderline().run() },
+    { label: "Bullet list", icon: List, detail: "Create a bullet list", run: () => editor.chain().focus().toggleBulletList().run() },
+    { label: "Numbered list", icon: ListOrdered, detail: "Create a numbered list", run: () => editor.chain().focus().toggleOrderedList().run() },
+    { label: "Quote", icon: Quote, detail: "Turn the current block into a quote", run: () => editor.chain().focus().toggleBlockquote().run() },
+    { label: "Code block", icon: Code, detail: "Insert an editable raw code block", run: () => editor.chain().focus().toggleCodeBlock().run() },
+    { label: "Link", icon: LinkIcon, detail: "Add or edit a hyperlink", run: () => openInsert("link") },
+    { label: "Image", icon: ImageIcon, detail: "Insert an image", run: () => fileRef.current?.click() },
+    { label: "Inline equation", icon: Sigma, detail: "Insert or edit raw LaTeX inline", run: () => openInsert("inlineMath") },
+    { label: "Block equation", icon: Sigma, detail: "Insert or edit raw LaTeX display math", run: () => openInsert("blockMath") },
+    { label: "Video card", icon: Video, detail: "Insert or edit a video link card", run: () => openInsert("video") },
+    { label: "Table", icon: Table, detail: "Insert a 2 × 2 table", run: () => editor.chain().focus().insertContent({ type: "table", content: [{ type: "tableRow", content: [{ type: "tableHeader", content: [{ type: "paragraph" }] }, { type: "tableHeader", content: [{ type: "paragraph" }] }] }, { type: "tableRow", content: [{ type: "tableCell", content: [{ type: "paragraph" }] }, { type: "tableCell", content: [{ type: "paragraph" }] }] }] }).run() },
+    ...COLORS.map(([name, color]) => ({ label: name + " text", icon: Palette, detail: "Apply " + name.toLowerCase() + " to selected text", run: () => editor.chain().focus().setColor(color).run() })),
+    { label: "Default text color", icon: Palette, detail: "Use the current theme text color", run: () => editor.chain().focus().unsetColor().run() },
+    { label: "Undo", icon: Undo2, detail: "Undo the last edit", run: () => editor.chain().focus().undo().run() },
+    { label: "Redo", icon: Redo2, detail: "Redo the last undone edit", run: () => editor.chain().focus().redo().run() },
   ];
   const filteredActions = actions.filter(item => (item.label + " " + item.detail).toLowerCase().includes(paletteQuery.toLowerCase()));
   function chooseAction(action) { action.run(); setPaletteOpen(false); setPaletteQuery(""); }
@@ -225,7 +240,7 @@ export default function RichTextEditor({ label, value = "", placeholder, onChang
   const hasTextSelection = !!selection && !selection.empty && !selection.node && !!editor.state.doc.textBetween(selection.from, selection.to).trim();
 
   return <section class="rich-editor">
-    <div class="rich-editor-heading">{label} <span class="rich-editor-shortcut">Ctrl + . for commands</span></div>
+    <div class="rich-editor-heading">{label} <span class="rich-editor-shortcut">Ctrl + Space for commands</span></div>
     <div class="rich-editor-surface"><div ref={hostRef}/></div>
     {hasTextSelection && selectionPosition && !paletteOpen && !dialog && <div class="rich-editor-selection-tools" style={{ left: selectionPosition.left + "px", top: selectionPosition.top + "px" }} onMouseDown={event => { if (event.target.closest("button")) event.preventDefault(); }}>
       <button type="button" title="Bold" aria-label="Bold" class={editor.isActive("bold") ? "is-active" : ""} onClick={() => applySelectionFormat(chain => chain.toggleBold().run())}><Bold size={14}/></button>
@@ -252,7 +267,7 @@ export default function RichTextEditor({ label, value = "", placeholder, onChang
         if (event.key === "ArrowDown") { event.preventDefault(); event.currentTarget.parentElement?.nextElementSibling?.querySelector("button")?.focus(); }
       }} placeholder="Search commands..." aria-label="Search editor commands"/></div>
       <div class="rich-editor-command-results">
-        {filteredActions.map(action => <button type="button" key={action.label} onMouseDown={event => event.preventDefault()} onClick={() => chooseAction(action)}><strong>{action.label}</strong><span>{action.detail}</span></button>)}
+        {filteredActions.map(action => <button type="button" key={action.label} onMouseDown={event => event.preventDefault()} onClick={() => chooseAction(action)}><span class="rich-editor-command-icon">{action.icon && <action.icon size={15}/>}</span><span class="rich-editor-command-copy"><strong>{action.label}</strong><small>{action.detail}</small></span></button>)}
         {!filteredActions.length && <p>No matching commands</p>}
       </div>
       <div class="rich-editor-command-hint">↑↓ to navigate · Enter to select · Esc to close</div>
@@ -263,7 +278,7 @@ export default function RichTextEditor({ label, value = "", placeholder, onChang
         <div class="prompt-heading"><h2>{dialog.title}</h2><button type="button" aria-label="Close" onClick={() => setDialog(null)}><X size={16}/></button></div>
         <p>{dialog.message}</p>
         {(dialog.type === "link" || dialog.type === "video") && <input aria-label={dialog.type === "link" ? "Link text" : "Video card text"} placeholder={dialog.type === "link" ? "Link text" : "Text shown on the video card"} value={dialogText} onInput={event => setDialogText(event.currentTarget.value)}/>}
-        {dialog.type !== "notice" && <textarea rows={dialog.type === "blockMath" ? 5 : 3} value={dialogValue} onInput={event => setDialogValue(event.currentTarget.value)} placeholder={dialog.type.includes("Math") ? "\\frac{a+b}{c}" : "https://example.com"}/>}
+        {dialog.type !== "notice" && <textarea ref={dialogFieldRef} rows={dialog.type === "blockMath" ? 5 : 3} value={dialogValue} onInput={event => setDialogValue(event.currentTarget.value)} placeholder={dialog.type.includes("Math") ? "\\frac{a+b}{c}" : "https://example.com"}/>}
         <div class="prompt-actions"><button type="button" class="prompt-cancel" onClick={() => setDialog(null)}>{dialog.type === "notice" ? "Close" : "Cancel"}</button>{dialog.type !== "notice" && <button type="button" class="prompt-confirm" onClick={submitInsert}>{dialog.editing || dialog.editingVideo ? "Save changes" : "Insert"}</button>}</div>
       </section>
     </div>}
