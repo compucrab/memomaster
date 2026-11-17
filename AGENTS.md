@@ -21,12 +21,12 @@ The hierarchy is Notebook → Chapter → Flashcard. Topics have been removed; l
 - Notebook view has Browse and Study tabs. Browse supports search, chapter filtering, next-due-date display, preview, editing, multi-selection, bulk deletion, chapter reassignment, and schedule reset.
 - Do not add a card right-click menu. Notebook cards in the library still use a right-click context menu for open, rename, delete, and cover colour.
 - Exact duplicate questions are blocked; similar questions warn and allow an explicit Save anyway choice.
-- Study sessions can cover a whole notebook or one chapter.
+- Scheduled review and unscheduled practice can cover a whole notebook or one chapter.
 - Scheduled study includes due cards and updates FSRS-6 state and reviewHistory.
-- Scheduled ratings are Forgot → Again, Difficult → Hard, Good → Good, and Easy → Easy. Forgot and Difficult requeue the card in the current session; Good and Easy complete it.
+- Scheduled ratings are Again, Hard, Good, and Easy, mapped directly to FSRS ratings. Queue behaviour is based on the resulting scheduled interval, not on the rating label: cards with a next interval of 10 minutes or less immediately return at the end of the active queue; longer intervals leave the queue until due.
 - Unscheduled practice can use any card, supports Repeat and Done, records practiceHistory, and must not alter FSRS state or due dates.
-- The review session keeps its own card snapshot while the session is active; do not rely on the parent's due-only list after rating a card.
-- Study status is derived from stored card state and review/practice history. The activity heatmap includes both modes; recall and rating outcomes use scheduled history only.
+- The active review component keeps its own card snapshot while review is open; do not rely on the parent's due-only list after rating a card.
+- Study status is derived from stored card state and review/practice history. Recall and rating outcomes use scheduled review history only.
 - Keep study/revision logic separate from card editing.
 
 ## Current implementation

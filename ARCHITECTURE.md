@@ -11,7 +11,7 @@ A notebook contains chapters, flashcards, scheduled review history, and unschedu
 Notebook view has two tabs:
 
 - **Browse:** searchable card list with next due date/time, chapter filter, preview, editing, multi-selection, bulk deletion, chapter reassignment, and schedule reset.
-- **Study:** Scheduled or Unscheduled sessions scoped to a whole notebook or one chapter.
+- **Study:** Scheduled review or unscheduled practice scoped to a whole notebook or one chapter.
 
 A new installation starts with an empty library.
 
@@ -78,12 +78,12 @@ Scheduled ratings map to FSRS as follows:
 
 | UI choice | FSRS rating | Scheduling behaviour |
 | --- | --- | --- |
-| Forgot | Again | Failed recall. Enters Learning/Relearning and waits until the configured step is due. |
-| Difficult | Hard | Successful recall with effort. Never requeues immediately; if still in a learning state, it returns only when its persisted step becomes due. |
-| Good | Good | Advances a learning step or continues the normal review schedule. |
-| Easy | Easy | Graduates a learning card or continues the normal review schedule. |
+| Again | Again | Failed recall. FSRS schedules a learning or relearning step. |
+| Hard | Hard | Successful recall with significant effort. |
+| Good | Good | Successful recall. |
+| Easy | Easy | Successful recall with high confidence. |
 
-The review session keeps a local snapshot of cards so a card remains available after its due date changes during the session. Cards in Learning/Relearning are held in a pending list and returned to the session only when their saved due timestamp has passed. If the session has no other cards, it displays the normal completion state without a countdown. The pending queue remains active while the session stays open, so a card automatically returns when its learning step becomes due. Exiting does not discard the schedule; the due card will appear in a later session.
+The active review queue starts with new cards, due cards, and learning/relearning cards due within the next 10 minutes. After a rating is saved, any card whose next interval is 10 minutes or less is immediately appended to the queue; it is not held until its timestamp. Cards with longer intervals leave the active queue and become available when due later. The queue is continuous and can grow or shrink as cards are rescheduled, so the review screen does not display a progress bar or completion percentage. Leaving review preserves all saved FSRS state and history.
 
 Unscheduled practice can include any cards in scope. Repeat moves a card to the end of the current queue; Done records an entry in `practiceHistory`. Unscheduled practice must not mutate FSRS state or due dates.
 
@@ -128,10 +128,10 @@ Image insertion supports file selection and clipboard paste. Inserted images are
 | NotebookView.jsx | Browse, card selection, chapter operations, study setup |
 | CardEditor.jsx | Card metadata, Question/Answer tabs, duplicate warning, schedule reset |
 | RichTextEditor.jsx | Tiptap setup, formatting toolbar, media/math insertion, editor history |
-| ReviewSession.jsx | Anki-style scheduled learning/relearning queue with New/Learning/Review counts, plus unscheduled practice queue |
+| ReviewSession.jsx | Continuous FSRS review queue, four rating controls, and unscheduled practice queue |
 | StudyStatus.jsx | Retention, rating, workload, maturity, and lapse analytics |
 | projectArchive.js | .memz ZIP export/import and legacy migration |
-| fsrs.js | FSRS scheduling, study-day rollover, memory estimates, interval calculation, review undo |
+| fsrs.js | FSRS scheduling, study-day rollover, interval calculation, review undo |
 | fsrsOptimizerData.js | Converts complete FSRS-6 review history into the official optimizer CSV input format |
 | fsrsSettings.js | Default and validated app-wide FSRS preferences |
 | markdown.js | Safe read-only Markdown/media rendering |
@@ -146,7 +146,7 @@ npm run build
 npm test
 ```
 
-The test suite covers Again/relearning, Hard semantics, Good/Easy graduation, preview-versus-saved intervals, retention and maximum-interval configuration, memory-curve output, study-day rollover, review snapshots, and undo. `fsrsCompatibility.test.js` adds a scheduler-contract matrix for all ratings, late reviews, counters, maximum interval enforcement, and minute-level learning steps. These tests do not yet establish exact Anki parity; shared golden fixtures must still be executed against Anki’s own scheduler.
+The test suite covers Again/relearning, Hard semantics, Good/Easy scheduling, preview-versus-saved intervals, retention and maximum-interval configuration, study-day rollover, review snapshots, and undo. `fsrsCompatibility.test.js` adds a scheduler-contract matrix for all ratings, late reviews, counters, maximum interval enforcement, and minute-level learning steps. These tests do not yet establish exact Anki parity; shared golden fixtures must still be executed against Anki’s own scheduler.
 
 ## Data flow
 

@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createEmptyCard, State } from "ts-fsrs";
-import { DEFAULT_FSRS_SETTINGS, getMemoryOverview, getReviewOptions, scheduleReview, undoLatestReview } from "./fsrs.js";
+import { DEFAULT_FSRS_SETTINGS, getReviewOptions, scheduleReview, undoLatestReview } from "./fsrs.js";
 
 const DAY = 86400000;
 function matureCard(now) {
@@ -105,16 +105,6 @@ test("desired retention changes future intervals and maximum interval caps them"
     );
     assert.equal(new Date(capped.fsrs.due).getTime(), expectedDue.getTime());
   }
-});
-
-test("memory overview exposes recall probability and a decaying curve", () => {
-  const now = new Date("2026-01-10T12:00:00.000Z");
-  const memory = getMemoryOverview(matureCard(now), now);
-  assert.ok(memory);
-  assert.ok(memory.retrievability >= 0 && memory.retrievability <= 1);
-  assert.ok(memory.stability > 0);
-  assert.ok(memory.difficulty >= 1 && memory.difficulty <= 10);
-  assert.ok(memory.curve[0].probability > memory.curve.at(-1).probability);
 });
 
 test("day rollover controls elapsed review days and review due time", () => {
