@@ -2,9 +2,7 @@ import { useMemo } from "preact/hooks";
 import { ArrowLeft, Flame, Trophy, CalendarDays, Layers3 } from "lucide-preact";
 import { getStudyActivity } from "../services/studyActivity";
 
-const WEEKDAYS = ["", "Mon", "", "Wed", "", "Fri", ""];
-
-function getDueCount(notebooks, now, rolloverHour) {
+function getDueCount(notebooks, now) {
   return notebooks.reduce((total, notebook) => {
     return total + (notebook.flashcards || []).filter((card) => {
       if (!card.fsrs?.due) return !card.fsrs;
@@ -24,7 +22,7 @@ export default function StudyStatus({ notebooks, settings, onBack }) {
   const data = useMemo(() => {
     const now = new Date();
     const activity = getStudyActivity(notebooks, now, settings?.rolloverHour ?? 4);
-    return { ...activity, dueCount: getDueCount(notebooks, now, settings?.rolloverHour ?? 4) };
+    return { ...activity, dueCount: getDueCount(notebooks, now) };
   }, [notebooks, settings]);
 
   const weeks = [];
@@ -56,7 +54,9 @@ export default function StudyStatus({ notebooks, settings, onBack }) {
           <div class="activity-months" style={{ gridTemplateColumns: `repeat(${weeks.length}, 12px)` }}>
             {monthLabels.map((label, index) => <span key={index}>{label}</span>)}
           </div>
-          <div class="activity-graph" role="img" aria-label="Study consistency over the last 12 months">
+          <div class="activity-graph-wrap">
+            <div class="activity-weekday-labels" aria-hidden="true">{["", "Mon", "", "Wed", "", "Fri", ""].map((label) => <span>{label}</span>)}</div>
+            <div class="activity-graph" role="img" aria-label="Study consistency over the last 12 months">
             {weeks.map((week, index) => (
               <div class="activity-week" key={index}>
                 {week.map((day) => <span
@@ -67,6 +67,7 @@ export default function StudyStatus({ notebooks, settings, onBack }) {
                 />)}
               </div>
             ))}
+            </div>
           </div>
           <div class="activity-legend"><span>Less</span>{[0, 1, 2, 3, 4].map((level) => <i class={`activity-day level-${level}`} />)}<span>More</span></div>
         </div>
