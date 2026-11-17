@@ -2,7 +2,7 @@ import { useState } from "preact/hooks";
 import { ArrowLeft, Check, Plus, RotateCcw, Trash2, X } from "lucide-preact";
 import RichTextEditor from "./RichTextEditor";
 import { findSimilarQuestion } from "../services/questionSimilarity";
-export default function CardEditor({ card, chapters = [], existingCards = [], onSave, onCancel, onAddChapter, onDelete, onResetSchedule, addedNotice = false }) {
+export default function CardEditor({ card, chapters = [], existingCards = [], onSave, onCancel, onAddChapter, onDelete, onResetSchedule, addedNotice = false, media = [], onAddMedia }) {
   const [draft, setDraft] = useState(() => ({ ...card }));
   const [similarQuestion, setSimilarQuestion] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -29,8 +29,8 @@ export default function CardEditor({ card, chapters = [], existingCards = [], on
       <div class="card-editor-writing">
         <div class="card-editor-content-panel">
           {activeSide === "question"
-            ? <RichTextEditor key="question" label="Question" value={draft.front} placeholder="Write your question..." onChange={front=>update({front})}/>
-            : <RichTextEditor key="answer" label="Answer" value={draft.back} placeholder="Write your answer..." onChange={back=>update({back})}/>}
+            ? <RichTextEditor key="question" label="Question" value={draft.front} placeholder="Write your question..." media={media} onAddMedia={onAddMedia} onChange={front=>update({front})}/>
+            : <RichTextEditor key="answer" label="Answer" value={draft.back} placeholder="Write your answer..." media={media} onAddMedia={onAddMedia} onChange={back=>update({back})}/>}
         </div>
       </div>
     </div>
