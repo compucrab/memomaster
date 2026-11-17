@@ -58,3 +58,15 @@
 .rich-editor-color input { width: 17px; height: 17px; padding: 0; border: 0; background: transparent; cursor: pointer; }
 .rich-editor-color input::-webkit-color-swatch-wrapper { padding: 0; }
 .rich-editor-color input::-webkit-color-swatch { border: 1px solid var(--line); border-radius: 3px; }
+
+/* Consistent heading scale, text sizing, and predictable media flow. */
+.rich-editor-content h1 { font-size: 19px; }
+.rich-editor-content h2 { font-size: 16px; }
+.rich-editor-content h3 { font-size: 14px; }
+.rich-editor-content h4 { margin: 5px 0 7px; color: var(--ink); font: 650 12px/1.4 var(--display); }
+.rich-editor-content h5 { margin: 5px 0 7px; color: var(--muted); font: 650 11px/1.4 var(--display); }
+.rich-editor-content img { display: block !important; float: none !important; vertical-align: baseline; }
+.rich-editor-size { display: inline-flex; height: 29px; align-items: center; gap: 3px; padding: 0 4px; color: var(--muted); font: 10px var(--sans); }
+.rich-editor-size select { width: 43px; border: 0; outline: 0; background: transparent; color: var(--ink); font: 10px var(--mono); }
+.rich-editor-size select:disabled { opacity: .4; }
+.rich-editor-content .tiptap-mathematics-render { max-width: 100%; }
