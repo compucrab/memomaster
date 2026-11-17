@@ -191,7 +191,13 @@ export default function NotebookView({ notebook, fsrsSettings, onUpdate, onBack,
   if (reviewing) {
     return <ReviewSession key={`${studyType}-${scopeType}-${scopeChapterId}`}
       cards={studyCards} mode={studyType} settings={fsrsSettings}
-      onReview={handleReview} onExit={() => setReviewing(false)} />;
+      onReview={handleReview}
+      scopeType={scopeType}
+      scopeChapterId={scopeChapterId}
+      onComplete={(session) => onUpdate({
+        studySessions: [...(notebook.studySessions || []), session],
+      })}
+      onExit={() => setReviewing(false)} />;
   }
 
   return (
