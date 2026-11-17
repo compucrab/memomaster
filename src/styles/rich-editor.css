@@ -85,3 +85,27 @@
 .rich-editor-content .tiptap-mathematics-render[data-type="block-math"] { font-size: 1.35em; }
 
 .rich-editor-content > * { text-align: left !important; }
+
+/* Keep inline math at the surrounding text size, including KaTeX's inner wrapper. */
+.rich-editor-content .tiptap-mathematics-render[data-type="inline-math"],
+.rich-editor-content .tiptap-mathematics-render[data-type="inline-math"] .katex {
+  font-size: 1em !important;
+}
+.rich-editor-content a { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
+
+/* Match the editable card surface to the Browse and Review renderer. */
+.rich-editor-content,
+.card-editor-writing .rich-editor-content {
+  font-size: 14px;
+  line-height: 1.75;
+}
+.rich-editor-content h1,
+.card-editor-writing .rich-editor-content h1 { font-size: clamp(20px, 2.2vw, 27px); }
+.rich-editor-content h2,
+.card-editor-writing .rich-editor-content h2 { font-size: clamp(18px, 1.9vw, 23px); }
+.rich-editor-content h3,
+.card-editor-writing .rich-editor-content h3 { font-size: 18px; }
+.rich-editor-content h4,
+.card-editor-writing .rich-editor-content h4 { font-size: 16px; }
+.rich-editor-content h5,
+.card-editor-writing .rich-editor-content h5 { font-size: 14px; }

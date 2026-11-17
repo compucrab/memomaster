@@ -30,3 +30,9 @@ test("renders video links as cards instead of embedded players", () => {
   assert.ok(!html.includes("<iframe"));
   assert.ok(!html.includes("<video"));
 });
+
+test("renders markdown links as styled, safe links", () => {
+  const html = renderMarkdown("Visit [the reference](https://example.com/docs) now");
+  assert.ok(html.includes('<a href="https://example.com/docs"'));
+  assert.ok(html.includes(">the reference</a>"));
+});
