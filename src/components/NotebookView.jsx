@@ -57,6 +57,7 @@ export default function NotebookView({ notebook, fsrsSettings, onUpdate, onBack,
   }, [cardAddedNotice]);
 
   useEffect(() => {
+    if (editingCardId || reviewing) return;
     const handleNotebookKeys = (event) => {
       if (event.repeat || event.ctrlKey || event.metaKey || event.altKey) return;
       if (event.target?.closest?.("input, textarea, select, [contenteditable='true'], [role='dialog']")) return;
@@ -67,7 +68,7 @@ export default function NotebookView({ notebook, fsrsSettings, onUpdate, onBack,
     };
     window.addEventListener("keydown", handleNotebookKeys);
     return () => window.removeEventListener("keydown", handleNotebookKeys);
-  }, []);
+  }, [editingCardId, reviewing]);
 
   const visibleCards = useMemo(() => {
     const needle = search.trim().toLocaleLowerCase();
