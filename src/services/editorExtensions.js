@@ -33,6 +33,27 @@ export const CardImage = Image.extend({
 });
 export const AlignedParagraph = Paragraph;
 export const AlignedHeading = Heading.configure({ levels: [1, 2, 3, 4, 5] });
+export const CardInfo = Node.create({
+  name: "cardInfo",
+  group: "block",
+  content: "block+",
+  defining: true,
+  isolating: true,
+  addAttributes() { return { title: { default: "Additional information" } }; },
+  parseHTML() {
+    return [{
+      tag: "aside[data-card-info]",
+      getAttrs: element => ({ title: element.getAttribute("data-title") || element.querySelector(":scope > header strong")?.textContent || "Additional information" }),
+    }];
+  },
+  renderHTML({ HTMLAttributes }) {
+    const title = String(HTMLAttributes.title || "Additional information").slice(0, 80);
+    return ["aside", { class: "study-info-card", "data-card-info": "", "data-title": title },
+      ["header", { class: "study-info-card-heading" }, ["span", {}, "ⓘ"], ["strong", {}, title]],
+      ["div", { class: "study-info-card-content" }, 0],
+    ];
+  },
+});
 export const CardVideo = Node.create({
   name: "cardVideo", group: "block", atom: true, selectable: true,
   addAttributes() { return { url: { default: "" }, provider: { default: "video" }, label: { default: "Video link" } }; },
@@ -121,6 +142,7 @@ export function createCardExtensions() {
     CardImage.configure({ allowBase64: true }),
     CardMath,
     CardVideo,
+    CardInfo,
     CardTable,
     CardTableRow,
     CardTableHeader,
