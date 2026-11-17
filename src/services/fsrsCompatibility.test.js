@@ -65,7 +65,7 @@ test("late reviews record elapsed time from the previous review, not the due dat
   });
   const result = scheduleReview(card, "good", now);
   assert.equal(result.log.elapsed_days, 38);
-  assert.equal(result.log.review.toISOString(), now.toISOString());
+  assert.equal(new Date(result.log.review).toISOString(), now.toISOString());
 });
 
 test("review counters and lapse counters follow the FSRS outcome", () => {
