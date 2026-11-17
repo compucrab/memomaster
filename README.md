@@ -46,7 +46,7 @@ Shortcuts apply in the relevant notebook, editor, or review screen. Alt-based na
 | Editor | Alt + B / Alt + S | Leave the editor for Browse / Study; asks before discarding changes |
 | Review | E | Edit the active card and return to Browse |
 | Scheduled review | 1 / 2 / 3 / 4 | Again / Hard / Good / Easy |
-| Review | Space | Reveal the answer; when visible, rate Good (scheduled) or mark Done (practice) |
+| Scheduled review | Space | Reveal the answer; when visible, rate Good |\n| Unscheduled practice | 1 | Repeat the revealed card (move it to the end of the queue) |\n| Unscheduled practice | 2 | Reveal the answer; when visible, mark the card Done |\n| Unscheduled practice | Space | Reveal the answer; when visible, mark the card Done |
 | Application | Ctrl + , | Open Preferences |
 | Application | Ctrl + S | Save project and choose a destination |
 | Application | Escape | Return from Help, Preferences, About, or study status to the library |
