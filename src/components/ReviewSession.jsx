@@ -1,4 +1,4 @@
-import { useRef, useState } from "preact/hooks";
+import { useEffect, useRef, useState } from "preact/hooks";
 import { State } from "ts-fsrs";
 import { Check, RotateCw } from "lucide-preact";
 import CardContent from "./CardContent";
@@ -44,6 +44,25 @@ export default function ReviewSession({ cards, mode = "scheduled", settings, med
   const options = activeCard && mode === "scheduled"
     ? getReviewOptions(activeCard, new Date(), settings)
     : null;
+
+  useEffect(() => {
+    const handleReviewKeys = (event) => {
+      if (event.ctrlKey || event.metaKey || event.altKey || event.target?.closest?.("input, textarea, select, [contenteditable='true']")) return;
+      if (!activeCard || processing) return;
+      if (event.code === "Space" || event.key === " ") {
+        event.preventDefault();
+        if (!revealed) setRevealed(true);
+        else finishCard(mode === "scheduled" ? "good" : "done");
+        return;
+      }
+      if (!revealed || mode !== "scheduled") return;
+      const grades = { "1": "forgot", "2": "difficult", "3": "good", "4": "easy" };
+      const choice = grades[event.key];
+      if (choice) { event.preventDefault(); finishCard(choice); }
+    };
+    window.addEventListener("keydown", handleReviewKeys);
+    return () => window.removeEventListener("keydown", handleReviewKeys);
+  }, [activeCard?.id, revealed, processing, mode]);
 
   function removeActiveCard() {
     setQueue((items) => items.slice(1));
