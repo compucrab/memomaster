@@ -265,3 +265,6 @@
 .study-card-prose .katex .mop,
 .study-card-prose .katex .mbin { font-size: inherit; }
 .study-card-prose img { margin-left: 0 !important; margin-right: auto !important; }
+
+/* Browse and Review use the same card typography scale. */
+.study-card-prose { font-size: 14px; line-height: 1.75; }
