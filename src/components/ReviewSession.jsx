@@ -19,7 +19,7 @@ function isDue(card, now) {
   return Number.isNaN(due.getTime()) || due <= now;
 }
 
-export default function ReviewSession({ cards, mode = "scheduled", settings, media = [], onReview, onComplete, scopeType, scopeChapterId, onExit }) {
+export default function ReviewSession({ cards, mode = "scheduled", settings, media = [], onReview, onEditCard, onComplete, scopeType, scopeChapterId, onExit }) {
   const [sessionCards, setSessionCards] = useState(() => cards.map((card) => ({ ...card })));
   const [queue, setQueue] = useState(() => {
     const now = new Date();
@@ -49,6 +49,11 @@ export default function ReviewSession({ cards, mode = "scheduled", settings, med
     const handleReviewKeys = (event) => {
       if (event.repeat || event.ctrlKey || event.metaKey || event.altKey || event.target?.closest?.("input, textarea, select, [contenteditable='true']")) return;
       if (!activeCard || processing) return;
+      if (event.key.toLowerCase() === "e") {
+        event.preventDefault();
+        onEditCard?.(activeCard.id);
+        return;
+      }
       if (event.code === "Space" || event.key === " ") {
         event.preventDefault();
         if (!revealed) setRevealed(true);
@@ -62,7 +67,7 @@ export default function ReviewSession({ cards, mode = "scheduled", settings, med
     };
     window.addEventListener("keydown", handleReviewKeys);
     return () => window.removeEventListener("keydown", handleReviewKeys);
-  }, [activeCard?.id, revealed, processing, mode]);
+  }, [activeCard?.id, revealed, processing, mode, onEditCard]);
 
   function removeActiveCard() {
     setQueue((items) => items.slice(1));
