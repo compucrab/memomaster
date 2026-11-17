@@ -56,6 +56,19 @@ export default function NotebookView({ notebook, fsrsSettings, onUpdate, onBack,
     return () => window.clearTimeout(timeout);
   }, [cardAddedNotice]);
 
+  useEffect(() => {
+    const handleNotebookKeys = (event) => {
+      if (event.ctrlKey || event.metaKey || event.altKey) return;
+      if (event.target?.closest?.("input, textarea, select, [contenteditable='true'], [role='dialog']")) return;
+      const key = event.key.toLowerCase();
+      if (key === "a") { event.preventDefault(); addCard(); }
+      else if (key === "s") { event.preventDefault(); setTab("study"); }
+      else if (key === "b") { event.preventDefault(); setTab("browse"); }
+    };
+    window.addEventListener("keydown", handleNotebookKeys);
+    return () => window.removeEventListener("keydown", handleNotebookKeys);
+  }, [cards, chapters, tab]);
+
   const visibleCards = useMemo(() => {
     const needle = search.trim().toLocaleLowerCase();
     return cards.filter(card => {
@@ -126,6 +139,14 @@ export default function NotebookView({ notebook, fsrsSettings, onUpdate, onBack,
     setEditingCardId(null);
   }
 
+  function saveAndAddCard(draft) {
+    saveCard(draft);
+    const nextDraft = { ...makeCard(), chapterId: draft.chapterId || "" };
+    setNewCard(nextDraft);
+    setEditingCardId(nextDraft.id);
+    setTab("browse");
+  }
+
   function askDelete(title, message, action) { setConfirmAction({ title, message, action }); }
   function deleteCards(ids) {
     const removing = new Set(ids);
@@ -192,7 +213,7 @@ export default function NotebookView({ notebook, fsrsSettings, onUpdate, onBack,
 
   if (editingCard) {
     return <CardEditor key={editingCard.id} card={editingCard} chapters={chapters} media={notebook.media || []} onAddMedia={addMedia}
-      onSave={saveCard} existingCards={cards} onCancel={() => { setEditingCardId(null); setNewCard(null); setCardAddedNotice(false); }}
+      onSave={saveCard} onSaveAndAdd={saveAndAddCard} existingCards={cards} onCancel={() => { setEditingCardId(null); setNewCard(null); setCardAddedNotice(false); }}
       addedNotice={cardAddedNotice} onAddChapter={addChapter} onDelete={() => { deleteCards([editingCard.id]); setEditingCardId(null); }}
       onResetSchedule={(id) => resetCardSchedules([id])} />;
   }
