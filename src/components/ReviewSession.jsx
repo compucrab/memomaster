@@ -1,8 +1,8 @@
-import { useMemo, useState } from "preact/hooks";
+import { useState } from "preact/hooks";
 import { State } from "ts-fsrs";
 import { Check, RotateCw } from "lucide-preact";
 import CardContent from "./CardContent";
-import { formatInterval, getReviewOptions, scheduleReview } from "../services/fsrs";
+import { getReviewOptions, scheduleReview } from "../services/fsrs";
 
 const SHORT_TERM_WINDOW = 10 * 60 * 1000;
 
@@ -35,16 +35,14 @@ export default function ReviewSession({ cards, mode = "scheduled", settings, onR
         : 0)
       .map((card) => card.id);
   });
-  const [clockNow, setClockNow] = useState(() => new Date());
   const [revealed, setRevealed] = useState(false);
   const [reviewed, setReviewed] = useState(0);
   const [processing, setProcessing] = useState(false);
   const [reviewError, setReviewError] = useState("");
   const activeCard = sessionCards.find((card) => card.id === queue[0]);
-  const options = useMemo(
-    () => activeCard && mode === "scheduled" ? getReviewOptions(activeCard, clockNow, settings) : null,
-    [activeCard?.id, activeCard?.fsrs, clockNow, settings],
-  );
+  const options = activeCard && mode === "scheduled"
+    ? getReviewOptions(activeCard, new Date(), settings)
+    : null;
 
 
 
