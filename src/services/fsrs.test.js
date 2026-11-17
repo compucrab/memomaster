@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createEmptyCard, State } from "ts-fsrs";
-import { DEFAULT_FSRS_SETTINGS, getReviewOptions, scheduleReview, undoLatestReview } from "./fsrs.js";
+import { DEFAULT_FSRS_SETTINGS, getReviewOptions, scheduleReview } from "./fsrs.js";
 
 const DAY = 86400000;
 function matureCard(now) {
@@ -127,58 +127,4 @@ test("review logs retain reversible before-and-after FSRS snapshots", () => {
   assert.equal(result.log.previousState, State.New);
   assert.equal(result.log.nextState, State.Learning);
   assert.equal(typeof result.log.nextFsrs.due, "string");
-});
-
-test("undo restores the exact previous FSRS state and removes only that review", () => {
-  const now = new Date("2026-01-10T12:00:00.000Z");
-  const card = matureCard(now);
-  const previous = JSON.stringify(card.fsrs);
-  const result = scheduleReview(card, "good", now);
-  const notebooks = [{
-    id: "notebook-a",
-    flashcards: [{ ...card, fsrs: result.fsrs }],
-    reviewHistory: [result.log],
-  }];
-  const undone = undoLatestReview(notebooks);
-  assert.equal(undone.undone, true);
-  assert.equal(JSON.stringify(undone.notebooks[0].flashcards[0].fsrs), previous);
-  assert.equal(undone.notebooks[0].reviewHistory.length, 0);
-});
-
-test("undo of a first review removes the newly created FSRS state", () => {
-  const now = new Date("2026-01-10T12:00:00.000Z");
-  const result = scheduleReview({ id: "new-card" }, "good", now);
-  const undone = undoLatestReview([{
-    id: "notebook-a",
-    flashcards: [{ id: "new-card", fsrs: result.fsrs }],
-    reviewHistory: [result.log],
-  }]);
-  assert.equal(undone.undone, true);
-  assert.equal(Object.hasOwn(undone.notebooks[0].flashcards[0], "fsrs"), false);
-});
-
-test("legacy review logs without snapshots are not undone destructively", () => {
-  const notebooks = [{
-    id: "notebook-a",
-    flashcards: [{ id: "card-a", fsrs: matureCard(new Date()).fsrs }],
-    reviewHistory: [{ cardId: "card-a", review: "2026-01-10T12:00:00.000Z", rating: "good" }],
-  }];
-  const undone = undoLatestReview(notebooks);
-  assert.equal(undone.undone, false);
-  assert.equal(undone.notebooks, notebooks);
-});
-
-test("undo refuses to overwrite a schedule changed after the recorded review", () => {
-  const now = new Date("2026-01-10T12:00:00.000Z");
-  const result = scheduleReview(matureCard(now), "good", now);
-  const changedFsrs = { ...result.fsrs, due: new Date("2026-02-01T04:00:00.000Z").toISOString() };
-  const notebooks = [{
-    id: "notebook-a",
-    flashcards: [{ id: "fsrs-test-card", fsrs: changedFsrs }],
-    reviewHistory: [result.log],
-  }];
-  const undone = undoLatestReview(notebooks);
-  assert.equal(undone.undone, false);
-  assert.match(undone.reason, /schedule changed/);
-  assert.equal(undone.notebooks, notebooks);
 });

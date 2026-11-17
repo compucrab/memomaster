@@ -103,15 +103,23 @@ Older projects without `studySessions` start with an empty activity history; exi
 
 ## Card editor and content formats
 
-`src/components/CardEditor.jsx` provides separate Question and Answer tabs. Each tab mounts its own RichTextEditor instance, so undo/redo history is isolated per side.
+`src/components/CardEditor.jsx` provides separate Question and Answer tabs. Each tab mounts its own RichTextEditor instance, so editor history remains independent per side.
 
-Card content is stored as Tiptap JSON in SQLite and .memz archives. `src/services/cardDocument.js` normalizes legacy Markdown strings to JSON, renders JSON using the same extension schema as the editor, and resolves notebook media references for display. Browse previews and review sessions use this shared renderer, so editing and previewing use one content model.\n\nThe editor supports five semantic heading levels, emphasis, underline, inline code and code blocks, lists, quotes, links, an unrestricted text-color picker, editable tables with row/column controls, inline/display LaTeX, images with drag-to-resize handles, video link cards, and editable info-card titles and rich-text bodies. Non-text blocks expose contextual hover controls for their properties. Arbitrary text sizing and text alignment controls are not exposed; document content remains left-aligned with a shared typography scale.
+Card front/back content is stored as canonical Tiptap JSON in SQLite and .memz archives. `src/services/cardDocument.js` normalizes legacy Markdown strings to JSON, renders JSON using the shared extension schema, and resolves notebook media references for display. Browse previews and review sessions use this shared renderer so the editor and read-only views use the same document model.
 
-Each notebook has a reusable `media` collection. Image files are stored once as media assets in notebook metadata and card JSON stores a `memomedia://{assetId}` reference. The media picker can reuse an image in multiple cards. Media assets are included in SQLite library saves and .memz archives because they are part of notebook metadata. Clipboard image paste also adds the image to the media collection.
+The editor uses a contextual Notion-style workflow rather than a permanent formatting toolbar:
 
-Video content is stored as a link card using `@[video](URL)`; previews never embed or autoplay the video. Selecting the card opens the original supported video URL in the user's browser. Info cards are block nodes with a title and editable rich-text body, rendered consistently in the editor and card previews.
+- Select text to reveal inline formatting controls for emphasis, inline code, paragraph/heading style, text colour, and links.
+- Press Ctrl + Space to open the searchable command palette.
+- Right-click editable objects to show a contextual Edit action. Property dialogs focus their primary field automatically and accept Enter to submit.
+- Five semantic heading levels, lists, quotes, code blocks, links, and a native custom text-colour picker are supported. Text alignment remains left-aligned and arbitrary text sizing is not exposed.
+- Tables support row and column insertion/removal. There is no table zoom or full-screen table control.
+- Images are notebook-scoped media assets referenced from card JSON using `memomedia://{assetId}`. The media picker can reuse an image in multiple cards. Images resize by dragging their corner handle; there are no alignment controls.
+- Inline and display equations use KaTeX. Their LaTeX source and equation size are edited through the contextual Edit dialog.
+- Video cards store a URL, provider, and editable label. They open the source URL in the browser and never embed or autoplay video.
+- Info cards store an editable title and rich-text body.
 
-`src/services/cardDocument.js` renders canonical Tiptap JSON for browse previews and review sessions. `src/services/markdown.js` remains as the legacy Markdown conversion/renderer path. Keep renderer changes security-reviewed and cover hostile input.
+`src/services/markdown.js` remains the legacy Markdown renderer and conversion path. Keep it for old library content and supported .memz imports. Review HTML-producing changes for XSS and cover normal and hostile input in tests.
 
 ## Important modules
 
@@ -120,25 +128,28 @@ Video content is stored as a link card using `@[video](URL)`; previews never emb
 | Layout.jsx | Application state, SQLite persistence, project lifecycle, automatic backups, FSRS preferences |
 | NotebookView.jsx | Browse, card selection, chapter operations, study setup |
 | CardEditor.jsx | Card metadata, Question/Answer tabs, duplicate warning, schedule reset |
-| RichTextEditor.jsx | Tiptap setup, contextual formatting, media/math insertion, table editing, image resizing, editor history |
+| RichTextEditor.jsx | Tiptap setup, contextual formatting, command palette, dialogs, media/math insertion, table editing, image resizing |
+| CardContent.jsx | Shared read-only card document renderer |
 | ReviewSession.jsx | Continuous FSRS review queue, four rating controls, and unscheduled practice queue |
 | StudyStatus.jsx | Retention, rating, workload, maturity, and lapse analytics |
 | projectArchive.js | .memz ZIP export/import and legacy migration |
 | fsrs.js | FSRS scheduling, study-day rollover, interval calculation |
 | fsrsSettings.js | Default and validated app-wide FSRS preferences |
-| cardDocument.js | Tiptap JSON normalization, media resolution, and shared HTML rendering |\n| editorExtensions.js | Shared Tiptap schema for editing and rendering |\n| markdown.js | Legacy Markdown rendering and conversion support |
+| cardDocument.js | Tiptap JSON normalization, media resolution, and shared HTML rendering |
+| editorExtensions.js | Shared Tiptap schema for editing and rendering |
+| markdown.js | Legacy Markdown rendering and conversion support |
 | lib.rs | SQLite commands, native file I/O, automatic backup writing |
 
 ## Verification
 
-Run the frontend build and FSRS regression tests:
+Run the frontend build and regression tests:
 
 ```powershell
 npm run build
 npm test
 ```
 
-The test suite covers Again/relearning, Hard semantics, Good/Easy scheduling, preview-versus-saved intervals, retention and maximum-interval configuration, study-day rollover, review snapshots. `fsrsCompatibility.test.js` adds a scheduler-contract matrix for all ratings, late reviews, counters, maximum interval enforcement, and minute-level learning steps. These tests do not yet establish exact Anki parity; shared golden fixtures must still be executed against Anki’s own scheduler.
+The Node test suite covers FSRS rating semantics, learning/relearning steps, preview-versus-saved intervals, retention and maximum-interval configuration, study-day rollover, persisted review snapshots, canonical Tiptap document handling, and legacy Markdown rendering. Browser-dependent Tiptap HTML serialization is skipped by the Node runner and is exercised by the running app. The tests do not establish exact Anki parity; shared golden fixtures must still be executed against Anki's own scheduler.
 
 ## Data flow
 
