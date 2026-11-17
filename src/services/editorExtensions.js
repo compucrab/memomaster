@@ -158,13 +158,13 @@ export const CardTable = Node.create({
       },
       addTableColumnAfter: () => ({ state, dispatch }) => {
         const found = findTable(state); if (!found) return false;
-        const tr = state.tr; let offset = found.pos + 1; const rows = [];
+        const tr = state.tr; const rows = [];
         found.node.forEach((row, rowOffset) => rows.push({ row, pos: found.pos + 1 + rowOffset }));
         const $from = state.selection.$from;
         let cellDepth = $from.depth;
         while (cellDepth > found.depth && !["tableCell", "tableHeader"].includes($from.node(cellDepth).type.name)) cellDepth--;
         const selectedIndex = cellDepth > found.depth ? $from.index(cellDepth - 1) : 0;
-        rows.forEach(({ row, pos }) => {
+        rows.reverse().forEach(({ row, pos }) => {
           const index = Math.min(selectedIndex + 1, row.childCount);
           const template = row.child(Math.max(0, Math.min(index - 1, row.childCount - 1)));
           const cell = template.type.createAndFill();
@@ -187,10 +187,11 @@ export const CardTable = Node.create({
         if (depth <= found.depth) return false;
         const column = $from.index(depth - 1);
         if (found.node.firstChild.childCount <= 1) return false;
-        const tr = state.tr; let rowPos = found.pos + 1;
-        found.node.forEach(row => {
-          const cell = row.child(column); if (cell) tr.delete(rowPos + 1 + row.content.content.slice(0, column).reduce((sum, item) => sum + item.nodeSize, 0), rowPos + 1 + row.content.content.slice(0, column + 1).reduce((sum, item) => sum + item.nodeSize, 0));
-          rowPos += row.nodeSize;
+        const tr = state.tr; const rows = []; let rowPos = found.pos + 1;
+        found.node.forEach(row => { rows.push({ row, pos: rowPos }); rowPos += row.nodeSize; });
+        rows.reverse().forEach(({ row, pos }) => {
+          const cell = row.child(column);
+          if (cell) tr.delete(pos + 1 + row.content.content.slice(0, column).reduce((sum, item) => sum + item.nodeSize, 0), pos + 1 + row.content.content.slice(0, column + 1).reduce((sum, item) => sum + item.nodeSize, 0));
         });
         if (dispatch) dispatch(tr);
         return true;
