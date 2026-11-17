@@ -24,7 +24,9 @@ function matureCard(now) {
   };
 }
 
-test("FSRS defaults to a 180-day maximum interval", () => {
+test("FSRS defaults to Anki-style learning steps and a 180-day maximum interval", () => {
+  assert.deepEqual(DEFAULT_FSRS_SETTINGS.learningSteps, ["1m", "10m"]);
+  assert.deepEqual(DEFAULT_FSRS_SETTINGS.relearningSteps, ["10m"]);
   assert.equal(DEFAULT_FSRS_SETTINGS.maximumInterval, 180);
 });
 
