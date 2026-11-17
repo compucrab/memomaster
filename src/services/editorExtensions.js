@@ -36,8 +36,8 @@ export const AlignedHeading = Heading.configure({ levels: [1, 2, 3, 4, 5] });
 export const CardVideo = Node.create({
   name: "cardVideo", group: "block", atom: true, selectable: true,
   addAttributes() { return { url: { default: "" }, provider: { default: "video" } }; },
-  parseHTML() { return [{ tag: "div[data-card-video]" }]; },
-  renderHTML({ HTMLAttributes }) { const url = safeMediaUrl(HTMLAttributes.url); return url ? ["a", { href: url, target: "_blank", rel: "noopener noreferrer", class: "study-video-card", "data-card-video": "", "data-url": url }, ["span", { class: "study-video-card-icon" }, "▶"], ["span", {}, ["strong", {}, "Video link"], ["small", {}, "Open video in browser"]], ["span", { class: "study-video-card-arrow" }, "↗"]] : ["div", { "data-card-video": "" }, "Unsupported video link"]; },
+  parseHTML() { return [{ tag: "a[data-card-video]", getAttrs: element => ({ url: element.getAttribute("href") || element.getAttribute("data-url") || "", provider: element.getAttribute("data-provider") || "video" }) }, { tag: "div[data-card-video]", getAttrs: element => ({ url: element.getAttribute("data-url") || "", provider: element.getAttribute("data-provider") || "video" }) }]; },
+  renderHTML({ HTMLAttributes }) { const url = safeMediaUrl(HTMLAttributes.url); return url ? ["a", { href: url, target: "_blank", rel: "noopener noreferrer", class: "study-video-card", "data-card-video": "", "data-url": url, "data-provider": HTMLAttributes.provider || "video" }, ["span", { class: "study-video-card-icon" }, "▶"], ["span", {}, ["strong", {}, "Video link"], ["small", {}, "Open video in browser"]], ["span", { class: "study-video-card-arrow" }, "↗"]] : ["div", { "data-card-video": "" }, "Unsupported video link"]; },
   markdownTokenizer: {
     name: "cardVideo", level: "block", start: (source) => source.indexOf("@[video]("),
     tokenize(source) { const match = /^@\[video\]\((https?:\/\/[^\s)]+)\)/.exec(source); return match ? { type: "cardVideo", raw: match[0], href: match[1] } : undefined; },
