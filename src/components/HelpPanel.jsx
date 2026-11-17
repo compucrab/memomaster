@@ -18,19 +18,20 @@ const pages = {
     title: "Keyboard shortcuts",
     intro: "Shortcuts are available when the relevant notebook, editor, or review screen is active. Text-entry fields keep their normal typing behaviour.",
     sections: [
-      ["Notebook", "A — Add a new card
+      ["Notebook", `A — Add a new card
 S — Open Study
 B — Open Browse
 Ctrl + Enter — Save the current card and continue with a new card while editing
-Ctrl + D — Open the chapter picker while editing a card"],
-      ["Review", "1 — Again
-2 — Hard
+Ctrl + D — Open the chapter picker while editing a card`],
+      ["Scheduled review", `1 — Again
+2 — Hard (difficult)
 3 — Good
 4 — Easy
-Space — Reveal the answer; when the answer is visible, rate Good"],
-      ["Editor", "Ctrl + Space — Open the editor command palette
+Space — Reveal the answer; when it is visible, rate Good`],
+      ["Unscheduled practice", "Space — Reveal the answer; when it is visible, mark the card Done."],
+      ["Editor", `Ctrl + Space — Open the editor command palette
 ↑ / ↓ — Move through the command palette or chapter picker
-Enter — Choose the highlighted option"],
+Enter — Choose the highlighted option`],
       ["Application", "Ctrl + , — Open Preferences
 Ctrl + S — Save project (.memz) and choose a destination"]
     ]
