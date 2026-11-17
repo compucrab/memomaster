@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "preact/hooks";
+import { useMemo, useState } from "preact/hooks";
 import { State } from "ts-fsrs";
 import { Check, RotateCw } from "lucide-preact";
 import CardContent from "./CardContent";
