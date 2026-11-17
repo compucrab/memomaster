@@ -5,7 +5,6 @@ import { Markdown } from "@tiptap/markdown";
 import Placeholder from "@tiptap/extension-placeholder";
 import Underline from "@tiptap/extension-underline";
 import Color from "@tiptap/extension-color";
-import Link from "@tiptap/extension-link";
 import { Bold, Italic, Underline as UnderlineIcon, Link as LinkIcon, Heading1, Heading2, Heading3, Heading4, Heading5, List, ListOrdered, Quote, Code, Undo2, Redo2, ImagePlus, Sigma, Video, X, Minus, Plus, Pilcrow } from "lucide-preact";
 import { CardImage, CardVideo, CardMath, CardTextStyle, CardLink, AlignedParagraph, AlignedHeading } from "../services/editorExtensions";
 import "katex/dist/katex.min.css";
@@ -73,9 +72,18 @@ export default function RichTextEditor({ label, value = "", placeholder, onChang
         attributes: { class: "rich-editor-content", role: "textbox", "aria-label": label, "aria-multiline": "true", "data-placeholder": placeholder || "", spellcheck: "true" },
         handlePaste(view, event) {
           const files = Array.from(event.clipboardData?.items || []).filter(item => item.kind === "file").map(item => item.getAsFile()).filter(Boolean);
-          if (!files.length) return false;
-          insertFiles(files, instance).catch(() => {});
-          return true;
+          if (files.length) {
+            insertFiles(files, instance).catch(() => {});
+            return true;
+          }
+          const pastedText = event.clipboardData?.getData("text/plain") || "";
+          const containsMarkdown = /(?:^|\\n)#{1,5}\\s|\\[[^\\]]+\\]\\(https?:\\/\\/|\\*\\*[^*]+\\*\\*|(?:^|\\n)\\s*[-*+]\\s/m.test(pastedText);
+          if (containsMarkdown && instance.markdown?.parse) {
+            event.preventDefault();
+            instance.chain().focus().insertContent(instance.markdown.parse(pastedText)).run();
+            return true;
+          }
+          return false;
         },
       },
       onUpdate: ({ editor: current }) => onChangeRef.current?.(toStoredMarkdown(current.getMarkdown())),
