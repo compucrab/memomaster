@@ -1,6 +1,6 @@
 import { Editor, generateHTML } from "@tiptap/core";
-import { createCardExtensions } from "./editorExtensions";
-import { renderMarkdown, unescapeMarkdownPunctuation } from "./markdown";
+import { createCardExtensions } from "./editorExtensions.js";
+import { renderMarkdown, unescapeMarkdownPunctuation } from "./markdown.js";
 
 const extensions = createCardExtensions();
 
