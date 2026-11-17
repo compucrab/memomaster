@@ -21,14 +21,15 @@ function isDue(card, now) {
   return Number.isNaN(due.getTime()) || due <= now;
 }
 
-function isLearningDueToday(card, now, settings) {
+function isLearningDueToday(card, now, studyDayEnd) {
   if (!isLearning(card) || !card.fsrs?.due) return false;
   const due = new Date(card.fsrs.due);
-  return !Number.isNaN(due.getTime()) && due > now && due < getStudyDayEnd(now, settings?.rolloverHour);
+  return !Number.isNaN(due.getTime()) && due > now && due < studyDayEnd;
 }
 
 export default function ReviewSession({ cards, mode = "scheduled", settings, onReview, onExit }) {
   const [sessionCards, setSessionCards] = useState(() => cards.map((card) => ({ ...card })));
+  const [studyDayEnd] = useState(() => getStudyDayEnd(new Date(), settings?.rolloverHour));
   const [queue, setQueue] = useState(() => {
     const now = new Date();
     const priority = (card) => {
@@ -45,7 +46,7 @@ export default function ReviewSession({ cards, mode = "scheduled", settings, onR
   });
   const [pending, setPending] = useState(() => {
     const now = new Date();
-    return mode === "scheduled" ? cards.filter((card) => isLearningDueToday(card, now, settings)).map((card) => card.id) : [];
+    return mode === "scheduled" ? cards.filter((card) => isLearningDueToday(card, now, studyDayEnd)).map((card) => card.id) : [];
   });
   const [clockNow, setClockNow] = useState(() => new Date());
   const [revealed, setRevealed] = useState(false);
@@ -62,7 +63,7 @@ export default function ReviewSession({ cards, mode = "scheduled", settings, onR
     if (!pending.length) return undefined;
     const timer = window.setInterval(() => {
       const now = new Date();
-      const dayEnd = getStudyDayEnd(now, settings?.rolloverHour);
+      const dayEnd = studyDayEnd;
       const dueIds = pending.filter((id) => {
         const card = sessionCards.find((item) => item.id === id);
         return card && isDue(card, now);
@@ -82,7 +83,7 @@ export default function ReviewSession({ cards, mode = "scheduled", settings, onR
       }
     }, 1000);
     return () => window.clearInterval(timer);
-  }, [pending, sessionCards, queue.length]);
+  }, [pending, sessionCards, queue.length, studyDayEnd]);
 
   function removeActiveCard() {
     setQueue((items) => items.slice(1));
@@ -101,7 +102,7 @@ export default function ReviewSession({ cards, mode = "scheduled", settings, onR
         setSessionCards((items) => items.map((card) => card.id === activeCard.id ? { ...card, fsrs: result.fsrs } : card));
         setReviewed((count) => count + 1);
         const inLearningStep = result.fsrs.state === State.Learning || result.fsrs.state === State.Relearning;
-        if (inLearningStep && isLearningDueToday({ fsrs: result.fsrs }, reviewedAt, settings)) {
+        if (inLearningStep && isLearningDueToday({ fsrs: result.fsrs }, reviewedAt, studyDayEnd)) {
           setPending((items) => items.includes(activeCard.id) ? items : [...items, activeCard.id]);
           removeActiveCard();
           return;
