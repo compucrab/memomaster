@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "preact/hooks";
 import { Editor } from "@tiptap/core";
 import Placeholder from "@tiptap/extension-placeholder";
-import { Bold, Italic, Underline as UnderlineIcon, Link as LinkIcon, Image as ImageIcon, Sigma, Video, X, Pilcrow, Heading1, Heading2, Heading3, Heading4, Heading5, List, ListOrdered, Quote, Code, Table, Palette, Undo2, Redo2 } from "lucide-preact";
+import { Bold, Italic, Underline as UnderlineIcon, Link as LinkIcon, Image as ImageIcon, Sigma, Video, X, Pilcrow, Heading1, Heading2, Heading3, Heading4, Heading5, List, ListOrdered, Quote, Code, CodeXml, Table, Palette, Undo2, Redo2, Info } from "lucide-preact";
 import { createCardExtensions } from "../services/editorExtensions";
 import { normalizeCardDocument } from "../services/cardDocument";
 import "katex/dist/katex.min.css";
@@ -221,14 +221,16 @@ export default function RichTextEditor({ label, value = "", placeholder, onChang
     { label: "Bullet list", icon: List, detail: "Create a bullet list", run: () => editor.chain().focus().toggleBulletList().run() },
     { label: "Numbered list", icon: ListOrdered, detail: "Create a numbered list", run: () => editor.chain().focus().toggleOrderedList().run() },
     { label: "Quote", icon: Quote, detail: "Turn the current block into a quote", run: () => editor.chain().focus().toggleBlockquote().run() },
+    { label: "Inline code", icon: CodeXml, detail: "Format selected text as inline code", run: () => editor.chain().focus().toggleCode().run() },
     { label: "Code block", icon: Code, detail: "Insert an editable raw code block", run: () => editor.chain().focus().toggleCodeBlock().run() },
     { label: "Link", icon: LinkIcon, detail: "Add or edit a hyperlink", run: () => openInsert("link") },
     { label: "Image", icon: ImageIcon, detail: "Insert an image", run: () => fileRef.current?.click() },
     { label: "Inline equation", icon: Sigma, detail: "Insert or edit raw LaTeX inline", run: () => openInsert("inlineMath") },
     { label: "Block equation", icon: Sigma, detail: "Insert or edit raw LaTeX display math", run: () => openInsert("blockMath") },
     { label: "Video card", icon: Video, detail: "Insert or edit a video link card", run: () => openInsert("video") },
+    { label: "Info card", icon: Info, detail: "Insert a card for notes and additional information", run: () => editor.chain().focus().insertContent({ type: "cardInfo", attrs: { title: "Additional information" }, content: [{ type: "paragraph" }] }).run() },
     { label: "Table", icon: Table, detail: "Insert a 2 × 2 table", run: () => editor.chain().focus().insertContent({ type: "table", content: [{ type: "tableRow", content: [{ type: "tableHeader", content: [{ type: "paragraph" }] }, { type: "tableHeader", content: [{ type: "paragraph" }] }] }, { type: "tableRow", content: [{ type: "tableCell", content: [{ type: "paragraph" }] }, { type: "tableCell", content: [{ type: "paragraph" }] }] }] }).run() },
-    ...COLORS.map(([name, color]) => ({ label: name + " text", icon: Palette, detail: "Apply " + name.toLowerCase() + " to selected text", run: () => editor.chain().focus().setColor(color).run() })),
+    ...COLORS.map(([name, color]) => ({ label: name + " text", color, detail: "Apply " + name.toLowerCase() + " to selected text", run: () => editor.chain().focus().setColor(color).run() })),
     { label: "Default text color", icon: Palette, detail: "Use the current theme text color", run: () => editor.chain().focus().unsetColor().run() },
     { label: "Undo", icon: Undo2, detail: "Undo the last edit", run: () => editor.chain().focus().undo().run() },
     { label: "Redo", icon: Redo2, detail: "Redo the last undone edit", run: () => editor.chain().focus().redo().run() },
@@ -246,6 +248,7 @@ export default function RichTextEditor({ label, value = "", placeholder, onChang
       <button type="button" title="Bold" aria-label="Bold" class={editor.isActive("bold") ? "is-active" : ""} onClick={() => applySelectionFormat(chain => chain.toggleBold().run())}><Bold size={14}/></button>
       <button type="button" title="Italic" aria-label="Italic" class={editor.isActive("italic") ? "is-active" : ""} onClick={() => applySelectionFormat(chain => chain.toggleItalic().run())}><Italic size={14}/></button>
       <button type="button" title="Underline" aria-label="Underline" class={editor.isActive("underline") ? "is-active" : ""} onClick={() => applySelectionFormat(chain => chain.toggleUnderline().run())}><UnderlineIcon size={14}/></button>
+      <button type="button" title="Inline code" aria-label="Inline code" class={editor.isActive("code") ? "is-active" : ""} onClick={() => applySelectionFormat(chain => chain.toggleCode().run())}><CodeXml size={14}/></button>
       <span class="rich-editor-selection-divider"/>
       <select aria-label="Text block style" value={editor.isActive("heading") ? String(editor.getAttributes("heading").level) : "p"} onChange={event => {
         const value = event.currentTarget.value;
@@ -267,7 +270,7 @@ export default function RichTextEditor({ label, value = "", placeholder, onChang
         if (event.key === "ArrowDown") { event.preventDefault(); event.currentTarget.parentElement?.nextElementSibling?.querySelector("button")?.focus(); }
       }} placeholder="Search commands..." aria-label="Search editor commands"/></div>
       <div class="rich-editor-command-results">
-        {filteredActions.map(action => <button type="button" key={action.label} onMouseDown={event => event.preventDefault()} onClick={() => chooseAction(action)}><span class="rich-editor-command-icon">{action.icon && <action.icon size={15}/>}</span><span class="rich-editor-command-copy"><strong>{action.label}</strong><small>{action.detail}</small></span></button>)}
+        {filteredActions.map(action => <button type="button" key={action.label} onMouseDown={event => event.preventDefault()} onClick={() => chooseAction(action)}><span class="rich-editor-command-icon">{action.color ? <i class="rich-editor-command-color" style={{ backgroundColor: action.color }}/> : action.icon && <action.icon size={15}/>}</span><span class="rich-editor-command-copy"><strong>{action.label}</strong><small>{action.detail}</small></span></button>)}
         {!filteredActions.length && <p>No matching commands</p>}
       </div>
       <div class="rich-editor-command-hint">↑↓ to navigate · Enter to select · Esc to close</div>
