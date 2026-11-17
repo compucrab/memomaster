@@ -3,7 +3,7 @@ import { ArrowLeft, Check, Plus, RotateCcw, Trash2, X } from "lucide-preact";
 import RichTextEditor from "./RichTextEditor";
 import { findSimilarQuestion } from "../services/questionSimilarity";
 import { normalizeCardDocument, cardDocumentText } from "../services/cardDocument";
-export default function CardEditor({ card, chapters = [], existingCards = [], onSave, onSaveAndAdd, onCancel, onAddChapter, onDelete, onResetSchedule, addedNotice = false, media = [], onAddMedia }) {
+export default function CardEditor({ card, chapters = [], existingCards = [], onSave, onSaveAndAdd, onCancel, onAddChapter, onDelete, onResetSchedule, addedNotice = false, media = [], onAddMedia, onNavigate }) {
   const [draft, setDraft] = useState(() => ({ ...card, front: normalizeCardDocument(card.front), back: normalizeCardDocument(card.back) }));
   const [similarQuestion, setSimilarQuestion] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -13,6 +13,7 @@ export default function CardEditor({ card, chapters = [], existingCards = [], on
   const [chapterQuery, setChapterQuery] = useState("");
   const [highlightedChapter, setHighlightedChapter] = useState(0);
   const chapterSearchRef = useRef(null);
+  const pendingNavigationRef = useRef(null);
   const highlightedChapterRef = useRef(null);
   const chapterOptions = [{ id: "", name: "Unassigned" }, ...chapters];
   const filteredChapterOptions = chapterOptions.filter(item => item.name.toLocaleLowerCase().includes(chapterQuery.toLocaleLowerCase()));
@@ -43,9 +44,17 @@ export default function CardEditor({ card, chapters = [], existingCards = [], on
         if (event.target?.closest?.("[role='dialog'], .rich-editor-command-palette, .rich-editor-insert-dialog")) return;
         event.preventDefault(); event.stopPropagation(); setConfirmDiscard(true); return;
       }
-      if (event.target?.closest?.("[role='dialog'], [role='alertdialog'], .chapter-picker")) return;
       if (event.altKey && !event.ctrlKey && !event.metaKey) {
         const key = event.key.toLowerCase();
+        if (key === "b" || key === "s") {
+          event.preventDefault();
+          event.stopPropagation();
+          if (!event.target?.closest?.("[role='dialog'], [role='alertdialog'], .chapter-picker")) {
+            pendingNavigationRef.current = key === "b" ? "browse" : "study";
+            setConfirmDiscard(true);
+          }
+          return;
+        }
         if (key === "q" || key === "w") {
           event.preventDefault();
           event.stopPropagation();
@@ -53,6 +62,7 @@ export default function CardEditor({ card, chapters = [], existingCards = [], on
           return;
         }
       }
+      if (event.target?.closest?.("[role='dialog'], [role='alertdialog'], .chapter-picker")) return;
       if (!(event.ctrlKey || event.metaKey) || event.altKey) return;
       if (event.key.toLowerCase() === "d") {
         event.preventDefault();
@@ -128,7 +138,12 @@ export default function CardEditor({ card, chapters = [], existingCards = [], on
       </div>
       <div class="card-editor-footer-right">{!isNewCard && draft.fsrs && <button type="button" class="card-reset-schedule" onClick={() => { onResetSchedule?.(draft.id); setDraft(current => { const next = { ...current }; delete next.fsrs; return next; }); }}><RotateCcw size={13}/> Reset schedule</button>}{!isNewCard && <button type="button" class="card-delete-button" onClick={()=>setConfirmDelete(true)}><Trash2 size={14}/> Delete card</button>}<button type="button" class="study-secondary" onClick={onCancel}>Cancel</button><button type="button" class="study-primary" onClick={() => requestSave(false)}><Check size={15}/> {isNewCard ? "Add card" : "Save changes"}</button></div>
     </footer>
-    {confirmDiscard && <div class="prompt-backdrop" onMouseDown={event => event.target === event.currentTarget && setConfirmDiscard(false)}><section class="prompt-panel" role="alertdialog" aria-modal="true" aria-labelledby="discard-card-title"><div class="prompt-heading"><h2 id="discard-card-title">Discard card changes?</h2><button type="button" aria-label="Close" onClick={() => setConfirmDiscard(false)}><X size={16}/></button></div><p>{isNewCard ? "This new card has not been added. Discard it?" : "Your unsaved changes to this card will be lost. Discard them?"}</p><div class="prompt-actions"><button type="button" class="prompt-cancel" onClick={() => setConfirmDiscard(false)}>Keep editing</button><button type="button" class="prompt-confirm prompt-danger" onClick={onCancel}>Discard changes</button></div></section></div>}
+    {confirmDiscard && <div class="prompt-backdrop" onMouseDown={event => event.target === event.currentTarget && setConfirmDiscard(false)}><section class="prompt-panel" role="alertdialog" aria-modal="true" aria-labelledby="discard-card-title"><div class="prompt-heading"><h2 id="discard-card-title">Discard card changes?</h2><button type="button" aria-label="Close" onClick={() => setConfirmDiscard(false)}><X size={16}/></button></div><p>{isNewCard ? "This new card has not been added. Discard it?" : "Your unsaved changes to this card will be lost. Discard them?"}</p><div class="prompt-actions"><button type="button" class="prompt-cancel" onClick={() => { pendingNavigationRef.current = null; setConfirmDiscard(false); }}>Keep editing</button><button type="button" class="prompt-confirm prompt-danger" onClick={() => {
+      const destination = pendingNavigationRef.current;
+      pendingNavigationRef.current = null;
+      if (destination) onNavigate?.(destination);
+      else onCancel();
+    }}>Discard changes</button></div></section></div>}
     {confirmDelete && <div class="prompt-backdrop" onMouseDown={e=>e.target===e.currentTarget && setConfirmDelete(false)}><section class="prompt-panel" role="alertdialog" aria-modal="true" aria-labelledby="delete-card-title"><div class="prompt-heading"><h2 id="delete-card-title">Delete card?</h2><button type="button" aria-label="Close" onClick={()=>setConfirmDelete(false)}><X size={16}/></button></div><p>This card and its review history will be permanently deleted.</p><div class="prompt-actions"><button type="button" class="prompt-cancel" onClick={()=>setConfirmDelete(false)}>Cancel</button><button type="button" class="prompt-confirm prompt-danger" onClick={onDelete}>Delete card</button></div></section></div>}
     {similarQuestion && <div class="prompt-backdrop" role="presentation"><section class="prompt-panel question-warning" role="alertdialog" aria-modal="true" aria-labelledby="similar-question-title"><div class="prompt-heading"><h2 id="similar-question-title">{similarQuestion.blocked ? "This question already exists" : "This looks similar to another question"}</h2></div><p>{similarQuestion.blocked ? "There is already a card with the same question. Edit this question to make it distinct." : "We found a question that is very close in wording. You may already have this card in your notebook."}</p><div class="similar-question-match"><span>EXISTING QUESTION</span><p>{cardDocumentText(similarQuestion.card.front).trim()}</p></div><div class="prompt-actions"><button type="button" class="prompt-cancel" onClick={()=>{setSimilarQuestion(null);onCancel();}}>{isNewCard ? "Discard card" : "Cancel edit"}</button>{!similarQuestion.blocked && <button type="button" class="prompt-confirm" onClick={()=>{setSimilarQuestion(null);(similarQuestion.addAnother ? (onSaveAndAdd || onSave) : onSave)(draft);}}>Save anyway</button>}{similarQuestion.blocked && <button type="button" class="prompt-confirm" onClick={()=>setSimilarQuestion(null)}>Edit question</button>}</div></section></div>}
   </section>;

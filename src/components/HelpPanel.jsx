@@ -17,12 +17,12 @@ const pages = {
   },
   shortcuts: {
     title: "Keyboard shortcuts",
-    intro: "Shortcuts are available when the relevant notebook, editor, or review screen is active. Text-entry fields keep their normal typing behaviour.",
+    intro: "Shortcuts are available when the relevant notebook, editor, or review screen is active. Use Alt + B and Alt + S for navigation; plain B and S are not navigation shortcuts. Text-entry fields keep their normal typing behaviour.",
     sections: [
       ["Notebook", `A — Add a new card
 E — Edit the selected card in Browse
-Alt + S — Open Study
-Alt + B — Open Browse
+Alt + S — Open Study (also leaves the editor or review screen)
+Alt + B — Open Browse (also leaves the editor or review screen)
 Escape — Return to the library from Browse or Study
 Ctrl + Enter — Save the current card and continue with a new card while editing
 Ctrl + D — Open the chapter picker while editing a card`],
@@ -31,10 +31,14 @@ Ctrl + D — Open the chapter picker while editing a card`],
 2 — Hard (difficult)
 3 — Good
 4 — Easy
+Alt + S — Leave review for the Study tab
+Alt + B — Leave review for Browse
 Space — Reveal the answer; when it is visible, rate Good`],
       ["Unscheduled practice", "Space — Reveal the answer; when it is visible, mark the card Done."],
       ["Editor", `Alt + Q — Switch to the Question side while editing a card
 Alt + W — Switch to the Answer side while editing a card
+Alt + S — Leave the editor for Study (asks before discarding changes)
+Alt + B — Leave the editor for Browse (asks before discarding changes)
 Escape — Ask before discarding a new card or unsaved edits
 Ctrl + Space — Open the editor command palette
 ↑ / ↓ — Move through the command palette or chapter picker; the highlighted command stays in view
