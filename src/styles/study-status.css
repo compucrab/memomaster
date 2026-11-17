@@ -162,3 +162,63 @@
 @media(max-width:460px) { .fsrs-settings-grid { grid-template-columns:1fr; } }
 
 
+
+
+/* Full-window Anki-style review card with both sides stacked after reveal. */
+.review-session {
+  width: 100%;
+  max-width: none;
+  min-height: 0;
+  padding: 12px clamp(14px, 2.5vw, 36px) 16px;
+}
+.review-session-header { padding-bottom: 10px; }
+.review-card {
+  display: flex;
+  flex: 1 1 0;
+  width: 100%;
+  max-width: none;
+  height: auto;
+  min-height: 0;
+  margin: 0;
+}
+.review-card-content {
+  display: flex;
+  flex: 1 1 0;
+  min-height: 0;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: 0;
+  overflow: auto;
+  padding: clamp(20px, 3vw, 48px);
+  text-align: left;
+}
+.review-card-side {
+  width: 100%;
+  min-width: 0;
+  flex: 0 0 auto;
+}
+.review-card-side .study-side-label {
+  margin: 0 0 18px;
+  text-align: left;
+}
+.review-card-side .study-card-prose {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.review-answer-divider {
+  width: 100%;
+  height: 1px;
+  flex: 0 0 auto;
+  margin: clamp(22px, 3vh, 36px) 0;
+  background: var(--line);
+}
+.review-card-content .review-card-side .study-card-prose img {
+  max-width: 100%;
+  max-height: min(65vh, 900px);
+}
+@media (max-height: 720px) {
+  .review-card { height: auto; }
+}
