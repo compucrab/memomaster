@@ -252,3 +252,16 @@
 .study-card-prose img { display: block; margin: 18px 0 !important; }
 .study-card-prose .katex { font-size: 1em; }
 .study-card-prose .katex-display { font-size: 1.35em; }
+
+/* Shared card typography: links and inline equations match normal body text. */
+.study-card-prose a:not(.study-video-card) {
+  color: var(--accent);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+.study-card-prose .katex { font-size: 1em; }
+.study-card-prose .katex .mord,
+.study-card-prose .katex .mop,
+.study-card-prose .katex .mbin { font-size: inherit; }
+.study-card-prose img { margin-left: 0 !important; margin-right: auto !important; }
