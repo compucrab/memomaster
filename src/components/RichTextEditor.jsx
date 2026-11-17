@@ -311,7 +311,10 @@ export default function RichTextEditor({ label, value = "", placeholder, onChang
     <div class="rich-editor-heading">{label} <span class="rich-editor-shortcut">Ctrl + Space for commands</span></div>
     <div class="rich-editor-surface" onClick={() => hoverEdit && setHoverEdit(null)} onMouseOver={event => {
       const table = event.target.closest("table");
-      if (!table) return;
+      if (!table) {
+        if (!event.target.closest(".rich-editor-table-zoom-trigger")) setTablePreview(null);
+        return;
+      }
       const rect = table.getBoundingClientRect();
       const html = table.outerHTML;
       setTablePreview(current => current?.html === html && current?.left === rect.left && current?.right === rect.right && current?.top === rect.top && current?.bottom === rect.bottom ? current : { html, left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom });
