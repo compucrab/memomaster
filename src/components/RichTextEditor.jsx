@@ -227,7 +227,7 @@ export default function RichTextEditor({ label, value = "", placeholder, onChang
   return <section class="rich-editor">
     <div class="rich-editor-heading">{label} <span class="rich-editor-shortcut">Ctrl + . for commands</span></div>
     <div class="rich-editor-surface"><div ref={hostRef}/></div>
-    {hasTextSelection && selectionPosition && !paletteOpen && !dialog && <div class="rich-editor-selection-tools" style={{ left: selectionPosition.left + "px", top: selectionPosition.top + "px" }} onMouseDown={event => event.preventDefault()}>
+    {hasTextSelection && selectionPosition && !paletteOpen && !dialog && <div class="rich-editor-selection-tools" style={{ left: selectionPosition.left + "px", top: selectionPosition.top + "px" }} onMouseDown={event => { if (event.target.closest("button")) event.preventDefault(); }}>
       <button type="button" title="Bold" aria-label="Bold" class={editor.isActive("bold") ? "is-active" : ""} onClick={() => applySelectionFormat(chain => chain.toggleBold().run())}><Bold size={14}/></button>
       <button type="button" title="Italic" aria-label="Italic" class={editor.isActive("italic") ? "is-active" : ""} onClick={() => applySelectionFormat(chain => chain.toggleItalic().run())}><Italic size={14}/></button>
       <button type="button" title="Underline" aria-label="Underline" class={editor.isActive("underline") ? "is-active" : ""} onClick={() => applySelectionFormat(chain => chain.toggleUnderline().run())}><UnderlineIcon size={14}/></button>
