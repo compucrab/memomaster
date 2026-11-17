@@ -78,3 +78,10 @@
 .media-library-item:hover { border-color: var(--accent); color: var(--ink); }
 .media-library-item img { width: 100%; height: 86px; object-fit: contain; background: var(--paper-deep); }
 .media-library-item span { overflow: hidden; font: 9px var(--sans); text-overflow: ellipsis; white-space: nowrap; }
+
+/* Notion-like block flow: content starts at the left edge and image tools are contextual. */
+.rich-editor-content img { display: block !important; margin: 12px 0 !important; }
+.rich-editor-content .tiptap-mathematics-render[data-type="inline-math"] { font-size: 1em !important; vertical-align: baseline; }
+.rich-editor-content .tiptap-mathematics-render[data-type="block-math"] { font-size: 1.35em; }
+
+.rich-editor-content > * { text-align: left !important; }

@@ -6,17 +6,16 @@ import { TextStyle } from "@tiptap/extension-text-style";
 import { Mathematics } from "@tiptap/extension-mathematics";
 const safeMediaUrl = (value = "") => /^(https?:|memomedia:\/\/[\w-]+$|data:image\/(png|jpe?g|gif|webp);base64,)/i.test(value) ? value : "";
 export const CardImage = Image.extend({
-  inline: true,
-  addAttributes() { return { ...this.parent?.(), src: { default: null }, alt: { default: null }, title: { default: null }, width: { default: 420 }, align: { default: "center" } }; },
+  inline: false,
+  addAttributes() { return { ...this.parent?.(), src: { default: null }, alt: { default: null }, title: { default: null }, width: { default: 420 } }; },
   renderHTML({ HTMLAttributes }) {
     const width = Math.max(40, Math.min(1600, Number(HTMLAttributes.width) || 420));
-    const align = ["left", "center", "right"].includes(HTMLAttributes.align) ? HTMLAttributes.align : "center";
-    const style = `width:${width}px;max-width:100%;display:block;margin:12px ${align === "left" ? "auto 0" : align === "right" ? "0 auto" : "auto"};`;
-    return ["img", { ...this.options.HTMLAttributes, ...HTMLAttributes, style, "data-image-align": align, "data-image-width": width }];
+    const style = `width:${width}px;max-width:100%;display:block;margin:12px 0;`;
+    return ["img", { ...this.options.HTMLAttributes, ...HTMLAttributes, style, "data-image-width": width }];
   },
   parseMarkdown(token) {
-    const metadata = String(token.title || "").match(/width=(\d+);align=(left|center|right)/);
-    return { type: "image", attrs: { src: safeMediaUrl(token.href), alt: token.text || "", title: null, width: metadata ? Number(metadata[1]) : 420, align: metadata ? metadata[2] : "center" } };
+    const metadata = String(token.title || "").match(/width=(\d+)/);
+    return { type: "image", attrs: { src: safeMediaUrl(token.href), alt: token.text || "", title: null, width: metadata ? Number(metadata[1]) : 420 } };
   },
   renderMarkdown(node) {
     const attrs = node?.attrs || {};
@@ -24,8 +23,7 @@ export const CardImage = Image.extend({
     if (!src) return "";
     const alt = String(attrs.alt || "").replace(/[\\\]]/g, "\\$&");
     const width = Math.max(40, Math.min(1600, Number(attrs.width) || 420));
-    const align = ["left", "center", "right"].includes(attrs.align) ? attrs.align : "center";
-    return "![" + alt + "](" + src + ' "width=' + width + ";align=" + align + '")';
+    return "![" + alt + "](" + src + ' "width=' + width + '")';
   },
 });
 export const AlignedParagraph = Paragraph;
@@ -57,5 +55,15 @@ export const CardTextStyle = TextStyle.extend({
         },
       },
     };
+  },
+  renderMarkdown(mark, helpers) {
+    const attrs = mark?.attrs || {};
+    const styles = [];
+    const color = String(attrs.color || "");
+    const size = String(attrs.fontSize || "");
+    if (/^(#[0-9a-f]{3,8}|rgba?\([\d.% ,]+\)|hsla?\([\d.% ,]+\)|[a-z]{3,20})$/i.test(color)) styles.push("color:" + color);
+    if (/^\d{1,2}(?:px|pt|rem|em)$/.test(size)) styles.push("font-size:" + size);
+    const content = helpers.renderChildren(mark);
+    return styles.length ? '<span style="' + styles.join(";") + '">' + content + "</span>" : content;
   },
 });

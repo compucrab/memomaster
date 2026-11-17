@@ -246,3 +246,9 @@
 .study-video-card strong { font: 600 11px var(--sans); }
 .study-video-card small { color: var(--muted); font: 9px var(--sans); }
 .study-video-card-arrow { color: var(--muted); font-size: 14px; }
+
+/* Consistent left-aligned Notion-style document flow in every card preview. */
+.study-card-prose > * { text-align: left !important; }
+.study-card-prose img { display: block; margin: 18px 0 !important; }
+.study-card-prose .katex { font-size: 1em; }
+.study-card-prose .katex-display { font-size: 1.35em; }
