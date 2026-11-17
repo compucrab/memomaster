@@ -35,15 +35,15 @@ export const AlignedParagraph = Paragraph;
 export const AlignedHeading = Heading.configure({ levels: [1, 2, 3, 4, 5] });
 export const CardVideo = Node.create({
   name: "cardVideo", group: "block", atom: true, selectable: true,
-  addAttributes() { return { url: { default: "" }, provider: { default: "video" } }; },
-  parseHTML() { return [{ tag: "a[data-card-video]", getAttrs: element => ({ url: element.getAttribute("href") || element.getAttribute("data-url") || "", provider: element.getAttribute("data-provider") || "video" }) }, { tag: "div[data-card-video]", getAttrs: element => ({ url: element.getAttribute("data-url") || "", provider: element.getAttribute("data-provider") || "video" }) }]; },
-  renderHTML({ HTMLAttributes }) { const url = safeMediaUrl(HTMLAttributes.url); return url ? ["a", { href: url, target: "_blank", rel: "noopener noreferrer", class: "study-video-card", "data-card-video": "", "data-url": url, "data-provider": HTMLAttributes.provider || "video" }, ["span", { class: "study-video-card-icon" }, "▶"], ["span", {}, ["strong", {}, "Video link"], ["small", {}, "Open video in browser"]], ["span", { class: "study-video-card-arrow" }, "↗"]] : ["div", { "data-card-video": "" }, "Unsupported video link"]; },
+  addAttributes() { return { url: { default: "" }, provider: { default: "video" }, label: { default: "Video link" } }; },
+  parseHTML() { return [{ tag: "a[data-card-video]", getAttrs: element => ({ url: element.getAttribute("href") || element.getAttribute("data-url") || "", provider: element.getAttribute("data-provider") || "video", label: element.getAttribute("data-label") || element.querySelector("strong")?.textContent || "Video link" }) }, { tag: "div[data-card-video]", getAttrs: element => ({ url: element.getAttribute("data-url") || "", provider: element.getAttribute("data-provider") || "video", label: element.getAttribute("data-label") || "Video link" }) }]; },
+  renderHTML({ HTMLAttributes }) { const url = safeMediaUrl(HTMLAttributes.url); const label = String(HTMLAttributes.label || "Video link").slice(0, 80); return url ? ["a", { href: url, target: "_blank", rel: "noopener noreferrer", class: "study-video-card", "data-card-video": "", "data-url": url, "data-provider": HTMLAttributes.provider || "video", "data-label": label }, ["span", { class: "study-video-card-icon" }, "▶"], ["span", {}, ["strong", {}, label], ["small", {}, "Open video in browser"]], ["span", { class: "study-video-card-arrow" }, "↗"]] : ["div", { "data-card-video": "" }, "Unsupported video link"]; },
   markdownTokenizer: {
     name: "cardVideo", level: "block", start: (source) => source.indexOf("@[video]("),
     tokenize(source) { const match = /^@\[video\]\((https?:\/\/[^\s)]+)\)/.exec(source); return match ? { type: "cardVideo", raw: match[0], href: match[1] } : undefined; },
   },
-  parseMarkdown: (token) => ({ type: "cardVideo", attrs: { url: token.href || "", provider: "video" } }),
-  renderMarkdown: (node) => { const url = safeMediaUrl(node?.attrs?.url); return url ? `@[video](${url})` : ""; },
+  parseMarkdown: (token) => ({ type: "cardVideo", attrs: { url: token.href || "", provider: "video", label: token.label || "Video link" } }),
+  renderMarkdown: (node) => { const url = safeMediaUrl(node?.attrs?.url); const label = String(node?.attrs?.label || "Video link").replace(/[\\]]/g, ""); return url ? `@[video:${label}](${url})` : ""; },
 });
 export const CardLink = Link.extend({
   markdownTokenizer: {
