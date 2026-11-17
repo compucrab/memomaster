@@ -56,7 +56,7 @@ export default function HelpPanel({ page = "guide", onPageChange, onBack, backLa
     { id: "about", label: "About", Icon: Info }
   ];
   return <section class="workspace help-workspace">
-    <button class="settings-back" onClick={onBack}><ArrowLeft size={14}/> BACK TO NOTEBOOK</button>
+    <button class="settings-back" onClick={onBack}><ArrowLeft size={14}/> {backLabel}</button>
     <div class="help-layout">
       <aside class="help-navigation" aria-label="Help pages">
         {nav.map(({ id, label, Icon }) => <button type="button" class={page === id ? "is-active" : ""} onClick={() => onPageChange(id)}><Icon size={15}/>{label}</button>)}
