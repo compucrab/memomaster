@@ -55,7 +55,7 @@ function renderInline(source, mediaMap = new Map()) {
     });
     if (!safeStyles.length) return inner;
     const token = "\u0000STYLE" + styledSpans.length + "\u0000";
-    styledSpans.push({ token, html: '<span style="' + safeStyles.join(";") + '">' + renderInline(inner) + "</span>" });
+    styledSpans.push({ token, html: '<span style="' + safeStyles.join(";") + '">' + renderInline(inner, mediaMap) + "</span>" });
     return token;
   });
   let value = escapeHtml(prepared);
@@ -151,7 +151,7 @@ export function renderMarkdown(source = "", media = []) {
     }
     if (inCode) { code.push(line); continue; }
 
-    const aligned = line.match(/^<(p|h[1-3]) style="text-align:(center|right)">([\s\S]*)<\/\1>$/i);
+    const aligned = line.match(/^<(p|h[1-5]) style="text-align:(center|right)">([\s\S]*)<\/\1>$/i);
     if (aligned) {
       flushParagraph(); flushList(); flushQuote();
       const tag = aligned[1].toLowerCase();
