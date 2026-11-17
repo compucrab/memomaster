@@ -77,7 +77,7 @@ export default function NotebookView({ notebook, fsrsSettings, onUpdate, onBack,
     };
     window.addEventListener("keydown", handleNotebookKeys);
     return () => window.removeEventListener("keydown", handleNotebookKeys);
-  }, [editingCardId, reviewing, tab, selectedCardId, search, chapterFilter, cards]);
+  }, [editingCardId, reviewing, tab, selectedCardId, search, chapterFilter, cards, confirmAction, onBack]);
 
   const visibleCards = useMemo(() => {
     const needle = search.trim().toLocaleLowerCase();
