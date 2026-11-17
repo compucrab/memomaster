@@ -241,3 +241,14 @@
 .rich-editor-command-copy strong { color: var(--ink); font: 550 11px var(--sans); }
 .rich-editor-command-copy small { color: var(--muted); font: 9px var(--sans); }
 .rich-editor-shortcut { white-space: nowrap; }
+
+
+/* Distinct color previews in the editor command palette. */
+.rich-editor-command-color { display: block; width: 14px; height: 14px; border: 1px solid rgb(127 127 127 / 35%); border-radius: 50%; }
+
+/* Editable informational blocks shared by editor and study previews. */
+.rich-editor-content .study-info-card, .study-card-prose .study-info-card { margin: 14px 0; padding: 12px 14px; border: 1px solid var(--line); border-left: 3px solid var(--accent); background: var(--paper-card); }
+.study-info-card-heading { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; color: var(--ink); font-size: 12px; font-weight: 650; }
+.study-info-card-heading > span { color: var(--accent); }
+.study-info-card-content > :first-child { margin-top: 0; }
+.study-info-card-content > :last-child { margin-bottom: 0; }
