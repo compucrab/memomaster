@@ -6,7 +6,7 @@ MemoMaster is a desktop-first, local-first learning and revision app. The conten
 
 **Library → Notebook → Chapter → Flashcard**
 
-A notebook contains chapters, flashcards, scheduled review history, and unscheduled practice history. The library displays each notebook’s New, Learning/Relearning, and Review cards remaining in the current study day, using the configured rollover hour. A card contains Tiptap JSON front/back documents, an optional `chapterId`, and optional FSRS state. Topics are no longer part of the product model; legacy topic metadata is stripped when old library or archive data is loaded.
+A notebook contains chapters, flashcards, scheduled review history, and unscheduled practice history. The library displays each notebook’s New, Learning/Relearning, and Review cards remaining in the current study day, using the configured rollover hour. A card contains Tiptap JSON front/back documents, an optional `chapterId`, and optional FSRS state. Topics are not part of the product model.
 
 Notebook view has two tabs:
 
