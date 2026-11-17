@@ -202,3 +202,9 @@
   from { opacity: 0; transform: translateY(-5px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+.rich-editor-colors { display: inline-flex; align-items: center; gap: 5px; padding: 0 4px; }
+.rich-editor-color-swatch { width: 14px; height: 14px; padding: 0; border: 1px solid color-mix(in srgb, var(--ink) 35%, transparent); border-radius: 50%; cursor: pointer; }
+.rich-editor-color-swatch.is-active { outline: 2px solid var(--accent); outline-offset: 2px; }
+.rich-editor-color-reset { width: 19px; height: 19px; border: 1px solid var(--line); background: transparent; color: var(--muted); cursor: pointer; font: 11px var(--sans); }
+.rich-editor-color-swatch:disabled, .rich-editor-color-reset:disabled { opacity: .45; cursor: default; }
