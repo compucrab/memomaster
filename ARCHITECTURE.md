@@ -105,7 +105,7 @@ Older projects without `studySessions` start with an empty activity history; exi
 
 `src/components/CardEditor.jsx` provides separate Question and Answer tabs. Each tab mounts its own RichTextEditor instance, so undo/redo history is isolated per side.
 
-Card content remains Markdown for SQLite and .memz portability. The editor supports five heading levels, emphasis, underline, lists, quotes, inline code, links, text color, text sizing, paragraph alignment, inline/display LaTeX, and resizable images with deterministic block-style placement. The preview renderer preserves supported text color and font-size spans and uses the same five heading levels.
+Card content remains Markdown for SQLite and .memz portability. The editor supports five heading levels, emphasis, underline, lists, quotes, inline code, links, text color, text sizing, inline/display LaTeX, and left-aligned block images with contextual resize controls. Text and headings use a consistent left-aligned document flow. The preview renderer preserves supported text color and font-size spans and uses the same five heading levels. Inline equations use the surrounding text size; display equations remain visually distinct.
 
 Each notebook has a reusable `media` collection. Image files are stored once as media assets in notebook metadata and card Markdown stores a `memomedia://{assetId}` reference. The media picker can reuse an image in multiple cards. Media assets are included in SQLite library saves and .memz archives because they are part of notebook metadata. Clipboard image paste also adds the image to the media collection.
 
