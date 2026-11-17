@@ -1,31 +1,12 @@
 import { useEffect, useRef, useState } from "preact/hooks";
 import { Editor } from "@tiptap/core";
-
-
 import Placeholder from "@tiptap/extension-placeholder";
-
-
-
-import { Bold, Italic, Underline as UnderlineIcon, Link as LinkIcon, Heading1, Heading2, Heading3, Heading4, Heading5, List, ListOrdered, Quote, Code, Undo2, Redo2, ImagePlus, Sigma, Video, X, Minus, Plus, Pilcrow } from "lucide-preact";
+import { Bold, Italic, Underline as UnderlineIcon, Link as LinkIcon, ImagePlus, Sigma, Video, X } from "lucide-preact";
 import { createCardExtensions } from "../services/editorExtensions";
 import { normalizeCardDocument } from "../services/cardDocument";
-
 import "katex/dist/katex.min.css";
-const tools = [
-  { label: "Normal text", icon: Pilcrow, run: e => e.chain().focus().setParagraph().run(), active: e => e.isActive("paragraph") },
-  { label: "Bold", icon: Bold, run: e => e.chain().focus().toggleBold().run(), active: e => e.isActive("bold") },
-  { label: "Italic", icon: Italic, run: e => e.chain().focus().toggleItalic().run(), active: e => e.isActive("italic") },
-  { label: "Underline", icon: UnderlineIcon, run: e => e.chain().focus().toggleUnderline().run(), active: e => e.isActive("underline") },
-  { label: "Heading 1", icon: Heading1, run: e => e.chain().focus().setHeading({ level: 1 }).run(), active: e => e.isActive("heading", { level: 1 }) },
-  { label: "Heading 2", icon: Heading2, run: e => e.chain().focus().setHeading({ level: 2 }).run(), active: e => e.isActive("heading", { level: 2 }) },
-  { label: "Heading 3", icon: Heading3, run: e => e.chain().focus().setHeading({ level: 3 }).run(), active: e => e.isActive("heading", { level: 3 }) },
-  { label: "Heading 4", icon: Heading4, run: e => e.chain().focus().setHeading({ level: 4 }).run(), active: e => e.isActive("heading", { level: 4 }) },
-  { label: "Heading 5", icon: Heading5, run: e => e.chain().focus().setHeading({ level: 5 }).run(), active: e => e.isActive("heading", { level: 5 }) },
-  { label: "Bullet list", icon: List, run: e => e.chain().focus().toggleBulletList().run(), active: e => e.isActive("bulletList") },
-  { label: "Numbered list", icon: ListOrdered, run: e => e.chain().focus().toggleOrderedList().run(), active: e => e.isActive("orderedList") },
-  { label: "Quote", icon: Quote, run: e => e.chain().focus().toggleBlockquote().run(), active: e => e.isActive("blockquote") },
-  { label: "Inline code", icon: Code, run: e => e.chain().focus().toggleCode().run(), active: e => e.isActive("code") },
-];
+
+const COLORS = [["Blue", "#5797f5"], ["Green", "#55ad72"], ["Red", "#e06470"], ["Yellow", "#d8ad43"], ["Purple", "#a77be8"]];
 const readImage = file => new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(String(reader.result || "")); reader.onerror = () => reject(new Error("The image could not be read.")); reader.readAsDataURL(file); });
 function videoTarget(value) {
   let url;
@@ -36,21 +17,24 @@ function videoTarget(value) {
     const id = host === "youtu.be" ? url.pathname.split("/").filter(Boolean)[0] : url.searchParams.get("v") || url.pathname.split("/").filter(Boolean).pop();
     return /^[\w-]{6,20}$/.test(id || "") ? { url: value.trim(), provider: "youtube" } : { error: "This YouTube link does not contain a valid video ID." };
   }
-  if (host === "vimeo.com" || host.endsWith(".vimeo.com")) {
-    const id = url.pathname.split("/").filter(Boolean).pop();
-    return /^\d+$/.test(id || "") ? { url: value.trim(), provider: "vimeo" } : { error: "This Vimeo link does not contain a valid video ID." };
-  }
-  if (host === "instagram.com" || host.endsWith(".instagram.com")) {
-    const match = url.pathname.match(/^\/(reel|p|tv)\/([\w-]+)/i);
-    return match ? { url: value.trim(), provider: "instagram" } : { error: "This Instagram link is not a supported post or reel. Copy the link to a public reel or post." };
-  }
+  if (host === "vimeo.com" || host.endsWith(".vimeo.com")) return /^\d+$/.test(url.pathname.split("/").filter(Boolean).pop() || "") ? { url: value.trim(), provider: "vimeo" } : { error: "This Vimeo link does not contain a valid video ID." };
+  if (host === "instagram.com" || host.endsWith(".instagram.com")) return /^\/(reel|p|tv)\/[\w-]+/i.test(url.pathname) ? { url: value.trim(), provider: "instagram" } : { error: "This Instagram link is not a supported post or reel." };
   if (host === "facebook.com" || host.endsWith(".facebook.com") || host === "fb.watch") return { url: value.trim(), provider: "facebook" };
   if (/\.(mp4|webm|ogg)$/i.test(url.pathname)) return { url: value.trim(), provider: "direct" };
-  return { error: "This video host does not provide a supported embed. Try YouTube, Instagram, Facebook, Vimeo, or a direct MP4/WebM/OGG link. Some providers block playback outside their own website." };
+  return { error: "Unsupported video host. Try YouTube, Instagram, Facebook, Vimeo, or a direct MP4/WebM/OGG link." };
 }
+
 export default function RichTextEditor({ label, value = "", placeholder, onChange, media = [], onAddMedia }) {
-  const hostRef = useRef(null), editorRef = useRef(null), fileRef = useRef(null), onChangeRef = useRef(onChange), onAddMediaRef = useRef(onAddMedia), mediaRef = useRef(media);
+  const hostRef = useRef(null), fileRef = useRef(null), paletteInputRef = useRef(null), editorRef = useRef(null);
+  const onChangeRef = useRef(onChange), onAddMediaRef = useRef(onAddMedia), mediaRef = useRef(media);
   mediaRef.current = media;
+  const [editor, setEditor] = useState(null), [revision, setRevision] = useState(0);
+  const [dialog, setDialog] = useState(null), [dialogValue, setDialogValue] = useState(""), [dialogText, setDialogText] = useState("");
+  const [paletteOpen, setPaletteOpen] = useState(false), [paletteQuery, setPaletteQuery] = useState("");
+  const [palettePosition, setPalettePosition] = useState({ left: 24, top: 24 }), [selectionPosition, setSelectionPosition] = useState(null);
+  onChangeRef.current = onChange;
+  onAddMediaRef.current = onAddMedia;
+
   const mapDocumentMedia = (node, direction) => {
     if (!node || typeof node !== "object") return node;
     const next = { ...node };
@@ -67,17 +51,70 @@ export default function RichTextEditor({ label, value = "", placeholder, onChang
     if (asset?.id) mediaRef.current = [...mediaRef.current.filter(item => item.id !== asset.id), asset];
     return asset;
   };
-  const [revision, setRevision] = useState(0), [editor, setEditor] = useState(null), [dialog, setDialog] = useState(null), [dialogValue, setDialogValue] = useState(""), [dialogText, setDialogText] = useState(""), [insertMenu, setInsertMenu] = useState(false), [insertQuery, setInsertQuery] = useState("");
-  onChangeRef.current = onChange;
-  onAddMediaRef.current = onAddMedia;
+
+  function positionAt(pos) {
+    const instance = editorRef.current;
+    if (!instance) return;
+    try {
+      const rect = instance.view.coordsAtPos(Math.max(0, Math.min(pos, instance.state.doc.content.size)));
+      setPalettePosition({ left: Math.max(12, Math.min(window.innerWidth - 340, rect.left)), top: Math.max(12, Math.min(window.innerHeight - 360, rect.bottom + 8)) });
+    } catch { setPalettePosition({ left: 24, top: 24 }); }
+  }
+  function openPalette() {
+    const instance = editorRef.current;
+    if (!instance) return;
+    positionAt(instance.state.selection.from);
+    setPaletteQuery("");
+    setPaletteOpen(true);
+  }
+  function updateSelectionPosition(instance) {
+    const selection = instance.state.selection;
+    if (selection.empty || selection.node) { setSelectionPosition(null); return; }
+    try {
+      const start = instance.view.coordsAtPos(selection.from), end = instance.view.coordsAtPos(selection.to);
+      setSelectionPosition({ left: Math.max(8, Math.min(window.innerWidth - 330, (start.left + end.left) / 2)), top: Math.max(8, start.top - 48) });
+    } catch { setSelectionPosition(null); }
+  }
+  function openInsert(type, nodePosition = null) {
+    const instance = editorRef.current;
+    if (!instance) return;
+    if (nodePosition !== null) instance.commands.setNodeSelection(nodePosition);
+    const selection = instance.state.selection;
+    let linkRange = { from: selection.from, to: selection.to, text: instance.state.doc.textBetween(selection.from, selection.to, " ") };
+    let activeLink = instance.getAttributes("link");
+    instance.state.doc.descendants((node, pos) => {
+      if (!node.isText || !node.marks.some(mark => mark.type.name === "link")) return;
+      const mark = node.marks.find(item => item.type.name === "link");
+      if (selection.from >= pos && selection.from <= pos + node.nodeSize && (!selection.empty || selection.from < pos + node.nodeSize)) {
+        activeLink = mark.attrs;
+        linkRange = { from: pos, to: pos + node.nodeSize, text: node.text || "" };
+      }
+    });
+    const selectedNode = selection.node || instance.state.doc.nodeAt(selection.from) || selection.$from.nodeAfter;
+    const editingMath = (type === "inlineMath" || type === "blockMath") && selectedNode?.type?.name === type;
+    const editingVideo = type === "video" && selectedNode?.type?.name === "cardVideo";
+    const from = type === "link" ? linkRange.from : selection.from;
+    setDialogValue(type === "link" ? String(activeLink.href || "") : editingMath ? String(selectedNode.attrs.latex || "") : editingVideo ? String(selectedNode.attrs.url || "") : "");
+    setDialogText(type === "link" ? linkRange.text : editingVideo ? String(selectedNode.attrs.label || "") : "");
+    setDialog({
+      type, from, to: type === "link" ? linkRange.to : selection.to, editing: editingMath, editingVideo,
+      title: editingMath ? "Edit equation" : type === "inlineMath" ? "Insert inline equation" : type === "blockMath" ? "Insert display equation" : type === "link" ? (activeLink.href ? "Edit link" : "Insert link") : editingVideo ? "Edit video card" : "Insert video card",
+      message: type.includes("Math") ? "Edit the raw LaTeX source below." : type === "link" ? "Set the visible text and destination." : "Choose the card label and video destination.",
+    });
+    setPaletteOpen(false);
+    setSelectionPosition(null);
+  }
+
   useEffect(() => {
     const insertFiles = async (files, instance) => {
       const images = Array.from(files || []).filter(file => file.type?.startsWith("image/"));
       if (!images.length) return false;
       for (const file of images) {
-        if (file.size > 12 * 1024 * 1024) { setDialog({ type: "notice", title: "Image is too large", message: `“${file.name}” exceeds the 12 MB image limit.` }); continue; }
-        try { const asset = cacheMediaAsset(onAddMediaRef.current ? await onAddMediaRef.current(file) : { data: await readImage(file) }); const src = asset.data || (asset.id ? "memomedia://" + asset.id : ""); instance.chain().focus().setImage({ src, alt: asset.name || file.name.replace(/\.[^.]+$/, ""), width: 420 }).run(); }
-        catch (error) { setDialog({ type: "notice", title: "Could not paste image", message: error.message }); }
+        if (file.size > 12 * 1024 * 1024) { setDialog({ type: "notice", title: "Image is too large", message: "The selected image exceeds the 12 MB limit." }); continue; }
+        try {
+          const asset = cacheMediaAsset(onAddMediaRef.current ? await onAddMediaRef.current(file) : { data: await readImage(file) });
+          instance.chain().focus().setImage({ src: asset.data || (asset.id ? "memomedia://" + asset.id : ""), alt: asset.name || file.name.replace(/\.[^.]+$/, ""), width: 420 }).run();
+        } catch (error) { setDialog({ type: "notice", title: "Could not paste image", message: error.message }); }
       }
       return true;
     };
@@ -87,74 +124,70 @@ export default function RichTextEditor({ label, value = "", placeholder, onChang
       content: toEditorDocument(value), contentType: "json",
       editorProps: {
         attributes: { class: "rich-editor-content", role: "textbox", "aria-label": label, "aria-multiline": "true", "data-placeholder": placeholder || "", spellcheck: "true" },
+        handleKeyDown(view, event) {
+          if ((event.ctrlKey || event.metaKey) && event.key === ".") { event.preventDefault(); openPalette(); return true; }
+          if (event.key === "Escape" && paletteOpen) { setPaletteOpen(false); return true; }
+          return false;
+        },
+        handleDOMEvents: {
+          contextmenu(view, event) {
+            const target = event.target?.closest?.(".tiptap-mathematics-render, [data-card-video]");
+            if (!target) return false;
+            event.preventDefault();
+            const coords = view.posAtCoords({ left: event.clientX, top: event.clientY });
+            if (!coords) return true;
+            let found = null;
+            view.state.doc.nodesBetween(Math.max(0, coords.pos - 1), Math.min(view.state.doc.content.size, coords.pos + 2), (node, pos) => {
+              if (["inlineMath", "blockMath", "cardVideo"].includes(node.type.name)) found = { type: node.type.name, pos };
+            });
+            if (found) openInsert(found.type === "cardVideo" ? "video" : found.type, found.pos);
+            return true;
+          },
+        },
         handlePaste(view, event) {
           const files = Array.from(event.clipboardData?.items || []).filter(item => item.kind === "file").map(item => item.getAsFile()).filter(Boolean);
-          if (files.length) {
-            insertFiles(files, instance).catch(() => {});
-            return true;
-          }
+          if (files.length) { insertFiles(files, instance).catch(() => {}); return true; }
           const pastedText = event.clipboardData?.getData("text/plain") || "";
           const containsMarkdown = /(?:^|\n)#{1,5}\s|\[[^\]]+\]\(https?:\/\/|\*\*[^*]+\*\*|(?:^|\n)\s*[-*+]\s/m.test(pastedText);
-          if (containsMarkdown && instance.markdown?.parse) {
-            event.preventDefault();
-            instance.chain().focus().insertContent(instance.markdown.parse(pastedText)).run();
-            return true;
-          }
+          if (containsMarkdown && instance.markdown?.parse) { event.preventDefault(); instance.chain().focus().insertContent(instance.markdown.parse(pastedText)).run(); return true; }
           return false;
         },
       },
       onUpdate: ({ editor: current }) => onChangeRef.current?.(toStoredDocument(current.getJSON())),
-      onTransaction: () => setRevision(n => n + 1),
+      onSelectionUpdate: ({ editor: current }) => updateSelectionPosition(current),
+      onTransaction: ({ editor: current }) => { setRevision(n => n + 1); updateSelectionPosition(current); },
     });
-    editorRef.current = instance; setEditor(instance);
+    editorRef.current = instance;
+    setEditor(instance);
     return () => { instance.destroy(); editorRef.current = null; setEditor(null); };
   }, []);
-  void revision;
+
+  useEffect(() => { if (paletteOpen) paletteInputRef.current?.focus(); }, [paletteOpen]);
+
   async function insertImage(event) {
-    const file = event.currentTarget.files?.[0]; event.currentTarget.value = "";
+    const file = event.currentTarget.files?.[0];
+    event.currentTarget.value = "";
     if (!file || !editor) return;
     if (!file.type.startsWith("image/")) { setDialog({ type: "notice", title: "Unsupported file", message: "Choose an image file such as PNG, JPEG, GIF or WebP." }); return; }
     if (file.size > 12 * 1024 * 1024) { setDialog({ type: "notice", title: "Image is too large", message: "Choose an image smaller than 12 MB." }); return; }
-    try { const asset = cacheMediaAsset(onAddMediaRef.current ? await onAddMediaRef.current(file) : { data: await readImage(file) }); const src = asset.data || (asset.id ? "memomedia://" + asset.id : ""); editor.chain().focus().setImage({ src, alt: asset.name || file.name.replace(/\.[^.]+$/, ""), width: 420 }).run(); }
-    catch (error) { setDialog({ type: "notice", title: "Could not insert image", message: error.message }); }
+    try {
+      const asset = cacheMediaAsset(onAddMediaRef.current ? await onAddMediaRef.current(file) : { data: await readImage(file) });
+      editor.chain().focus().setImage({ src: asset.data || (asset.id ? "memomedia://" + asset.id : ""), alt: asset.name || file.name.replace(/\.[^.]+$/, ""), width: 420 }).run();
+    } catch (error) { setDialog({ type: "notice", title: "Could not insert image", message: error.message }); }
   }
-  function openInsert(type) {
-    if (!editor) return;
-    const selection = editor.state.selection;
-    let linkRange = { from: selection.from, to: selection.to, text: editor.state.doc.textBetween(selection.from, selection.to, " ") };
-    let activeLink = editor.getAttributes("link");
-    editor.state.doc.descendants((node, pos) => {
-      if (!node.isText || !node.marks.some(mark => mark.type.name === "link")) return;
-      const mark = node.marks.find(item => item.type.name === "link");
-      if (selection.from >= pos && selection.from <= pos + node.nodeSize && (!selection.empty || selection.from < pos + node.nodeSize)) {
-        activeLink = mark.attrs;
-        linkRange = { from: pos, to: pos + node.nodeSize, text: node.text || "" };
-      }
-    });
-    const selectedText = linkRange.text;
-    const selectedNode = selection.node || editor.state.doc.nodeAt(selection.from) || selection.$from.nodeAfter;
-    const selectedMathType = ["inlineMath", "blockMath"].includes(selectedNode?.type?.name) ? selectedNode.type.name : null;
-    const editing = (type === "inlineMath" || type === "blockMath") && selectedMathType === type;
-    const node = editing ? selectedNode : null;
-    const selectedVideo = selection.node?.type?.name === "cardVideo" ? selection.node : null;
-    const editingVideo = type === "video" && !!selectedVideo;
-    setDialogValue(type === "link" ? String(activeLink.href || "") : editing ? String(node?.attrs?.latex || "") : editingVideo ? String(selectedVideo.attrs.url || "") : "");
-    setDialogText(type === "link" ? selectedText : editingVideo ? String(selectedVideo.attrs.label || "") : "");
-    setDialog({ type, from: type === "link" ? linkRange.from : selection.from, to: type === "link" ? linkRange.to : selection.to, editing, editingVideo, title: editing ? "Edit equation" : type === "inlineMath" ? "Insert inline equation" : type === "blockMath" ? "Insert display equation" : type === "link" ? (activeLink.href ? "Edit link" : "Insert link") : editingVideo ? "Edit video link card" : "Insert video link card", message: type.includes("Math") ? "Enter a LaTeX expression." : type === "link" ? "Set the visible text and destination." : "Choose the text shown on the video card and add its destination." });
-  }
+
   function submitInsert() {
     if (!editor || !dialogValue.trim()) { setDialog({ type: "notice", title: "Nothing to insert", message: "Enter a value first." }); return; }
     if (dialog.type === "inlineMath" || dialog.type === "blockMath") {
       const nodeType = dialog.type, latex = dialogValue.trim();
       if (dialog.editing) editor.chain().focus().setNodeSelection(dialog.from).updateAttributes(nodeType, { latex }).run();
       else editor.chain().focus().setTextSelection({ from: dialog.from, to: dialog.to })[nodeType === "inlineMath" ? "insertInlineMath" : "insertBlockMath"]({ latex }).run();
-    }
-    if (dialog.type === "link") {
-      let url; try { url = new URL(dialogValue.trim()); } catch { setDialog({ type: "notice", title: "Invalid link", message: "Enter a complete https:// or http:// link." }); return; }
+    } else if (dialog.type === "link") {
+      let url;
+      try { url = new URL(dialogValue.trim()); } catch { setDialog({ type: "notice", title: "Invalid link", message: "Enter a complete https:// or http:// link." }); return; }
       if (!["http:", "https:"].includes(url.protocol)) { setDialog({ type: "notice", title: "Invalid link", message: "Only http and https links are supported." }); return; }
       editor.chain().focus().setTextSelection({ from: dialog.from, to: dialog.to }).insertContent({ type: "text", text: dialogText.trim() || url.hostname, marks: [{ type: "link", attrs: { href: url.href, target: "_blank", rel: "noopener noreferrer" } }] }).run();
-    }
-    if (dialog.type === "video") {
+    } else if (dialog.type === "video") {
       const target = videoTarget(dialogValue);
       if (target.error) { setDialog({ type: "notice", title: "Unable to add video link", message: target.error }); return; }
       const attrs = { ...target, label: dialogText.trim() || "Video link" };
@@ -164,71 +197,76 @@ export default function RichTextEditor({ label, value = "", placeholder, onChang
     setDialog(null); setDialogValue(""); setDialogText("");
   }
 
-  const insertActions = [
-    { label: "Paragraph", detail: "Normal text block", run: () => editor.chain().focus().setParagraph().run() },
-    { label: "Heading 1", detail: "Large section heading", run: () => editor.chain().focus().setHeading({ level: 1 }).run() },
-    { label: "Heading 2", detail: "Section heading", run: () => editor.chain().focus().setHeading({ level: 2 }).run() },
-    { label: "Heading 3", detail: "Small heading", run: () => editor.chain().focus().setHeading({ level: 3 }).run() },
-    { label: "Heading 4", detail: "Compact heading", run: () => editor.chain().focus().setHeading({ level: 4 }).run() },
-    { label: "Heading 5", detail: "Small label heading", run: () => editor.chain().focus().setHeading({ level: 5 }).run() },
-    { label: "Code block", detail: "Monospaced code", run: () => editor.chain().focus().toggleCodeBlock().run() },
-    { label: "Table", detail: "Insert a 2 × 2 table", run: () => editor.chain().focus().insertContent({ type: "table", content: [{ type: "tableRow", content: [{ type: "tableHeader", content: [{ type: "paragraph" }] }, { type: "tableHeader", content: [{ type: "paragraph" }] }] }, { type: "tableRow", content: [{ type: "tableCell", content: [{ type: "paragraph" }] }, { type: "tableCell", content: [{ type: "paragraph" }] }] }] }).run() },
+  const actions = [
+    { label: "Paragraph", detail: "Convert the current block to normal text", run: () => editor.chain().focus().setParagraph().run() },
+    ...[1, 2, 3, 4, 5].map(level => ({ label: "Heading " + level, detail: "Format the current block as heading " + level, run: () => editor.chain().focus().setHeading({ level }).run() })),
+    { label: "Bold", detail: "Bold selected text", run: () => editor.chain().focus().toggleBold().run() },
+    { label: "Italic", detail: "Italic selected text", run: () => editor.chain().focus().toggleItalic().run() },
+    { label: "Underline", detail: "Underline selected text", run: () => editor.chain().focus().toggleUnderline().run() },
+    { label: "Bullet list", detail: "Create a bullet list", run: () => editor.chain().focus().toggleBulletList().run() },
+    { label: "Numbered list", detail: "Create a numbered list", run: () => editor.chain().focus().toggleOrderedList().run() },
+    { label: "Quote", detail: "Turn the current block into a quote", run: () => editor.chain().focus().toggleBlockquote().run() },
+    { label: "Code block", detail: "Insert an editable raw code block", run: () => editor.chain().focus().toggleCodeBlock().run() },
     { label: "Link", detail: "Add or edit a hyperlink", run: () => openInsert("link") },
     { label: "Image", detail: "Insert an image", run: () => fileRef.current?.click() },
-    { label: "Inline equation", detail: "Insert LaTeX in a sentence", run: () => openInsert("inlineMath") },
-    { label: "Block equation", detail: "Insert a display equation", run: () => openInsert("blockMath") },
-    { label: "Video link", detail: "Add a video link card", run: () => openInsert("video") },
+    { label: "Inline equation", detail: "Insert or edit raw LaTeX inline", run: () => openInsert("inlineMath") },
+    { label: "Block equation", detail: "Insert or edit raw LaTeX display math", run: () => openInsert("blockMath") },
+    { label: "Video card", detail: "Insert or edit a video link card", run: () => openInsert("video") },
+    { label: "Table", detail: "Insert a 2 × 2 table", run: () => editor.chain().focus().insertContent({ type: "table", content: [{ type: "tableRow", content: [{ type: "tableHeader", content: [{ type: "paragraph" }] }, { type: "tableHeader", content: [{ type: "paragraph" }] }] }, { type: "tableRow", content: [{ type: "tableCell", content: [{ type: "paragraph" }] }, { type: "tableCell", content: [{ type: "paragraph" }] }] }] }).run() },
+    ...COLORS.map(([name, color]) => ({ label: name + " text", detail: "Apply " + name.toLowerCase() + " to selected text", run: () => editor.chain().focus().setColor(color).run() })),
+    { label: "Default text color", detail: "Use the current theme text color", run: () => editor.chain().focus().unsetColor().run() },
+    { label: "Undo", detail: "Undo the last edit", run: () => editor.chain().focus().undo().run() },
+    { label: "Redo", detail: "Redo the last undone edit", run: () => editor.chain().focus().redo().run() },
   ];
-  function chooseInsert(action) {
-    action.run();
-    setInsertMenu(false);
-    setInsertQuery("");
-  }
-  function resize(delta) {
-    if (!editor?.isActive("image")) { setDialog({ type: "notice", title: "Select an image first", message: "Click an image, then use the image size controls." }); return; }
-    const width = Number(editor.getAttributes("image").width) || 420;
-    editor.chain().focus().updateAttributes("image", { width: Math.max(60, Math.min(1200, width + delta)) }).run();
-  }
-  const imageSelected = !!editor?.isActive("image");
+  const filteredActions = actions.filter(item => (item.label + " " + item.detail).toLowerCase().includes(paletteQuery.toLowerCase()));
+  function chooseAction(action) { action.run(); setPaletteOpen(false); setPaletteQuery(""); }
+  function applySelectionFormat(callback) { if (editor) callback(editor.chain().focus()); setSelectionPosition(null); }
+  const selection = editor?.state.selection;
+  const hasTextSelection = !!selection && !selection.empty && !selection.node && !!editor.state.doc.textBetween(selection.from, selection.to).trim();
+
   return <section class="rich-editor">
-    <div class="rich-editor-heading">{label}</div>
-    <div class="rich-editor-toolbar" role="toolbar" aria-label={`${label} formatting`}>
-      {tools.filter(({ label: name }) => ["Bold", "Italic", "Underline", "Bullet list", "Numbered list", "Quote", "Inline code"].includes(name)).map(({ label: name, icon: Icon, run, active }) => <button type="button" class={`rich-editor-tool ${editor && active(editor) ? "is-active" : ""}`} title={name} aria-label={name} disabled={!editor} onMouseDown={e => e.preventDefault()} onClick={() => editor && run(editor)}><Icon size={15}/></button>)}
-      <button type="button" class={`rich-editor-tool ${insertMenu ? "is-active" : ""}`} title="Insert block or element" aria-label="Insert block or element" disabled={!editor} onMouseDown={e=>e.preventDefault()} onClick={()=>setInsertMenu(value=>!value)}><Plus size={16}/></button>
-      <span class="rich-editor-divider"/>
-      {imageSelected && <><button type="button" class="rich-editor-tool" title="Decrease image size" aria-label="Decrease image size" disabled={!editor} onMouseDown={e=>e.preventDefault()} onClick={()=>resize(-60)}><Minus size={15}/></button><button type="button" class="rich-editor-tool" title="Increase image size" aria-label="Increase image size" disabled={!editor} onMouseDown={e=>e.preventDefault()} onClick={()=>resize(60)}><Plus size={15}/></button><span class="rich-editor-divider"/></>}
-      <div class="rich-editor-colors" role="group" aria-label="Text colour">
-        {[["Blue", "#5797f5"], ["Green", "#55ad72"], ["Red", "#e06470"], ["Yellow", "#d8ad43"], ["Purple", "#a77be8"]].map(([name, color]) => <button type="button" class={`rich-editor-color-swatch ${editor?.getAttributes("textStyle").color === color ? "is-active" : ""}`} style={{ backgroundColor: color }} title={`${name} text`} aria-label={`${name} text`} disabled={!editor} onMouseDown={e=>e.preventDefault()} onClick={()=>editor?.chain().focus().setColor(color).run()}/>)}
-        <button type="button" class="rich-editor-color-reset" title="Default theme text colour" aria-label="Default theme text colour" disabled={!editor} onMouseDown={e=>e.preventDefault()} onClick={()=>editor?.chain().focus().unsetColor().run()}>A</button>
-      </div>
-      <button type="button" class="rich-editor-tool" title="Insert link" aria-label="Insert link" disabled={!editor} onMouseDown={e=>e.preventDefault()} onClick={()=>openInsert("link")}><LinkIcon size={15}/></button>
-      <span class="rich-editor-divider"/>
-      <button type="button" class="rich-editor-tool" title="Insert image" aria-label="Insert image" disabled={!editor} onMouseDown={e=>e.preventDefault()} onClick={()=>fileRef.current?.click()}><ImagePlus size={15}/></button>
-      <span class="rich-editor-divider"/>
-      <button type="button" class="rich-editor-tool" title="Inline equation" aria-label="Inline equation" disabled={!editor} onMouseDown={e=>e.preventDefault()} onClick={()=>openInsert("inlineMath")}><Sigma size={15}/></button>
-      <button type="button" class="rich-editor-tool" title="Display equation" aria-label="Display equation" disabled={!editor} onMouseDown={e=>e.preventDefault()} onClick={()=>openInsert("blockMath")}>∑</button>
-      <button type="button" class="rich-editor-tool" title="Insert video link card" aria-label="Insert video link card" disabled={!editor} onMouseDown={e=>e.preventDefault()} onClick={()=>openInsert("video")}><Video size={15}/></button>
-      <span class="rich-editor-divider"/>
-      <button type="button" class="rich-editor-tool" title="Undo" aria-label="Undo" disabled={!editor?.can().undo()} onMouseDown={e=>e.preventDefault()} onClick={()=>editor?.chain().focus().undo().run()}><Undo2 size={15}/></button>
-      <button type="button" class="rich-editor-tool" title="Redo" aria-label="Redo" disabled={!editor?.can().redo()} onMouseDown={e=>e.preventDefault()} onClick={()=>editor?.chain().focus().redo().run()}><Redo2 size={15}/></button>
-      <input ref={fileRef} type="file" accept="image/*" hidden onChange={insertImage}/>
-    </div>
-    {insertMenu && <div class="rich-editor-insert-menu">
-      <input autoFocus value={insertQuery} onInput={e=>setInsertQuery(e.currentTarget.value)} placeholder="Search blocks and actions..." aria-label="Search insert menu"/>
-      <div class="rich-editor-insert-results">
-        {insertActions.filter(item => (item.label + " " + item.detail).toLowerCase().includes(insertQuery.toLowerCase())).map(item => <button type="button" onMouseDown={e=>e.preventDefault()} onClick={()=>chooseInsert(item)}><strong>{item.label}</strong><span>{item.detail}</span></button>)}
-        {!insertActions.some(item => (item.label + " " + item.detail).toLowerCase().includes(insertQuery.toLowerCase())) && <p>No matching blocks</p>}
-      </div>
-    </div>}
+    <div class="rich-editor-heading">{label} <span class="rich-editor-shortcut">Ctrl + . for commands</span></div>
     <div class="rich-editor-surface"><div ref={hostRef}/></div>
-    {dialog && <div class="prompt-backdrop" onMouseDown={e=>e.target===e.currentTarget && setDialog(null)}>
+    {hasTextSelection && selectionPosition && !paletteOpen && !dialog && <div class="rich-editor-selection-tools" style={{ left: selectionPosition.left + "px", top: selectionPosition.top + "px" }} onMouseDown={event => { if (event.target.closest("button")) event.preventDefault(); }}>
+      <button type="button" title="Bold" aria-label="Bold" class={editor.isActive("bold") ? "is-active" : ""} onClick={() => applySelectionFormat(chain => chain.toggleBold().run())}><Bold size={14}/></button>
+      <button type="button" title="Italic" aria-label="Italic" class={editor.isActive("italic") ? "is-active" : ""} onClick={() => applySelectionFormat(chain => chain.toggleItalic().run())}><Italic size={14}/></button>
+      <button type="button" title="Underline" aria-label="Underline" class={editor.isActive("underline") ? "is-active" : ""} onClick={() => applySelectionFormat(chain => chain.toggleUnderline().run())}><UnderlineIcon size={14}/></button>
+      <span class="rich-editor-selection-divider"/>
+      <select aria-label="Text block style" value={editor.isActive("heading") ? String(editor.getAttributes("heading").level) : "p"} onChange={event => {
+        const value = event.currentTarget.value;
+        applySelectionFormat(chain => (value === "p" ? chain.setParagraph() : chain.setHeading({ level: Number(value) })).run());
+      }}>
+        <option value="p">Paragraph</option>
+        {[1, 2, 3, 4, 5].map(level => <option value={String(level)}>Heading {level}</option>)}
+      </select>
+      <span class="rich-editor-selection-divider"/>
+      {COLORS.map(([name, color]) => <button type="button" class="rich-editor-selection-color" style={{ backgroundColor: color }} title={name} aria-label={name + " text"} onClick={() => applySelectionFormat(chain => chain.setColor(color).run())}/>)}
+      <button type="button" class="rich-editor-selection-reset" title="Default theme color" aria-label="Default theme color" onClick={() => applySelectionFormat(chain => chain.unsetColor().run())}>A</button>
+      <span class="rich-editor-selection-divider"/>
+      <button type="button" title="Add link" aria-label="Add link" onClick={() => openInsert("link")}><LinkIcon size={14}/></button>
+    </div>}
+    {paletteOpen && <div class="rich-editor-command-palette" style={{ left: palettePosition.left + "px", top: palettePosition.top + "px" }} onMouseDown={event => event.stopPropagation()}>
+      <div class="rich-editor-command-search"><span>⌘</span><input ref={paletteInputRef} value={paletteQuery} onInput={event => setPaletteQuery(event.currentTarget.value)} onKeyDown={event => {
+        if (event.key === "Escape") { event.preventDefault(); setPaletteOpen(false); }
+        if (event.key === "Enter" && filteredActions[0]) { event.preventDefault(); chooseAction(filteredActions[0]); }
+        if (event.key === "ArrowDown") { event.preventDefault(); event.currentTarget.parentElement?.nextElementSibling?.querySelector("button")?.focus(); }
+      }} placeholder="Search commands..." aria-label="Search editor commands"/></div>
+      <div class="rich-editor-command-results">
+        {filteredActions.map(action => <button type="button" key={action.label} onMouseDown={event => event.preventDefault()} onClick={() => chooseAction(action)}><strong>{action.label}</strong><span>{action.detail}</span></button>)}
+        {!filteredActions.length && <p>No matching commands</p>}
+      </div>
+      <div class="rich-editor-command-hint">↑↓ to navigate · Enter to select · Esc to close</div>
+    </div>}
+    <input ref={fileRef} type="file" accept="image/*" hidden onChange={insertImage}/>
+    {dialog && <div class="prompt-backdrop" onMouseDown={event => event.target === event.currentTarget && setDialog(null)}>
       <section class="prompt-panel rich-editor-insert-dialog" role="dialog" aria-modal="true" aria-label={dialog.title}>
-        <div class="prompt-heading"><h2>{dialog.title}</h2><button type="button" aria-label="Close" onClick={()=>setDialog(null)}><X size={16}/></button></div>
+        <div class="prompt-heading"><h2>{dialog.title}</h2><button type="button" aria-label="Close" onClick={() => setDialog(null)}><X size={16}/></button></div>
         <p>{dialog.message}</p>
-        {(dialog.type === "link" || dialog.type === "video") && <input aria-label={dialog.type === "link" ? "Link text" : "Video card text"} placeholder={dialog.type === "link" ? "Link text" : "Text shown on the video card"} value={dialogText} onInput={e=>setDialogText(e.currentTarget.value)}/>}
-        {dialog.type !== "notice" && <textarea rows={dialog.type==="blockMath" ? 5 : 3} value={dialogValue} onInput={e=>setDialogValue(e.currentTarget.value)} placeholder={dialog.type.includes("Math") ? "\\frac{a+b}{c}" : dialog.type === "link" || dialog.type === "video" ? "https://example.com" : "Paste the link"}/>}
-        <div class="prompt-actions"><button type="button" class="prompt-cancel" onClick={()=>setDialog(null)}>{dialog.type==="notice" ? "Close" : "Cancel"}</button>{dialog.type!=="notice" && <button type="button" class="prompt-confirm" onClick={submitInsert}>Insert</button>}</div>
+        {(dialog.type === "link" || dialog.type === "video") && <input aria-label={dialog.type === "link" ? "Link text" : "Video card text"} placeholder={dialog.type === "link" ? "Link text" : "Text shown on the video card"} value={dialogText} onInput={event => setDialogText(event.currentTarget.value)}/>}
+        {dialog.type !== "notice" && <textarea rows={dialog.type === "blockMath" ? 5 : 3} value={dialogValue} onInput={event => setDialogValue(event.currentTarget.value)} placeholder={dialog.type.includes("Math") ? "\\frac{a+b}{c}" : "https://example.com"}/>}
+        <div class="prompt-actions"><button type="button" class="prompt-cancel" onClick={() => setDialog(null)}>{dialog.type === "notice" ? "Close" : "Cancel"}</button>{dialog.type !== "notice" && <button type="button" class="prompt-confirm" onClick={submitInsert}>{dialog.editing || dialog.editingVideo ? "Save changes" : "Insert"}</button>}</div>
       </section>
     </div>}
+    <span class="sr-only" aria-live="polite">{revision ? "Editor updated" : ""}</span>
   </section>;
 }
