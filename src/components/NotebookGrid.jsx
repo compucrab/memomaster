@@ -1,9 +1,19 @@
+import { useEffect, useState } from "preact/hooks";
 import { BookOpen, Plus } from "lucide-preact";
 import { getStudyQueueCounts } from "../services/studyQueue";
 
 export default function NotebookGrid({ notebooks, settings, onOpen, onContextMenu, onCreate }) {
-  const now = new Date();
   const rolloverHour = settings?.rolloverHour ?? 4;
+  const [now, setNow] = useState(() => new Date());
+
+  useEffect(() => {
+    const current = new Date();
+    const nextRollover = new Date(current);
+    nextRollover.setHours(rolloverHour, 0, 0, 0);
+    if (nextRollover <= current) nextRollover.setDate(nextRollover.getDate() + 1);
+    const timeout = window.setTimeout(() => setNow(new Date()), nextRollover.getTime() - current.getTime() + 1000);
+    return () => window.clearTimeout(timeout);
+  }, [now, rolloverHour]);
 
   return (
     <section class="workspace library-workspace">
