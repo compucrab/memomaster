@@ -66,7 +66,7 @@ export default function CardEditor({ card, chapters = [], existingCards = [], on
     };
     window.addEventListener("keydown", handleEditorShortcuts, true);
     return () => window.removeEventListener("keydown", handleEditorShortcuts, true);
-  }, [draft, existingCards, chapterPickerOpen, chapterOptions.length]);
+  }, [draft, existingCards, chapterPickerOpen, chapterOptions.length, similarQuestion, confirmDelete, confirmDiscard]);
 
   function chooseChapter(chapter) {
     update({ chapterId: chapter.id });
