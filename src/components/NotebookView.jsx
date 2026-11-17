@@ -75,7 +75,7 @@ export default function NotebookView({ notebook, fsrsSettings, onUpdate, onBack,
     const due = card.fsrs?.due ? new Date(card.fsrs.due) : null;
     const isDue = !due || Number.isNaN(due.getTime()) || due <= now;
     if (!card.fsrs || state === State.New) counts.new += 1;
-    else if ((state === State.Learning || state === State.Relearning) && isDue) counts.learning += 1;
+    else if (state === State.Learning || state === State.Relearning) counts.learning += 1;
     else if (state === State.Review && isDue) counts.review += 1;
     return counts;
   }, { new: 0, learning: 0, review: 0 });
