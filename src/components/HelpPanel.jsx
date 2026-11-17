@@ -12,7 +12,7 @@ const pages = {
       ["Edit questions and answers quickly", "While editing a card, press Alt + Q to switch to the Question side or Alt + W to switch to the Answer side. Press Escape and confirm to discard a new card or unsaved edits. The text editor is focused when the card editor opens. Search fields and text boxes in dialogs are focused automatically when they appear."],
       ["Study to practise remembering", "Open the Study tab or press Alt + S to choose Scheduled reviews or Unscheduled practice. Reveal the answer before rating how well you remembered it. Press Alt + B to return to Browse, or Escape to return to the library."],
       ["Understand the four ratings", "Again means you forgot or could not recall the answer. Hard means you remembered it with difficulty. Good means you recalled it correctly. Easy means it was effortless. MemoMaster uses these ratings to plan future scheduled reviews."],
-      ["Your work is saved automatically", "Changes are saved in the app's local library. Use File → Save project to create a portable .memz backup at a location you choose. MemoMaster also creates an automatic backup when you close the app."]
+      ["Your work is saved automatically", "Changes are saved in the app's local library. Use File → Save project to create a portable .memz backup at a location you choose. MemoMaster also creates a verified automatic backup when you close the app. The newest 10 automatic backups are kept. Open Preferences → Backups & recovery to browse or restore them. If the local database is damaged, MemoMaster preserves it and offers available backups for recovery."]
     ]
   },
   shortcuts: {
