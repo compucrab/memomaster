@@ -9,7 +9,7 @@ MemoMaster is a local-first desktop learning and revision app built with Tauri 2
 - Browse cards with question/answer search, chapter filtering, preview, editing, Ctrl/Shift multi-selection, bulk deletion, chapter reassignment, and schedule reset.
 - Duplicate-question detection: exact duplicates are blocked and close matches are flagged before saving.
 - Rich card editor with separate Question and Answer tabs, powered by Tiptap.
-- Canonical Tiptap JSON for card content, with Markdown conversion retained for legacy content and archive imports.
+- Canonical Tiptap JSON for card content, with Markdown conversion available for explicit Markdown text input.
 - Notion-style contextual text formatting, five heading levels, lists, quotes, inline code, links, and a native text-colour picker.
 - Editable tables with row and column controls; tables remain within the available editor and card width and scroll horizontally when needed.
 - Image insertion from files or clipboard, notebook-scoped reusable media, and per-image drag resizing. Images are stored once in the notebook media collection (up to 12 MB per inserted image).
@@ -143,4 +143,4 @@ The current `.memz` format uses manifest version 3 only. The importer rejects ol
 - Frontend code is JavaScript/JSX; do not introduce TypeScript without an explicit project decision.
 - MemoMaster is desktop-first and local-first. No cloud account, analytics, or sync backend is implemented.
 - Anki import/export and multi-device synchronization are not implemented.
-- Card front/back content is stored as Tiptap JSON. Markdown conversion remains available for explicit text/Markdown import paths.
+- Card front/back content is stored as Tiptap JSON. Markdown conversion remains available for explicit text/Markdown input.
