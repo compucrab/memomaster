@@ -30,12 +30,11 @@ export default function NotebookGrid({ notebooks, settings, onOpen, onContextMen
             return (
               <article class="notebook-card" key={notebook.id} onContextMenu={(event) => onContextMenu(event, notebook)}>
                 <button class="notebook-open" onClick={() => onOpen(notebook.id)} aria-label={`Open ${notebook.title}`}>
-                  <div class="notebook-cover">
-                    <i class="cover-strip" style={{ backgroundColor: notebook.color }} />
-                    <BookOpen size={30} />
-                  </div>
                   <div class="notebook-info">
-                    <h2>{notebook.title}</h2>
+                    <div class="notebook-title-row">
+                      <i class="notebook-icon" style={{ color: notebook.color }}><BookOpen size={17} /></i>
+                      <h2>{notebook.title}</h2>
+                    </div>
                     <footer><span>{chapterCount} CHAPTERS</span><span>{cards.length || notebook.cards || 0} CARDS</span></footer>
                     <div class="notebook-daily-counts" aria-label="Cards left today">
                       <span class="daily-new"><strong>{counts.new}</strong><small>New</small></span>
