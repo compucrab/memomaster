@@ -19,12 +19,6 @@ function isDue(card, now) {
   return Number.isNaN(due.getTime()) || due <= now;
 }
 
-function isLearningDueToday(card, now, studyDayEnd) {
-  if (!isLearning(card) || !card.fsrs?.due) return false;
-  const due = new Date(card.fsrs.due);
-  return !Number.isNaN(due.getTime()) && due > now && due < studyDayEnd;
-}
-
 export default function ReviewSession({ cards, mode = "scheduled", settings, onReview, onExit }) {
   const [sessionCards, setSessionCards] = useState(() => cards.map((card) => ({ ...card })));
   const [queue, setQueue] = useState(() => {
