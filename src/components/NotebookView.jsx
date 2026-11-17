@@ -255,7 +255,8 @@ export default function NotebookView({ notebook, fsrsSettings, onUpdate, onBack,
         studySessions: [...(notebook.studySessions || []), session],
       })}
       onExit={() => setReviewing(false)}
-      onEscape={onBack} />;
+      onEscape={onBack}
+      onBrowse={() => { setReviewing(false); setTab("browse"); }} />;
   }
 
   return (
