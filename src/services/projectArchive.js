@@ -75,24 +75,18 @@ async function createZip(files) {
 }
 
 function cleanNotebook(notebook) {
-  const { description, markdown, ...metadata } = notebook;
   const cards = Array.isArray(notebook.flashcards) ? notebook.flashcards : [];
   return {
-    ...metadata,
-    chapters: Array.isArray(notebook.chapters)
-      ? notebook.chapters.map(({ topics, ...chapter }) => chapter)
-      : [],
+    ...notebook,
+    chapters: Array.isArray(notebook.chapters) ? notebook.chapters : [],
     media: Array.isArray(notebook.media) ? notebook.media : [],
-    flashcards: cards.map((card, index) => {
-      const { topicId, ...cleanCard } = card;
-      return {
-        ...cleanCard,
-        id: card.id || `card-${index + 1}`,
-        front: card.front ?? "",
-        back: card.back ?? "",
-        chapterId: card.chapterId ?? "",
-      };
-    }),
+    flashcards: cards.map((card, index) => ({
+      ...card,
+      id: card.id || `card-${index + 1}`,
+      front: card.front ?? "",
+      back: card.back ?? "",
+      chapterId: card.chapterId ?? "",
+    })),
     cards: cards.length,
   };
 }
