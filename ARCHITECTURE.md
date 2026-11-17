@@ -105,17 +105,13 @@ Older projects without `studySessions` start with an empty activity history; exi
 
 `src/components/CardEditor.jsx` provides separate Question and Answer tabs. Each tab mounts its own RichTextEditor instance, so undo/redo history is isolated per side.
 
-Card content remains Markdown for SQLite and .memz portability. Supported content includes:
+Card content remains Markdown for SQLite and .memz portability. The editor supports five heading levels, emphasis, underline, lists, quotes, inline code, links, text color, text sizing, paragraph alignment, inline/display LaTeX, and resizable images with deterministic block-style placement. The preview renderer preserves supported text color and font-size spans and uses the same five heading levels.
 
-- Standard Markdown formatting and links.
-- Inline images embedded as data URLs. Image title metadata stores width and alignment.
-- Inline and display LaTeX mathematics, rendered with KaTeX.
-- Video blocks stored as `@[video](URL)` and converted to provider-specific embeds at render time.
-- Text alignment serialized through paragraph/heading HTML attributes.
+Each notebook has a reusable `media` collection. Image files are stored once as media assets in notebook metadata and card Markdown stores a `memomedia://{assetId}` reference. The media picker can reuse an image in multiple cards. Media assets are included in SQLite library saves and .memz archives because they are part of notebook metadata. Clipboard image paste also adds the image to the media collection.
 
-Image insertion supports file selection and clipboard paste. Inserted images are limited to 12 MB. Video playback is subject to provider restrictions; the app cannot force third-party sites to allow embedding in the desktop webview.
+Video content is stored as a link card using `@[video](URL)`; previews never embed or autoplay the video. Selecting the card opens the original supported video URL in the user's browser.
 
-`src/services/markdown.js` renders saved Markdown for card previews and review sessions. It escapes user-authored text and validates media URL schemes before generating media HTML. Keep renderer changes security-reviewed and cover hostile input.
+`src/services/markdown.js` renders saved Markdown for browse previews and review sessions. It escapes user-authored text, resolves notebook media references, validates media URL schemes, and only restores a small allowlist of inline style properties. Keep renderer changes security-reviewed and cover hostile input.
 
 ## Important modules
 
