@@ -77,8 +77,6 @@ export default function NotebookView({ notebook, fsrsSettings, onUpdate, onBack,
       const typing = event.target?.closest?.("input, textarea, select, [contenteditable='true'], [role='dialog'], [role='alertdialog']");
       if (typing) return;
       if (key === "a") { event.preventDefault(); addCard(); }
-      else if (key === "s") { event.preventDefault(); setTab("study"); }
-      else if (key === "b") { event.preventDefault(); setTab("browse"); }
       else if (key === "e" && tab === "browse" && selectedCard) {
         event.preventDefault();
         setEditingCardId(selectedCard.id);
@@ -235,6 +233,7 @@ export default function NotebookView({ notebook, fsrsSettings, onUpdate, onBack,
   if (editingCard) {
     return <CardEditor key={editingCard.id} card={editingCard} chapters={chapters} media={notebook.media || []} onAddMedia={addMedia}
       onSave={saveCard} onSaveAndAdd={saveAndAddCard} existingCards={cards} onCancel={() => { setEditingCardId(null); setNewCard(null); setCardAddedNotice(false); }}
+      onNavigate={(nextTab) => { setEditingCardId(null); setNewCard(null); setCardAddedNotice(false); setTab(nextTab); }}
       addedNotice={cardAddedNotice} onAddChapter={addChapter} onDelete={() => { deleteCards([editingCard.id]); setEditingCardId(null); }}
       onResetSchedule={(id) => resetCardSchedules([id])} />;
   }
@@ -256,7 +255,8 @@ export default function NotebookView({ notebook, fsrsSettings, onUpdate, onBack,
       })}
       onExit={() => setReviewing(false)}
       onEscape={onBack}
-      onBrowse={() => { setReviewing(false); setTab("browse"); }} />;
+      onBrowse={() => { setReviewing(false); setTab("browse"); }}
+      onStudy={() => { setReviewing(false); setTab("study"); }} />;
   }
 
   return (
