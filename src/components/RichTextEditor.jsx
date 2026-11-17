@@ -77,7 +77,7 @@ export default function RichTextEditor({ label, value = "", placeholder, onChang
             return true;
           }
           const pastedText = event.clipboardData?.getData("text/plain") || "";
-          const containsMarkdown = /(?:^|\\n)#{1,5}\\s|\\[[^\\]]+\\]\\(https?:\\/\\/|\\*\\*[^*]+\\*\\*|(?:^|\\n)\\s*[-*+]\\s/m.test(pastedText);
+          const containsMarkdown = /(?:^|\n)#{1,5}\s|\[[^\]]+\]\(https?:\/\/|\*\*[^*]+\*\*|(?:^|\n)\s*[-*+]\s/m.test(pastedText);
           if (containsMarkdown && instance.markdown?.parse) {
             event.preventDefault();
             instance.chain().focus().insertContent(instance.markdown.parse(pastedText)).run();
