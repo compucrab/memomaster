@@ -15,7 +15,8 @@ export default function NotebookGrid({ notebooks, settings, onOpen, onContextMen
         <div class="notebook-grid">
           {notebooks.map((notebook) => {
             const chapterCount = Array.isArray(notebook.chapters) ? notebook.chapters.length : (notebook.chapters || 0);
-            const counts = getStudyQueueCounts(notebook.flashcards || [], now, rolloverHour);
+            const cards = notebook.flashcards ?? (notebook.markdown ? [{ id: "legacy-card" }] : []);
+            const counts = getStudyQueueCounts(cards, now, rolloverHour);
             return (
               <article class="notebook-card" key={notebook.id} onContextMenu={(event) => onContextMenu(event, notebook)}>
                 <button class="notebook-open" onClick={() => onOpen(notebook.id)} aria-label={`Open ${notebook.title}`}>
@@ -25,7 +26,7 @@ export default function NotebookGrid({ notebooks, settings, onOpen, onContextMen
                   </div>
                   <div class="notebook-info">
                     <h2>{notebook.title}</h2>
-                    <footer><span>{chapterCount} CHAPTERS</span><span>{notebook.flashcards?.length ?? notebook.cards ?? 0} CARDS</span></footer>
+                    <footer><span>{chapterCount} CHAPTERS</span><span>{cards.length || notebook.cards || 0} CARDS</span></footer>
                     <div class="notebook-daily-counts" aria-label="Cards left today">
                       <span class="daily-new"><strong>{counts.new}</strong><small>New</small></span>
                       <span class="daily-learning"><strong>{counts.learning}</strong><small>Learning</small></span>
