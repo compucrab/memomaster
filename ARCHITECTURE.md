@@ -105,7 +105,7 @@ Older projects without `studySessions` start with an empty activity history; exi
 
 `src/components/CardEditor.jsx` provides separate Question and Answer tabs. Each tab mounts its own RichTextEditor instance, so undo/redo history is isolated per side.
 
-Card content is stored as Tiptap JSON in SQLite and .memz archives. `src/services/cardDocument.js` normalizes legacy Markdown strings to JSON, renders JSON using the same extension schema as the editor, and resolves notebook media references for display. Browse previews and review sessions use this shared renderer, so editing and previewing use one content model.\n\nThe editor supports five semantic heading levels, emphasis, underline, inline code and code blocks, lists, quotes, links, a fixed text-color palette, editable tables, inline/display LaTeX, images with contextual resize controls, video link cards, and editable info cards for additional notes. Arbitrary text sizing and text alignment controls are not exposed; document content remains left-aligned with a shared typography scale.
+Card content is stored as Tiptap JSON in SQLite and .memz archives. `src/services/cardDocument.js` normalizes legacy Markdown strings to JSON, renders JSON using the same extension schema as the editor, and resolves notebook media references for display. Browse previews and review sessions use this shared renderer, so editing and previewing use one content model.\n\nThe editor supports five semantic heading levels, emphasis, underline, inline code and code blocks, lists, quotes, links, an unrestricted text-color picker, editable tables with row/column controls, inline/display LaTeX, images with drag-to-resize handles, video link cards, and editable info-card titles and rich-text bodies. Non-text blocks expose contextual hover controls for their properties. Arbitrary text sizing and text alignment controls are not exposed; document content remains left-aligned with a shared typography scale.
 
 Each notebook has a reusable `media` collection. Image files are stored once as media assets in notebook metadata and card JSON stores a `memomedia://{assetId}` reference. The media picker can reuse an image in multiple cards. Media assets are included in SQLite library saves and .memz archives because they are part of notebook metadata. Clipboard image paste also adds the image to the media collection.
 
@@ -120,7 +120,7 @@ Video content is stored as a link card using `@[video](URL)`; previews never emb
 | Layout.jsx | Application state, SQLite persistence, project lifecycle, automatic backups, FSRS preferences |
 | NotebookView.jsx | Browse, card selection, chapter operations, study setup |
 | CardEditor.jsx | Card metadata, Question/Answer tabs, duplicate warning, schedule reset |
-| RichTextEditor.jsx | Tiptap setup, formatting toolbar, media/math insertion, editor history |
+| RichTextEditor.jsx | Tiptap setup, contextual formatting, media/math insertion, table editing, image resizing, editor history |
 | ReviewSession.jsx | Continuous FSRS review queue, four rating controls, and unscheduled practice queue |
 | StudyStatus.jsx | Retention, rating, workload, maturity, and lapse analytics |
 | projectArchive.js | .memz ZIP export/import and legacy migration |
