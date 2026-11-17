@@ -16,7 +16,13 @@ export default function Titlebar({ onNewProject, onOpenProject, onSaveProject, o
         .catch((error) => console.error("Unable to read window state:", error));
     };
 
-    syncMaximized();
+    window.isMaximized()
+      .then(async (isMaximized) => {
+        if (!isMaximized) await window.maximize();
+        setMaximized(await window.isMaximized());
+      })
+      .catch((error) => console.error("Unable to maximize startup window:", error));
+
     window.onResized(syncMaximized)
       .then((dispose) => { unlisten = dispose; })
       .catch((error) => console.error("Unable to observe window size:", error));
