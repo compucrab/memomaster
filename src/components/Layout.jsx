@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import { open } from "@tauri-apps/plugin-dialog";
+import { open, save as saveFile } from "@tauri-apps/plugin-dialog";
 import Topbar from "./Topbar";
 import Titlebar from "./Titlebar";
 import NotebookGrid from "./NotebookGrid";
@@ -11,6 +11,8 @@ import ContextMenu from "./ContextMenu";
 import TextPrompt from "./TextPrompt";
 import StudyStatus from "./StudyStatus";
 import { createMemz, importMemz } from "../services/projectArchive";
+import { loadFsrsSettings, saveFsrsSettings } from "../services/fsrsSettings";
+import { buildFsrsOptimizerDataset } from "../services/fsrsOptimizerData.js";
 
 const savedTheme = () => {
   try { return localStorage.getItem("memomaster-theme") || "light"; }
@@ -35,6 +37,7 @@ export default function Layout() {
   const [query, setQuery] = useState("");
   const [menu, setMenu] = useState(null);
   const [theme, setTheme] = useState(savedTheme);
+  const [fsrsSettings, setFsrsSettings] = useState(loadFsrsSettings);
   const [prompt, setPrompt] = useState(null);
   const [confirmNewProject, setConfirmNewProject] = useState(false);
   const [deleteNotebook, setDeleteNotebook] = useState(null);
@@ -59,6 +62,7 @@ export default function Layout() {
   );
 
   useEffect(() => { try { localStorage.setItem("memomaster-theme", theme); } catch {} }, [theme]);
+  useEffect(() => { saveFsrsSettings(fsrsSettings); }, [fsrsSettings]);
   useEffect(() => { try { projectPath ? localStorage.setItem("memomaster-project-path", projectPath) : localStorage.removeItem("memomaster-project-path"); } catch {} }, [projectPath]);
 
   useEffect(() => {
@@ -169,6 +173,25 @@ export default function Layout() {
     await invoke("write_project_file", { path, bytes: Array.from(bytes) });
   }
 
+  async function exportFsrsHistory() {
+    try {
+      const dataset = buildFsrsOptimizerDataset(notebooksRef.current, fsrsSettings);
+      if (!dataset.reviewCount) {
+        setNotice("No complete FSRS-6 review logs are available to export yet.");
+        return;
+      }
+      const path = await saveFile({
+        defaultPath: "memomaster-fsrs-history.csv",
+        filters: [{ name: "CSV file", extensions: ["csv"] }],
+      });
+      if (!path) return;
+      await writeBytes(path, new TextEncoder().encode(dataset.csv));
+      setNotice(`Exported ${dataset.reviewCount} reviews from ${dataset.cardCount} cards${dataset.skippedCount ? `; skipped ${dataset.skippedCount} older or incomplete logs` : ""}.`);
+    } catch (error) {
+      setNotice(`Could not export FSRS history: ${error.message || error}`);
+    }
+  }
+
   async function openProjectFile() {
     try {
       const path = await open({ multiple: false, directory: false, filters: projectFilter });
@@ -183,7 +206,6 @@ export default function Layout() {
       setNotice(`Could not open project: ${error.message || error}`);
     }
   }
-
 
   async function saveProject() {
     try {
@@ -227,12 +249,13 @@ export default function Layout() {
         )}
         <main class="app-main">
           {view === "settings" ? (
-            <SettingsPanel theme={theme} onThemeChange={setTheme} onBack={() => setView("library")} />
+            <SettingsPanel theme={theme} onThemeChange={setTheme} fsrsSettings={fsrsSettings} onFsrsSettingsChange={setFsrsSettings} onExportFsrsHistory={exportFsrsHistory} onBack={() => setView("library")} />
           ) : view === "status" ? (
-            <StudyStatus notebooks={notebooks} onBack={() => setView("library")} />
+            <StudyStatus notebooks={notebooks} settings={fsrsSettings} onBack={() => setView("library")} />
           ) : view === "notebook" && activeNotebook ? (
             <NotebookView
               notebook={activeNotebook}
+              fsrsSettings={fsrsSettings}
               onUpdate={(changes) => updateNotebook(activeNotebook.id, changes)}
               onBack={() => setView("library")}
               onRequestText={requestText}

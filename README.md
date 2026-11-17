@@ -14,13 +14,37 @@ MemoMaster is a local-first desktop learning and revision app built with Tauri 2
 - Inline and display LaTeX equations rendered with KaTeX.
 - Video embeds for YouTube, Vimeo, Instagram public posts/reels, Facebook, and direct MP4/WebM/OGG URLs. Playback depends on the provider's embedding policy.
 - Separate undo/redo history for the Question and Answer editors.
-- Scheduled FSRS-6 reviews and unscheduled practice for a whole notebook or a chapter.
-- Scheduled ratings: Forgot, Difficult, Good, and Easy. Forgot and Difficult repeat the card in the current session; Good and Easy complete it.
-- Next-review intervals during review, and next due date/time in Browse card information.
-- Study status dashboard with activity heatmap, streaks, scheduled review outcomes, recall rate, upcoming reviews, and notebook progress.
+- FSRS-6 scheduled reviews and unscheduled practice for a whole notebook or a chapter.
+- Anki-style Again/Hard/Good/Easy ratings backed by FSRS-6, with configurable learning and relearning steps.
+- Export complete FSRS-6 review history as CSV for use with the official FSRS optimizer (the optimizer runtime is not yet integrated into the app).
+- Configurable desired retention, learning/relearning steps, maximum interval, and study-day rollover.
+- Retention dashboard with actual versus desired retention, monthly trend, rating distribution, daily workload forecast, card maturity, and frequently forgotten cards. Dashboard review metrics count only reviews that schedule the card beyond one day; short learning/relearning repetitions are excluded.
 - Light and dark themes.
 - Automatic SQLite persistence and automatic .memz backup on application close.
 - Portable .memz project open/save support and a custom desktop titlebar.
+
+## FSRS scheduling
+
+The scheduler uses `ts-fsrs` (FSRS-6). Default preferences:
+
+| Setting | Default |
+| --- | --- |
+| Desired retention | 90% |
+| Learning steps | 1 minute, 10 minutes |
+| Relearning steps | 10 minutes |
+| Maximum interval | 180 days |
+| Study-day rollover | 04:00 local time |
+
+Review buttons follow these rules:
+
+- **Again:** failed recall. FSRS schedules a learning or relearning step.
+- **Hard:** successful recall with significant effort.
+- **Good:** successful recall.
+- **Easy:** successful recall with high confidence.
+
+The active review queue includes new cards, due cards, and learning/relearning cards whose next due time is within 10 minutes. After a rating, a card whose next interval is 10 minutes or less is placed at the end of the queue immediately instead of making you wait for its timestamp. Cards scheduled beyond that short-term window leave the active queue and become available when due later. The queue is continuous rather than a fixed batch, so the review screen intentionally has no progress bar or completion percentage.
+
+Use **Export CSV** in FSRS scheduling preferences to export complete review logs in the official optimizer input format. Logs without reliable pre-review state data are excluded and reported. The in-app optimizer is not yet integrated. Changing FSRS preferences affects future scheduling. Existing due dates are not silently recalculated. Review history retains the before-and-after FSRS snapshots for audit and optimizer export. Preferences are shared across notebooks and stored locally in the application webview; they are not currently embedded in .memz archives. Per-notebook presets are a later iteration.
 
 ## Local storage and backups
 
@@ -66,9 +90,10 @@ Install dependencies and run the desktop app:
     npm install
     npm run tauri dev
 
-Build checks:
+Build and regression checks:
 
     npm run build
+    npm test
     npm run tauri build
 
 Vite uses port 1420; the Tauri configuration expects that fixed development port.

@@ -1,7 +1,17 @@
-import { useMemo, useState } from "preact/hooks";
-import { Check, Clock3, RotateCw } from "lucide-preact";
+import { useState } from "preact/hooks";
+import { State } from "ts-fsrs";
+import { Check, RotateCw } from "lucide-preact";
 import CardContent from "./CardContent";
 import { getReviewOptions, scheduleReview } from "../services/fsrs";
+
+const SHORT_TERM_WINDOW = 10 * 60 * 1000;
+
+function isShortTermPending(card, now) {
+  if (!card.fsrs?.due) return false;
+  const due = new Date(card.fsrs.due);
+  const remaining = due.getTime() - now.getTime();
+  return Number.isFinite(remaining) && remaining > 0 && remaining <= SHORT_TERM_WINDOW;
+}
 
 function isDue(card, now) {
   if (!card.fsrs?.due) return true;
@@ -9,12 +19,20 @@ function isDue(card, now) {
   return Number.isNaN(due.getTime()) || due <= now;
 }
 
-export default function ReviewSession({ cards, mode = "scheduled", onReview, onExit }) {
+export default function ReviewSession({ cards, mode = "scheduled", settings, onReview, onExit }) {
   const [sessionCards, setSessionCards] = useState(() => cards.map((card) => ({ ...card })));
   const [queue, setQueue] = useState(() => {
     const now = new Date();
-    return cards.filter((card) => mode === "unscheduled" || isDue(card, now))
-      .sort((a, b) => new Date(a.fsrs?.due || 0) - new Date(b.fsrs?.due || 0))
+    const priority = (card) => {
+      const state = card.fsrs?.state ?? State.New;
+      if (state === State.Learning || state === State.Relearning) return 0;
+      if (state === State.Review) return 1;
+      return 2;
+    };
+    return cards.filter((card) => mode === "unscheduled" || isDue(card, now) || isShortTermPending(card, now))
+      .sort((a, b) => mode === "scheduled"
+        ? priority(a) - priority(b) || new Date(a.fsrs?.due || 0) - new Date(b.fsrs?.due || 0)
+        : 0)
       .map((card) => card.id);
   });
   const [revealed, setRevealed] = useState(false);
@@ -22,11 +40,11 @@ export default function ReviewSession({ cards, mode = "scheduled", onReview, onE
   const [processing, setProcessing] = useState(false);
   const [reviewError, setReviewError] = useState("");
   const activeCard = sessionCards.find((card) => card.id === queue[0]);
-  const now = new Date();
-  const options = useMemo(
-    () => activeCard && mode === "scheduled" ? getReviewOptions(activeCard, now) : null,
-    [activeCard?.id, activeCard?.fsrs],
-  );
+  const options = activeCard && mode === "scheduled"
+    ? getReviewOptions(activeCard, new Date(), settings)
+    : null;
+
+
 
   function removeActiveCard() {
     setQueue((items) => items.slice(1));
@@ -39,11 +57,12 @@ export default function ReviewSession({ cards, mode = "scheduled", onReview, onE
     setReviewError("");
     try {
       if (mode === "scheduled") {
-        const result = scheduleReview(activeCard, choice, new Date());
+        const reviewedAt = new Date();
+        const result = scheduleReview(activeCard, choice, reviewedAt, settings);
         onReview(activeCard.id, result.fsrs, result.log, mode);
         setSessionCards((items) => items.map((card) => card.id === activeCard.id ? { ...card, fsrs: result.fsrs } : card));
         setReviewed((count) => count + 1);
-        if (choice === "forgot" || choice === "difficult") {
+        if (isShortTermPending({ fsrs: result.fsrs }, reviewedAt)) {
           setQueue((items) => [...items.slice(1), activeCard.id]);
           setRevealed(false);
           return;
@@ -71,6 +90,8 @@ export default function ReviewSession({ cards, mode = "scheduled", onReview, onE
     setRevealed(false);
   }
 
+
+
   if (!queue.length) {
     return (
       <section class="review-session">
@@ -93,9 +114,7 @@ export default function ReviewSession({ cards, mode = "scheduled", onReview, onE
     <section class="review-session">
       <header class="review-session-header">
         <button class="back-link" onClick={onExit}>← EXIT REVIEW</button>
-        <span>{mode === "scheduled" ? "SCHEDULED" : "UNSCHEDULED"} · {reviewed} REVIEWS · {queue.length} LEFT</span>
       </header>
-      <div class="review-progress"><i style={{ width: `${(reviewed / (reviewed + queue.length)) * 100}%` }} /></div>
       <div class="review-card">
         <div class="review-card-content">
           <p class="study-side-label">{revealed ? "ANSWER" : "QUESTION"}</p>
@@ -109,8 +128,8 @@ export default function ReviewSession({ cards, mode = "scheduled", onReview, onE
           <div class="review-ratings">
             <p>How well did you remember?</p>
             <div class="review-rating-options">
-              <button disabled={processing} class="review-rating forgot" onClick={() => finishCard("forgot")}><strong>Forgot</strong><span>{options.forgot.interval} · repeat</span></button>
-              <button disabled={processing} class="review-rating difficult" onClick={() => finishCard("difficult")}><strong>Difficult</strong><span>{options.difficult.interval} · repeat</span></button>
+              <button disabled={processing} class="review-rating forgot" onClick={() => finishCard("forgot")}><strong>Again</strong><span>{options.forgot.interval}</span></button>
+              <button disabled={processing} class="review-rating difficult" onClick={() => finishCard("difficult")}><strong>Hard</strong><span>{options.difficult.interval}</span></button>
               <button disabled={processing} class="review-rating good" onClick={() => finishCard("good")}><strong>Good</strong><span>{options.good.interval}</span></button>
               <button disabled={processing} class="review-rating easy" onClick={() => finishCard("easy")}><strong>Easy</strong><span>{options.easy.interval}</span></button>
             </div>
@@ -125,7 +144,7 @@ export default function ReviewSession({ cards, mode = "scheduled", onReview, onE
           </div>
         )}
       </div>
-      <footer class="review-session-footer"><Clock3 size={13} /> {mode === "scheduled" ? "Forgot and Difficult repeat until Good or Easy completes the card" : "Practice only · scheduled due dates remain unchanged"}</footer>
+      {reviewError && <p class="review-error" role="alert">{reviewError}</p>}
     </section>
   );
 }
