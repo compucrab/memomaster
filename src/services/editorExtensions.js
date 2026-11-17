@@ -10,7 +10,7 @@ export const CardImage = Image.extend({
   renderHTML({ HTMLAttributes }) {
     const width = Math.max(40, Math.min(1600, Number(HTMLAttributes.width) || 420));
     const align = ["left", "center", "right"].includes(HTMLAttributes.align) ? HTMLAttributes.align : "center";
-    const style = align === "center" ? `width:${width}px;max-width:100%;display:block;margin:12px auto;` : `width:${width}px;max-width:100%;display:inline-block;vertical-align:middle;float:${align};margin:8px 14px 8px 0;`;
+    const style = `width:${width}px;max-width:100%;display:block;margin:12px ${align === "left" ? "auto 0" : align === "right" ? "0 auto" : "auto"};`;
     return ["img", { ...this.options.HTMLAttributes, ...HTMLAttributes, style, "data-image-align": align, "data-image-width": width }];
   },
   parseMarkdown(token) {
@@ -28,7 +28,7 @@ export const CardImage = Image.extend({
   },
 });
 export const AlignedParagraph = Paragraph;
-export const AlignedHeading = Heading;
+export const AlignedHeading = Heading.configure({ levels: [1, 2, 3, 4, 5] });
 export const CardVideo = Node.create({
   name: "cardVideo", group: "block", atom: true, selectable: true,
   addAttributes() { return { url: { default: "" }, provider: { default: "video" } }; },
