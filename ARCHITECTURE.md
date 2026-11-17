@@ -10,10 +10,14 @@ A notebook contains chapters, flashcards, scheduled review history, and unschedu
 
 Notebook view has two tabs:
 
-- **Browse:** searchable card list with next due date/time, chapter filter, preview, editing, multi-selection, bulk deletion, chapter reassignment, and schedule reset.
+- **Browse:** searchable card list with next due date/time, chapter filter, preview, editing, Ctrl-click toggling, Shift-click range selection, Ctrl+Shift additive range selection, bulk deletion, chapter reassignment, and schedule reset. Delete asks for confirmation; Escape clears selection before it exits to the library.
 - **Study:** Scheduled review or unscheduled practice scoped to a whole notebook or one chapter.
 
 A new installation starts with an empty library.
+
+## Keyboard interaction
+
+Notebook shortcuts are documented in the in-app Help → Shortcuts page and in README.md. Alt + B and Alt + S switch between Browse and Study; Alt + A adds a card and Alt + E edits the selected Browse card. These Alt shortcuts are handled even while a text field is focused. In Browse, Ctrl-click toggles individual cards, Shift-click selects a range from the last anchor, and Ctrl + Shift + click adds a range. Delete requests confirmation before removing selected cards. Escape clears an active selection first; with no selection, it returns to the library. In the editor, Escape asks before discarding changes, while Alt + B / Alt + S navigate away with the same discard protection. Keep this guide synchronized with HelpPanel.jsx when shortcuts change.
 
 ## Technology and runtime
 

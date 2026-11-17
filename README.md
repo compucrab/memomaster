@@ -6,7 +6,7 @@ MemoMaster is a local-first desktop learning and revision app built with Tauri 2
 
 - Notebook library with notebook creation, rename, deletion, and cover-strip colour selection. Each notebook shows New, Learning/Relearning, and Review cards remaining before the next study-day rollover.
 - Notebook workspace with Browse and Study tabs.
-- Browse cards with question/answer search, chapter filtering, preview, editing, multi-selection, bulk deletion, chapter reassignment, and schedule reset.
+- Browse cards with question/answer search, chapter filtering, preview, editing, Ctrl/Shift multi-selection, bulk deletion, chapter reassignment, and schedule reset.
 - Duplicate-question detection: exact duplicates are blocked and close matches are flagged before saving.
 - Rich card editor with separate Question and Answer tabs, powered by Tiptap.
 - Canonical Tiptap JSON for card content, with Markdown conversion retained for legacy content and archive imports.
@@ -23,6 +23,33 @@ MemoMaster is a local-first desktop learning and revision app built with Tauri 2
 - Light and dark themes.
 - Automatic SQLite persistence and automatic .memz backup on application close.
 - Portable .memz project open/save support and a custom desktop titlebar.
+
+## Keyboard shortcuts
+
+Shortcuts apply in the relevant notebook, editor, or review screen. Alt-based navigation and card actions are handled even when a text field is focused. Plain B and S are not navigation shortcuts.
+
+| Context | Shortcut | Action |
+| --- | --- | --- |
+| Notebook | A / Alt + A | Add a card |
+| Browse | E / Alt + E | Edit the selected card |
+| Notebook | Alt + B / Alt + S | Open Browse / Study |
+| Browse | Ctrl-click | Add or remove a card from the selection |
+| Browse | Shift-click | Select a continuous range of cards |
+| Browse | Ctrl + Shift + click | Add a range to the current selection |
+| Browse | Delete | Delete selected cards after confirmation |
+| Browse | Escape | Clear selection; with no selection, return to the library |
+| Study / Browse | Escape | Return to the library |
+| Editor | Ctrl + Enter | Save the card and continue with a new card |
+| Editor | Ctrl + D | Open the chapter picker |
+| Editor | Ctrl + Space | Open the command palette |
+| Editor | Alt + Q / Alt + W | Switch to Question / Answer |
+| Editor | Alt + B / Alt + S | Leave the editor for Browse / Study; asks before discarding changes |
+| Review | E | Edit the active card and return to Browse |
+| Scheduled review | 1 / 2 / 3 / 4 | Again / Hard / Good / Easy |
+| Review | Space | Reveal the answer; when visible, rate Good (scheduled) or mark Done (practice) |
+| Application | Ctrl + , | Open Preferences |
+| Application | Ctrl + S | Save project and choose a destination |
+| Application | Escape | Return from Help, Preferences, About, or study status to the library |
 
 ## FSRS scheduling
 
@@ -58,7 +85,7 @@ The File menu provides New project, Open project, Save project, and Preferences.
 
 - **New project** replaces the active library with an empty one and clears the remembered project path. It does not delete existing backups.
 - **Open project** imports a .memz archive, replaces the active library, and makes that file the remembered Save project destination.
-- **Save project** overwrites the remembered .memz file when one exists. If no project file is associated, it creates a timestamped backup in the application's backups folder.
+- **Save project** always opens a native save dialog so you can choose the destination and filename. The selected .memz path becomes the remembered project path for the next save dialog.
 - **Automatic backup** creates a timestamped .memz snapshot in that same backups folder when the application closes successfully.
 
 A .memz archive is a snapshot, not a live link to SQLite. Changes made after a snapshot do not update it. Keep independent backups; the SQLite working copy is not a substitute for an external backup.

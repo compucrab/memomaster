@@ -268,3 +268,8 @@
 
 /* Browse and Review use the same card typography scale. */
 .study-card-prose { font-size: 14px; line-height: 1.75; }
+
+
+/* Browse card-list controls use selection styling instead of a browser focus ring. */
+.browse-card-select:focus-visible,
+.browse-card-checkbox:focus-visible { outline: none; }
