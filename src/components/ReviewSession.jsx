@@ -4,10 +4,27 @@ import { Check, Clock3, RotateCw } from "lucide-preact";
 import CardContent from "./CardContent";
 import { formatInterval, getReviewOptions, scheduleReview } from "../services/fsrs";
 
+function getStudyDayEnd(now, rolloverHour) {
+  const end = new Date(now);
+  end.setHours(rolloverHour ?? 4, 0, 0, 0);
+  if (end <= now) end.setDate(end.getDate() + 1);
+  return end;
+}
+
+function isLearning(card) {
+  return card.fsrs?.state === State.Learning || card.fsrs?.state === State.Relearning;
+}
+
 function isDue(card, now) {
   if (!card.fsrs?.due) return true;
   const due = new Date(card.fsrs.due);
   return Number.isNaN(due.getTime()) || due <= now;
+}
+
+function isLearningDueToday(card, now, settings) {
+  if (!isLearning(card) || !card.fsrs?.due) return false;
+  const due = new Date(card.fsrs.due);
+  return !Number.isNaN(due.getTime()) && due > now && due < getStudyDayEnd(now, settings?.rolloverHour);
 }
 
 export default function ReviewSession({ cards, mode = "scheduled", settings, onReview, onExit }) {
@@ -26,7 +43,10 @@ export default function ReviewSession({ cards, mode = "scheduled", settings, onR
         : 0)
       .map((card) => card.id);
   });
-  const [pending, setPending] = useState([]);
+  const [pending, setPending] = useState(() => {
+    const now = new Date();
+    return mode === "scheduled" ? cards.filter((card) => isLearningDueToday(card, now, settings)).map((card) => card.id) : [];
+  });
   const [clockNow, setClockNow] = useState(() => new Date());
   const [revealed, setRevealed] = useState(false);
   const [reviewed, setReviewed] = useState(0);
@@ -42,14 +62,23 @@ export default function ReviewSession({ cards, mode = "scheduled", settings, onR
     if (!pending.length) return undefined;
     const timer = window.setInterval(() => {
       const now = new Date();
+      const dayEnd = getStudyDayEnd(now, settings?.rolloverHour);
       const dueIds = pending.filter((id) => {
         const card = sessionCards.find((item) => item.id === id);
         return card && isDue(card, now);
       });
-      if (!queue.length || dueIds.length) setClockNow(now);
+      const expiredIds = pending.filter((id) => {
+        const card = sessionCards.find((item) => item.id === id);
+        const due = new Date(card?.fsrs?.due);
+        return !card || Number.isNaN(due.getTime()) || due >= dayEnd;
+      });
+      if (!queue.length || dueIds.length || expiredIds.length) setClockNow(now);
       if (dueIds.length) {
         setQueue((items) => [...items, ...dueIds.filter((id) => !items.includes(id))]);
-        setPending((items) => items.filter((id) => !dueIds.includes(id)));
+      }
+      if (dueIds.length || expiredIds.length) {
+        const finishedIds = new Set([...dueIds, ...expiredIds]);
+        setPending((items) => items.filter((id) => !finishedIds.has(id)));
       }
     }, 1000);
     return () => window.clearInterval(timer);
@@ -72,7 +101,7 @@ export default function ReviewSession({ cards, mode = "scheduled", settings, onR
         setSessionCards((items) => items.map((card) => card.id === activeCard.id ? { ...card, fsrs: result.fsrs } : card));
         setReviewed((count) => count + 1);
         const inLearningStep = result.fsrs.state === State.Learning || result.fsrs.state === State.Relearning;
-        if (inLearningStep && new Date(result.fsrs.due) > reviewedAt) {
+        if (inLearningStep && isLearningDueToday({ fsrs: result.fsrs }, reviewedAt, settings)) {
           setPending((items) => items.includes(activeCard.id) ? items : [...items, activeCard.id]);
           removeActiveCard();
           return;
@@ -101,13 +130,19 @@ export default function ReviewSession({ cards, mode = "scheduled", settings, onR
   }
 
   if (!queue.length && pending.length) {
+    const nextDue = pending
+      .map((id) => sessionCards.find((card) => card.id === id)?.fsrs?.due)
+      .filter(Boolean)
+      .map((due) => new Date(due))
+      .filter((due) => !Number.isNaN(due.getTime()))
+      .sort((a, b) => a - b)[0];
     return (
       <section class="review-session">
-        <header class="review-session-header"><button class="back-link" onClick={onExit}>← EXIT REVIEW</button><span>{reviewed} REVIEWS · {pending.length} LEARNING</span></header>
+        <header class="review-session-header"><button class="back-link" onClick={onExit}>← EXIT REVIEW</button><span>{reviewed} REVIEWS</span></header>
         <div class="review-complete">
-          <Check size={30} />
-          <h1>You're all caught up</h1>
-          <p>This session is still active. The next learning cards will appear automatically when they're ready.</p>
+          <Clock3 size={30} />
+          <h1>Next card is not due yet</h1>
+          <p>{nextDue ? "The next learning card is due at " + nextDue.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) + ". It will return automatically." : "The remaining learning cards are scheduled for another study day."}</p>
         </div>
       </section>
     );
