@@ -7,7 +7,7 @@ import { Mathematics } from "@tiptap/extension-mathematics";
 const safeMediaUrl = (value = "") => /^(https?:|memomedia:\/\/[\w-]+$|data:image\/(png|jpe?g|gif|webp);base64,)/i.test(value) ? value : "";
 export const CardImage = Image.extend({
   inline: false,
-  addAttributes() { return { ...this.parent?.(), src: { default: null }, alt: { default: null }, title: { default: null }, width: { default: 420 }, align: { default: "center" } }; },
+  addAttributes() { return { ...this.parent?.(), src: { default: null }, alt: { default: null }, title: { default: null }, width: { default: 420 } }; },
   renderHTML({ HTMLAttributes }) {
     const width = Math.max(40, Math.min(1600, Number(HTMLAttributes.width) || 420));
     const style = `width:${width}px;max-width:100%;display:block;margin:12px 0;`;
@@ -63,7 +63,7 @@ export const CardTextStyle = TextStyle.extend({
     const size = String(attrs.fontSize || "");
     if (/^#[0-9a-f]{3,8}$/i.test(color)) styles.push("color:" + color);
     if (/^\d{1,2}(?:px|pt|rem|em)$/.test(size)) styles.push("font-size:" + size);
-    const content = helpers.renderChildren(mark.content);
+    const content = helpers.renderChildren(mark);
     return styles.length ? '<span style="' + styles.join(";") + '">' + content + "</span>" : content;
   },
 });
