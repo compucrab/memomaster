@@ -37,6 +37,7 @@ export default function NotebookView({ notebook, fsrsSettings, onUpdate, onBack,
   const [selectedCardId, setSelectedCardId] = useState(cards[0]?.id || null);
   const [search, setSearch] = useState("");
   const searchInputRef = useRef(null);
+  const selectionAnchorRef = useRef(null);
   const [chapterFilter, setChapterFilter] = useState("all");
   const [editingCardId, setEditingCardId] = useState(null);
   const [studyType, setStudyType] = useState("scheduled");
@@ -64,18 +65,30 @@ export default function NotebookView({ notebook, fsrsSettings, onUpdate, onBack,
   useEffect(() => {
     if (editingCardId || reviewing) return;
     const handleNotebookKeys = (event) => {
-      if (event.repeat || event.ctrlKey || event.metaKey) return;
+      if (event.repeat) return;
+      const key = event.key.toLowerCase();
+      const typing = event.target?.closest?.("input, textarea, select, [contenteditable='true'], [role='dialog'], [role='alertdialog']");
       if (event.key === "Escape") {
         if (confirmAction) { event.preventDefault(); setConfirmAction(null); return; }
+        if (selectedCardIds.length) { event.preventDefault(); setSelectedCardIds([]); selectionAnchorRef.current = null; return; }
         if (tab === "browse" || tab === "study") { event.preventDefault(); onBack(); }
         return;
       }
-      const key = event.key.toLowerCase();
-      if (event.altKey && key === "b") { event.preventDefault(); setTab("browse"); return; }
-      if (event.altKey && key === "s") { event.preventDefault(); setTab("study"); return; }
-      if (event.altKey) return;
-      const typing = event.target?.closest?.("input, textarea, select, [contenteditable='true'], [role='dialog'], [role='alertdialog']");
-      if (typing) return;
+      if (event.altKey && !event.ctrlKey && !event.metaKey) {
+        const key = event.key.toLowerCase();
+        if (key === "b") { event.preventDefault(); setTab("browse"); return; }
+        if (key === "s") { event.preventDefault(); setTab("study"); return; }
+        if (key === "a") { event.preventDefault(); addCard(); return; }
+        if (key === "e" && tab === "browse" && selectedCard) { event.preventDefault(); setEditingCardId(selectedCard.id); return; }
+        return;
+      }
+      if (typing || event.altKey || event.ctrlKey || event.metaKey) return;
+      if (event.key === "Delete" && tab === "browse" && selectedCardIds.length) {
+        event.preventDefault();
+        const ids = [...selectedCardIds];
+        askDelete("Delete selected cards?", "Permanently delete " + ids.length + " selected cards?", () => deleteCards(ids));
+        return;
+      }
       if (key === "a") { event.preventDefault(); addCard(); }
       else if (key === "e" && tab === "browse" && selectedCard) {
         event.preventDefault();
@@ -84,7 +97,7 @@ export default function NotebookView({ notebook, fsrsSettings, onUpdate, onBack,
     };
     window.addEventListener("keydown", handleNotebookKeys);
     return () => window.removeEventListener("keydown", handleNotebookKeys);
-  }, [editingCardId, reviewing, tab, selectedCardId, search, chapterFilter, cards, confirmAction, onBack]);
+  }, [editingCardId, reviewing, tab, selectedCardId, selectedCardIds, search, chapterFilter, cards, confirmAction, onBack]);
 
   const visibleCards = useMemo(() => {
     const needle = search.trim().toLocaleLowerCase();
@@ -190,8 +203,26 @@ export default function NotebookView({ notebook, fsrsSettings, onUpdate, onBack,
     onUpdate({ flashcards: next, cards: next.length });
   }
 
-  function toggleCardSelection(id) {
-    setSelectedCardIds((items) => items.includes(id) ? items.filter((item) => item !== id) : [...items, id]);
+  function toggleCardSelection(id, event) {
+    const index = visibleCards.findIndex((card) => card.id === id);
+    if (event?.shiftKey && selectionAnchorRef.current) {
+      const anchorIndex = visibleCards.findIndex((card) => card.id === selectionAnchorRef.current);
+      if (anchorIndex >= 0 && index >= 0) {
+        const start = Math.min(anchorIndex, index);
+        const end = Math.max(anchorIndex, index);
+        const rangeIds = visibleCards.slice(start, end + 1).map((card) => card.id);
+        setSelectedCardIds((items) => event.ctrlKey || event.metaKey ? [...new Set([...items, ...rangeIds])] : rangeIds);
+        return;
+      }
+    }
+    if (event?.ctrlKey || event?.metaKey || event?.target?.type === "checkbox") {
+      setSelectedCardIds((items) => items.includes(id) ? items.filter((item) => item !== id) : [...items, id]);
+      selectionAnchorRef.current = id;
+      return;
+    }
+    selectionAnchorRef.current = id;
+    setSelectedCardIds([]);
+    setSelectedCardId(id);
   }
   function deleteChapter(chapter) {
     const removedIds = cards.filter((card) => card.chapterId === chapter.id).map((card) => card.id);
@@ -305,7 +336,7 @@ export default function NotebookView({ notebook, fsrsSettings, onUpdate, onBack,
                   setTargetChapterId("");
                 }}>Move</button>
                 <button type="button" onClick={() => { resetCardSchedules(selectedCardIds); setSelectedCardIds([]); }}>Reset schedule</button>
-                <button type="button" onClick={() => setSelectedCardIds([])}>Clear</button>
+                <button type="button" onClick={() => { setSelectedCardIds([]); selectionAnchorRef.current = null; }}>Clear</button>
                 <button type="button" class="delete-selected" onClick={() => askDelete("Delete selected cards?", "Permanently delete " + selectedCardIds.length + " selected cards?", () => deleteCards(selectedCardIds))}><Trash2 size={12} /> Delete</button>
               </div>}
             </div>
@@ -314,8 +345,8 @@ export default function NotebookView({ notebook, fsrsSettings, onUpdate, onBack,
                 const chapter = chapters.find(item => item.id === card.chapterId);
                 return (
                   <div key={card.id} class={`browse-card-row ${selectedCard?.id === card.id ? "selected" : ""} ${selectedCardIds.includes(card.id) ? "checked" : ""}`} onContextMenu={(event) => event.preventDefault()}>
-                    <input class="browse-card-checkbox" type="checkbox" aria-label="Select card" checked={selectedCardIds.includes(card.id)} onChange={() => toggleCardSelection(card.id)} />
-                    <button type="button" class="browse-card-select" onClick={() => setSelectedCardId(card.id)}>
+                    <input class="browse-card-checkbox" type="checkbox" aria-label="Select card" checked={selectedCardIds.includes(card.id)} onChange={(event) => toggleCardSelection(card.id, event)} />
+                    <button type="button" class="browse-card-select" onClick={(event) => { if (event.ctrlKey || event.metaKey || event.shiftKey) toggleCardSelection(card.id, event); else { setSelectedCardId(card.id); setSelectedCardIds([]); selectionAnchorRef.current = card.id; } }}>
                       <span class="browse-card-index">{String(index + 1).padStart(2, "0")}</span>
                       <span class="browse-card-copy"><strong>{cardDocumentText(card.front).trim().split("\n")[0] || "Untitled question"}</strong><small>{chapter?.name || "Unassigned"} · Due: {getDueLabel(card)}</small></span>
                     </button>

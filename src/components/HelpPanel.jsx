@@ -21,9 +21,14 @@ const pages = {
     sections: [
       ["Notebook", `A — Add a new card
 E — Edit the selected card in Browse
+Alt + A — Add a new card
+Alt + E — Edit the selected card in Browse
 Alt + S — Open Study (also leaves the editor or review screen)
 Alt + B — Open Browse (also leaves the editor or review screen)
-Escape — Return to the library from Browse or Study
+Delete — Delete selected cards after confirmation in Browse
+Ctrl-click — Add or remove a card from the selection
+Shift-click — Select a range of cards
+Escape — Clear the current card selection; otherwise return to the library from Browse or Study
 Ctrl + Enter — Save the current card and continue with a new card while editing
 Ctrl + D — Open the chapter picker while editing a card`],
       ["Scheduled review", `E — Edit the active card and return to Browse
