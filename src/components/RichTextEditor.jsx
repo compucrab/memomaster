@@ -31,11 +31,12 @@ export default function RichTextEditor({ label, value = "", placeholder, onChang
   const [editor, setEditor] = useState(null), [revision, setRevision] = useState(0);
   const [dialog, setDialog] = useState(null), [dialogValue, setDialogValue] = useState(""), [dialogText, setDialogText] = useState("");
   const [paletteOpen, setPaletteOpen] = useState(false), [paletteQuery, setPaletteQuery] = useState("");
+  const [paletteIndex, setPaletteIndex] = useState(0);
   const [hoverEdit, setHoverEdit] = useState(null);
   const [infoTitle, setInfoTitle] = useState("");
   const [imageWidth, setImageWidth] = useState(420);
   const [mathFontSize, setMathFontSize] = useState(16);
-  const colorInputRef = useRef(null);
+  const colorInputRef = useRef(null), paletteActiveItemRef = useRef(null);
   const [palettePosition, setPalettePosition] = useState({ left: 24, top: 24 }), [selectionPosition, setSelectionPosition] = useState(null);
   onChangeRef.current = onChange;
   onAddMediaRef.current = onAddMedia;
@@ -81,6 +82,7 @@ export default function RichTextEditor({ label, value = "", placeholder, onChang
     if (!instance) return;
     positionAt(instance.state.selection.from);
     setPaletteQuery("");
+    setPaletteIndex(0);
     setPaletteOpen(true);
   }
   function updateSelectionPosition(instance) {
@@ -208,8 +210,12 @@ export default function RichTextEditor({ label, value = "", placeholder, onChang
   }, []);
 
   useEffect(() => { if (editor) syncMathSizes(editor); }, [editor, revision]);
+  useEffect(() => { if (editor) editor.commands.focus("end"); }, [editor]);
 
-    useEffect(() => { if (paletteOpen) paletteInputRef.current?.focus(); }, [paletteOpen]);
+  useEffect(() => {
+    if (!paletteOpen) return;
+    paletteInputRef.current?.focus();
+  }, [paletteOpen]);
 
   useEffect(() => {
     if (!dialog || dialog.type === "notice") return;
@@ -291,7 +297,16 @@ export default function RichTextEditor({ label, value = "", placeholder, onChang
     { label: "Redo", icon: Redo2, detail: "Redo the last undone edit", run: () => editor.chain().focus().redo().run() },
   ];
   const filteredActions = actions.filter(item => (item.label + " " + item.detail).toLowerCase().includes(paletteQuery.toLowerCase()));
-  function chooseAction(action) { action.run(); setPaletteOpen(false); setPaletteQuery(""); }
+  useEffect(() => {
+    if (paletteOpen) paletteActiveItemRef.current?.scrollIntoView?.({ block: "nearest" });
+  }, [paletteOpen, paletteIndex, filteredActions.length]);
+  function chooseAction(action) { action.run(); setPaletteOpen(false); setPaletteQuery(""); setPaletteIndex(0); }
+  function handlePaletteKeyDown(event) {
+    if (event.key === "Escape") { event.preventDefault(); setPaletteOpen(false); }
+    else if (event.key === "ArrowDown") { event.preventDefault(); event.stopPropagation(); setPaletteIndex(index => Math.min(Math.max(0, filteredActions.length - 1), index + 1)); }
+    else if (event.key === "ArrowUp") { event.preventDefault(); event.stopPropagation(); setPaletteIndex(index => Math.max(0, index - 1)); }
+    else if (event.key === "Enter" && filteredActions[paletteIndex]) { event.preventDefault(); chooseAction(filteredActions[paletteIndex]); }
+  }
   function applySelectionFormat(callback) { if (editor) callback(editor.chain().focus()); setSelectionPosition(null); }
   const selection = editor?.state.selection;
   const hasTextSelection = !!selection && !selection.empty && !selection.node && !!editor.state.doc.textBetween(selection.from, selection.to).trim();
@@ -325,13 +340,9 @@ export default function RichTextEditor({ label, value = "", placeholder, onChang
       <button type="button" title="Add link" aria-label="Add link" onClick={() => openInsert("link")}><LinkIcon size={14}/></button>
     </div>}
     {paletteOpen && <div class="rich-editor-command-palette" style={{ left: palettePosition.left + "px", top: palettePosition.top + "px" }} onMouseDown={event => event.stopPropagation()}>
-      <div class="rich-editor-command-search"><span>⌘</span><input ref={paletteInputRef} value={paletteQuery} onInput={event => setPaletteQuery(event.currentTarget.value)} onKeyDown={event => {
-        if (event.key === "Escape") { event.preventDefault(); setPaletteOpen(false); }
-        if (event.key === "Enter" && filteredActions[0]) { event.preventDefault(); chooseAction(filteredActions[0]); }
-        if (event.key === "ArrowDown") { event.preventDefault(); event.currentTarget.parentElement?.nextElementSibling?.querySelector("button")?.focus(); }
-      }} placeholder="Search commands..." aria-label="Search editor commands"/></div>
+      <div class="rich-editor-command-search"><span>⌘</span><input ref={paletteInputRef} value={paletteQuery} onInput={event => { setPaletteQuery(event.currentTarget.value); setPaletteIndex(0); }} onKeyDown={handlePaletteKeyDown} placeholder="Search commands..." aria-label="Search editor commands"/></div>
       <div class="rich-editor-command-results">
-        {filteredActions.map(action => <button type="button" key={action.label} onMouseDown={event => event.preventDefault()} onClick={() => chooseAction(action)}><span class="rich-editor-command-icon">{action.color ? <i class="rich-editor-command-color" style={{ backgroundColor: action.color }}/> : action.icon && <action.icon size={15}/>}</span><span class="rich-editor-command-copy"><strong>{action.label}</strong><small>{action.detail}</small></span></button>)}
+        {filteredActions.map((action, index) => <button ref={paletteIndex === index ? paletteActiveItemRef : null} type="button" key={action.label} tabIndex={-1} aria-selected={paletteIndex === index} class={paletteIndex === index ? "is-highlighted" : ""} onMouseEnter={() => setPaletteIndex(index)} onMouseDown={event => event.preventDefault()} onClick={() => chooseAction(action)}><span class="rich-editor-command-icon">{action.color ? <i class="rich-editor-command-color" style={{ backgroundColor: action.color }}/> : action.icon && <action.icon size={15}/>}</span><span class="rich-editor-command-copy"><strong>{action.label}</strong><small>{action.detail}</small></span></button>)}
         {!filteredActions.length && <p>No matching commands</p>}
       </div>
       <div class="rich-editor-command-hint">↑↓ to navigate · Enter to select · Esc to close</div>
@@ -345,7 +356,7 @@ export default function RichTextEditor({ label, value = "", placeholder, onChang
         {dialog.type === "image" && <input ref={dialogFieldRef} type="number" min="40" max="1600" step="10" aria-label="Image width in pixels" value={imageWidth} onInput={event => setImageWidth(event.currentTarget.value)}/>}
         {dialog.editing && (dialog.type === "inlineMath" || dialog.type === "blockMath") && <label class="rich-editor-math-size">Equation size <input type="number" min="10" max="48" step="1" aria-label="Equation text size in pixels" value={mathFontSize} onInput={event => setMathFontSize(event.currentTarget.value)}/> px</label>}
         {dialog.type === "info" && <input ref={dialogFieldRef} aria-label="Info card title" placeholder="Additional information" value={infoTitle} onInput={event => setInfoTitle(event.currentTarget.value)}/>}
-        {(dialog.type === "link" || dialog.type === "video") && <input aria-label={dialog.type === "link" ? "Link text" : "Video card text"} placeholder={dialog.type === "link" ? "Link text" : "Text shown on the video card"} value={dialogText} onInput={event => setDialogText(event.currentTarget.value)}/>}
+        {(dialog.type === "link" || dialog.type === "video") && <input ref={dialogFieldRef} aria-label={dialog.type === "link" ? "Link text" : "Video card text"} placeholder={dialog.type === "link" ? "Link text" : "Text shown on the video card"} value={dialogText} onInput={event => setDialogText(event.currentTarget.value)}/>}
         {dialog.type === "table" && <div class="rich-editor-table-actions"><button type="button" onClick={() => editor?.chain().focus().setTextSelection(dialog.from).addTableRowAfter().run()}>Add row at bottom</button><button type="button" onClick={() => editor?.chain().focus().setTextSelection(dialog.from).addTableColumnAfter().run()}>Add column</button><button type="button" onClick={() => editor?.chain().focus().setTextSelection(dialog.from).deleteTableRow().run()}>Delete current row</button><button type="button" onClick={() => editor?.chain().focus().setTextSelection(dialog.from).deleteTableColumn().run()}>Delete current column</button></div>}
         {dialog.type !== "notice" && !["info","image","table"].includes(dialog.type) && <textarea ref={dialogFieldRef} rows={dialog.type === "blockMath" ? 5 : 3} value={dialogValue} onInput={event => setDialogValue(event.currentTarget.value)} placeholder={dialog.type.includes("Math") ? "\\frac{a+b}{c}" : "https://example.com"}/>}
         <div class="prompt-actions"><button type="button" class="prompt-cancel" onClick={() => setDialog(null)}>{dialog.type === "notice" ? "Close" : "Cancel"}</button>{dialog.type !== "notice" && <button type="button" class="prompt-confirm" onClick={submitInsert}>{dialog.editing || dialog.editingVideo || dialog.editingInfo || dialog.editingImage || dialog.editingTable ? "Done" : "Insert"}</button>}</div>

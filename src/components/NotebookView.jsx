@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "preact/hooks";
+import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import {
   ArrowLeft, BookOpen, GraduationCap, Layers3, Plus, Search, PencilLine, Trash2, X,
 } from "lucide-preact";
@@ -36,6 +36,8 @@ export default function NotebookView({ notebook, fsrsSettings, onUpdate, onBack,
   const [previewSide, setPreviewSide] = useState("question");
   const [selectedCardId, setSelectedCardId] = useState(cards[0]?.id || null);
   const [search, setSearch] = useState("");
+  const searchInputRef = useRef(null);
+  const selectionAnchorRef = useRef(null);
   const [chapterFilter, setChapterFilter] = useState("all");
   const [editingCardId, setEditingCardId] = useState(null);
   const [studyType, setStudyType] = useState("scheduled");
@@ -51,10 +53,50 @@ export default function NotebookView({ notebook, fsrsSettings, onUpdate, onBack,
   const editingCard = cards.find(card => card.id === editingCardId) || (newCard?.id === editingCardId ? newCard : null);
 
   useEffect(() => {
+    if (tab === "browse" && !editingCardId && !reviewing) searchInputRef.current?.focus();
+  }, [tab, editingCardId, reviewing]);
+
+  useEffect(() => {
     if (!cardAddedNotice) return;
     const timeout = window.setTimeout(() => setCardAddedNotice(false), 1800);
     return () => window.clearTimeout(timeout);
   }, [cardAddedNotice]);
+
+  useEffect(() => {
+    if (editingCardId || reviewing) return;
+    const handleNotebookKeys = (event) => {
+      if (event.repeat) return;
+      const key = event.key.toLowerCase();
+      const typing = event.target?.closest?.("input, textarea, select, [contenteditable='true'], [role='dialog'], [role='alertdialog']");
+      if (event.key === "Escape") {
+        if (confirmAction) { event.preventDefault(); setConfirmAction(null); return; }
+        if (selectedCardIds.length) { event.preventDefault(); setSelectedCardIds([]); selectionAnchorRef.current = null; return; }
+        if (tab === "browse" || tab === "study") { event.preventDefault(); onBack(); }
+        return;
+      }
+      if (event.altKey && !event.ctrlKey && !event.metaKey) {
+        if (key === "b") { event.preventDefault(); setTab("browse"); return; }
+        if (key === "s") { event.preventDefault(); setTab("study"); return; }
+        if (key === "a") { event.preventDefault(); addCard(); return; }
+        if (key === "e" && tab === "browse" && selectedCard) { event.preventDefault(); setEditingCardId(selectedCard.id); return; }
+        return;
+      }
+      if (typing || event.altKey || event.ctrlKey || event.metaKey) return;
+      if (event.key === "Delete" && tab === "browse" && selectedCardIds.length) {
+        event.preventDefault();
+        const ids = [...selectedCardIds];
+        askDelete("Delete selected cards?", "Permanently delete " + ids.length + " selected cards?", () => deleteCards(ids));
+        return;
+      }
+      if (key === "a") { event.preventDefault(); addCard(); }
+      else if (key === "e" && tab === "browse" && selectedCard) {
+        event.preventDefault();
+        setEditingCardId(selectedCard.id);
+      }
+    };
+    window.addEventListener("keydown", handleNotebookKeys);
+    return () => window.removeEventListener("keydown", handleNotebookKeys);
+  }, [editingCardId, reviewing, tab, selectedCardId, selectedCardIds, search, chapterFilter, cards, confirmAction, onBack]);
 
   const visibleCards = useMemo(() => {
     const needle = search.trim().toLocaleLowerCase();
@@ -126,6 +168,16 @@ export default function NotebookView({ notebook, fsrsSettings, onUpdate, onBack,
     setEditingCardId(null);
   }
 
+  function saveAndAddCard(draft) {
+    const isAdding = !cards.some(card => card.id === draft.id);
+    saveCard(draft);
+    if (isAdding) return;
+    const nextDraft = { ...makeCard(), chapterId: draft.chapterId || "" };
+    setNewCard(nextDraft);
+    setEditingCardId(nextDraft.id);
+    setTab("browse");
+  }
+
   function askDelete(title, message, action) { setConfirmAction({ title, message, action }); }
   function deleteCards(ids) {
     const removing = new Set(ids);
@@ -150,8 +202,26 @@ export default function NotebookView({ notebook, fsrsSettings, onUpdate, onBack,
     onUpdate({ flashcards: next, cards: next.length });
   }
 
-  function toggleCardSelection(id) {
-    setSelectedCardIds((items) => items.includes(id) ? items.filter((item) => item !== id) : [...items, id]);
+  function toggleCardSelection(id, event) {
+    const index = visibleCards.findIndex((card) => card.id === id);
+    if (event?.shiftKey && selectionAnchorRef.current) {
+      const anchorIndex = visibleCards.findIndex((card) => card.id === selectionAnchorRef.current);
+      if (anchorIndex >= 0 && index >= 0) {
+        const start = Math.min(anchorIndex, index);
+        const end = Math.max(anchorIndex, index);
+        const rangeIds = visibleCards.slice(start, end + 1).map((card) => card.id);
+        setSelectedCardIds((items) => event.ctrlKey || event.metaKey ? [...new Set([...items, ...rangeIds])] : rangeIds);
+        return;
+      }
+    }
+    if (event?.ctrlKey || event?.metaKey || event?.target?.type === "checkbox") {
+      setSelectedCardIds((items) => items.includes(id) ? items.filter((item) => item !== id) : [...items, id]);
+      selectionAnchorRef.current = id;
+      return;
+    }
+    selectionAnchorRef.current = id;
+    setSelectedCardIds([]);
+    setSelectedCardId(id);
   }
   function deleteChapter(chapter) {
     const removedIds = cards.filter((card) => card.chapterId === chapter.id).map((card) => card.id);
@@ -192,7 +262,8 @@ export default function NotebookView({ notebook, fsrsSettings, onUpdate, onBack,
 
   if (editingCard) {
     return <CardEditor key={editingCard.id} card={editingCard} chapters={chapters} media={notebook.media || []} onAddMedia={addMedia}
-      onSave={saveCard} existingCards={cards} onCancel={() => { setEditingCardId(null); setNewCard(null); setCardAddedNotice(false); }}
+      onSave={saveCard} onSaveAndAdd={saveAndAddCard} existingCards={cards} onCancel={() => { setEditingCardId(null); setNewCard(null); setCardAddedNotice(false); }}
+      onNavigate={(nextTab) => { setEditingCardId(null); setNewCard(null); setCardAddedNotice(false); setTab(nextTab); }}
       addedNotice={cardAddedNotice} onAddChapter={addChapter} onDelete={() => { deleteCards([editingCard.id]); setEditingCardId(null); }}
       onResetSchedule={(id) => resetCardSchedules([id])} />;
   }
@@ -201,12 +272,21 @@ export default function NotebookView({ notebook, fsrsSettings, onUpdate, onBack,
     return <ReviewSession key={`${studyType}-${scopeType}-${scopeChapterId}`}
       cards={studyCards} mode={studyType} settings={fsrsSettings} media={notebook.media || []}
       onReview={handleReview}
+      onEditCard={(cardId) => {
+        setSelectedCardId(cardId);
+        setTab("browse");
+        setReviewing(false);
+        setEditingCardId(cardId);
+      }}
       scopeType={scopeType}
       scopeChapterId={scopeChapterId}
       onComplete={(session) => onUpdate({
         studySessions: [...(notebook.studySessions || []), session],
       })}
-      onExit={() => setReviewing(false)} />;
+      onExit={() => setReviewing(false)}
+      onEscape={onBack}
+      onBrowse={() => { setReviewing(false); setTab("browse"); }}
+      onStudy={() => { setReviewing(false); setTab("study"); }} />;
   }
 
   return (
@@ -226,7 +306,7 @@ export default function NotebookView({ notebook, fsrsSettings, onUpdate, onBack,
         <div class="browse-workspace">
           <aside class="browse-list-panel">
             <div class="browse-tools">
-              <label class="browse-search"><Search size={14} /><input value={search} onInput={event => setSearch(event.currentTarget.value)} placeholder="Search question or answer..." /></label>
+              <label class="browse-search"><Search size={14} /><input ref={searchInputRef} value={search} onInput={event => setSearch(event.currentTarget.value)} placeholder="Search question or answer..." /></label>
               <div class="browse-filters">
                 <select value={chapterFilter} onChange={event => setChapterFilter(event.currentTarget.value)}>
                   <option value="all">All chapters</option>
@@ -255,7 +335,7 @@ export default function NotebookView({ notebook, fsrsSettings, onUpdate, onBack,
                   setTargetChapterId("");
                 }}>Move</button>
                 <button type="button" onClick={() => { resetCardSchedules(selectedCardIds); setSelectedCardIds([]); }}>Reset schedule</button>
-                <button type="button" onClick={() => setSelectedCardIds([])}>Clear</button>
+                <button type="button" onClick={() => { setSelectedCardIds([]); selectionAnchorRef.current = null; }}>Clear</button>
                 <button type="button" class="delete-selected" onClick={() => askDelete("Delete selected cards?", "Permanently delete " + selectedCardIds.length + " selected cards?", () => deleteCards(selectedCardIds))}><Trash2 size={12} /> Delete</button>
               </div>}
             </div>
@@ -264,8 +344,8 @@ export default function NotebookView({ notebook, fsrsSettings, onUpdate, onBack,
                 const chapter = chapters.find(item => item.id === card.chapterId);
                 return (
                   <div key={card.id} class={`browse-card-row ${selectedCard?.id === card.id ? "selected" : ""} ${selectedCardIds.includes(card.id) ? "checked" : ""}`} onContextMenu={(event) => event.preventDefault()}>
-                    <input class="browse-card-checkbox" type="checkbox" aria-label="Select card" checked={selectedCardIds.includes(card.id)} onChange={() => toggleCardSelection(card.id)} />
-                    <button type="button" class="browse-card-select" onClick={() => setSelectedCardId(card.id)}>
+                    <input class="browse-card-checkbox" type="checkbox" aria-label="Select card" checked={selectedCardIds.includes(card.id)} onChange={(event) => toggleCardSelection(card.id, event)} />
+                    <button type="button" class="browse-card-select" onClick={(event) => { if (event.ctrlKey || event.metaKey || event.shiftKey) toggleCardSelection(card.id, event); else { setSelectedCardId(card.id); setSelectedCardIds([]); selectionAnchorRef.current = card.id; } }}>
                       <span class="browse-card-index">{String(index + 1).padStart(2, "0")}</span>
                       <span class="browse-card-copy"><strong>{cardDocumentText(card.front).trim().split("\n")[0] || "Untitled question"}</strong><small>{chapter?.name || "Unassigned"} · Due: {getDueLabel(card)}</small></span>
                     </button>

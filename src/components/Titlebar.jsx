@@ -1,15 +1,43 @@
-import { useState } from "preact/hooks";
+import { useEffect, useState } from "preact/hooks";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { Minus, Square, X, Copy } from "lucide-preact";
 import AppMenu from "./AppMenu";
 
-export default function Titlebar({ onNewProject, onOpenProject, onSaveProject, onPreferences }) {
+export default function Titlebar({ onNewProject, onOpenProject, onSaveProject, onPreferences, onHelp }) {
   const [maximized, setMaximized] = useState(false);
+
+  useEffect(() => {
+    const window = getCurrentWindow();
+    let unlisten;
+
+    const syncMaximized = () => {
+      window.isMaximized()
+        .then(setMaximized)
+        .catch((error) => console.error("Unable to read window state:", error));
+    };
+
+    window.isMaximized()
+      .then(async (isMaximized) => {
+        if (!isMaximized) await window.maximize();
+        setMaximized(await window.isMaximized());
+      })
+      .catch((error) => console.error("Unable to maximize startup window:", error));
+
+    window.onResized(syncMaximized)
+      .then((dispose) => { unlisten = dispose; })
+      .catch((error) => console.error("Unable to observe window size:", error));
+
+    return () => unlisten?.();
+  }, []);
 
   async function toggleMaximize() {
     const window = getCurrentWindow();
-    await window.toggleMaximize();
-    setMaximized(await window.isMaximized());
+    try {
+      await window.toggleMaximize();
+      setMaximized(await window.isMaximized());
+    } catch (error) {
+      console.error("Unable to toggle window state:", error);
+    }
   }
 
   function startWindowDrag(event) {
@@ -19,20 +47,30 @@ export default function Titlebar({ onNewProject, onOpenProject, onSaveProject, o
 
   return (
     <header class="titlebar">
-      <div class="titlebar-brand" data-tauri-drag-region onMouseDown={startWindowDrag}>
+      <div
+        class="titlebar-brand"
+        data-tauri-drag-region
+        onMouseDown={startWindowDrag}
+        onDblClick={toggleMaximize}
+      >
         <span class="titlebar-mark" data-tauri-drag-region>m</span>
         <span data-tauri-drag-region>MemoMaster</span>
       </div>
-      <AppMenu onNewProject={onNewProject} onOpenProject={onOpenProject} onSaveProject={onSaveProject} onPreferences={onPreferences} />
-      <div class="titlebar-drag" data-tauri-drag-region onMouseDown={startWindowDrag} />
+      <AppMenu onNewProject={onNewProject} onOpenProject={onOpenProject} onSaveProject={onSaveProject} onPreferences={onPreferences} onHelp={onHelp} />
+      <div
+        class="titlebar-drag"
+        data-tauri-drag-region
+        onMouseDown={startWindowDrag}
+        onDblClick={toggleMaximize}
+      />
       <div class="window-controls">
-        <button aria-label="Minimize" onClick={() => getCurrentWindow().minimize()}>
+        <button type="button" aria-label="Minimize" onClick={() => getCurrentWindow().minimize()}>
           <Minus size={14} />
         </button>
-        <button aria-label={maximized ? "Restore" : "Maximize"} onClick={toggleMaximize}>
+        <button type="button" aria-label={maximized ? "Restore" : "Maximize"} onClick={toggleMaximize}>
           {maximized ? <Copy size={12} /> : <Square size={12} />}
         </button>
-        <button class="window-close" aria-label="Close" onClick={() => getCurrentWindow().close()}>
+        <button type="button" class="window-close" aria-label="Close" onClick={() => getCurrentWindow().close()}>
           <X size={15} />
         </button>
       </div>

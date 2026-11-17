@@ -232,3 +232,21 @@
 .rich-editor-content th, .study-card-prose th { background: var(--hover); font-weight: 650; }
 .rich-editor-content .katex, .study-card-prose .katex { font-size: 1em; }
 .rich-editor-content .katex-display, .study-card-prose .katex-display { font-size: 1.15em; }
+
+
+/* Searchable chapter selector with keyboard-highlighted results. */
+.card-editor-footer .chapter-picker-label { display: grid; gap: 5px; }
+.chapter-picker { position: relative; width: 260px; }
+.chapter-picker-trigger { display: flex; width: 100%; height: 38px; align-items: center; justify-content: space-between; gap: 10px; padding: 0 11px; border: 1px solid var(--line); border-radius: 3px; background: var(--paper-card); color: var(--ink); cursor: pointer; text-align: left; font: 11px var(--sans); }
+.chapter-picker-trigger:hover, .chapter-picker-trigger[aria-expanded="true"] { border-color: var(--accent); }
+.chapter-picker-caret { color: var(--muted); font: 14px var(--sans); }
+.chapter-picker-popover { position: absolute; z-index: 60; right: 0; bottom: calc(100% + 7px); width: min(320px, 80vw); padding: 8px; border: 1px solid var(--line); border-radius: 4px; background: var(--paper-card); box-shadow: 0 12px 32px rgb(0 0 0 / 18%); }
+.chapter-picker-popover > input { width: 100%; height: 35px; padding: 0 10px; border: 1px solid var(--line); outline: none; background: var(--paper); color: var(--ink); font: 11px var(--sans); }
+.chapter-picker-popover > input:focus { border-color: var(--accent); }
+.chapter-picker-options { display: flex; max-height: 220px; flex-direction: column; gap: 2px; overflow-y: auto; margin-top: 6px; }
+.chapter-picker-options button { min-height: 34px; padding: 0 9px; border: 0; border-radius: 2px; background: transparent; color: var(--ink); cursor: pointer; text-align: left; font: 11px var(--sans); }
+.chapter-picker-options button:hover, .chapter-picker-options button.is-highlighted { background: var(--hover); }
+.chapter-picker-options button[aria-selected="true"] { color: var(--accent); }
+.chapter-picker-options p { margin: 0; padding: 12px 9px; color: var(--muted); font: 10px var(--sans); }
+.chapter-picker-popover > small { display: block; margin: 7px 2px 1px; color: var(--muted); font: 8px var(--mono); }
+@media (max-width: 900px) { .chapter-picker { width: min(260px, 52vw); } }

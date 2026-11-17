@@ -1,4 +1,4 @@
-import { useRef, useState } from "preact/hooks";
+import { useEffect, useRef, useState } from "preact/hooks";
 import { State } from "ts-fsrs";
 import { Check, RotateCw } from "lucide-preact";
 import CardContent from "./CardContent";
@@ -19,7 +19,7 @@ function isDue(card, now) {
   return Number.isNaN(due.getTime()) || due <= now;
 }
 
-export default function ReviewSession({ cards, mode = "scheduled", settings, media = [], onReview, onComplete, scopeType, scopeChapterId, onExit }) {
+export default function ReviewSession({ cards, mode = "scheduled", settings, media = [], onReview, onEditCard, onComplete, scopeType, scopeChapterId, onExit, onEscape, onBrowse, onStudy }) {
   const [sessionCards, setSessionCards] = useState(() => cards.map((card) => ({ ...card })));
   const [queue, setQueue] = useState(() => {
     const now = new Date();
@@ -44,6 +44,52 @@ export default function ReviewSession({ cards, mode = "scheduled", settings, med
   const options = activeCard && mode === "scheduled"
     ? getReviewOptions(activeCard, new Date(), settings)
     : null;
+
+  useEffect(() => {
+    const handleReviewKeys = (event) => {
+      if (event.repeat || event.ctrlKey || event.metaKey) return;
+      if (event.key === "Escape") { event.preventDefault(); onEscape?.(); return; }
+      if (event.altKey) {
+        const key = event.key.toLowerCase();
+        if (key === "b" || key === "s") {
+          event.preventDefault();
+          if (key === "b") onBrowse?.();
+          else onStudy?.();
+        }
+        return;
+      }
+      if (event.target?.closest?.("input, textarea, select, [contenteditable='true'], [role='dialog'], [role='alertdialog']")) return;
+      if (!activeCard || processing) return;
+      if (event.key.toLowerCase() === "e") {
+        event.preventDefault();
+        onEditCard?.(activeCard.id);
+        return;
+      }
+      if (mode === "unscheduled" && event.key === "2") {
+        event.preventDefault();
+        if (!revealed) setRevealed(true);
+        else finishCard("done");
+        return;
+      }
+      if (mode === "unscheduled" && revealed && event.key === "1") {
+        event.preventDefault();
+        repeatCard();
+        return;
+      }
+      if (event.code === "Space" || event.key === " ") {
+        event.preventDefault();
+        if (!revealed) setRevealed(true);
+        else finishCard(mode === "scheduled" ? "good" : "done");
+        return;
+      }
+      if (!revealed || mode !== "scheduled") return;
+      const grades = { "1": "forgot", "2": "difficult", "3": "good", "4": "easy" };
+      const choice = grades[event.key];
+      if (choice) { event.preventDefault(); finishCard(choice); }
+    };
+    window.addEventListener("keydown", handleReviewKeys);
+    return () => window.removeEventListener("keydown", handleReviewKeys);
+  }, [activeCard?.id, revealed, processing, mode, onEditCard, onEscape, onBrowse, onStudy]);
 
   function removeActiveCard() {
     setQueue((items) => items.slice(1));

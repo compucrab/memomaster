@@ -1,0 +1,20 @@
+@reference "tailwindcss";
+
+.help-workspace { display: flex; flex-direction: column; gap: 22px; }
+.help-layout { display: grid; grid-template-columns: 190px minmax(0, 820px); gap: clamp(28px, 5vw, 72px); width: min(100%, 1100px); margin: 10px auto 40px; }
+.help-navigation { display: flex; flex-direction: column; gap: 4px; align-self: start; position: sticky; top: 12px; }
+.help-navigation button { display: flex; align-items: center; gap: 10px; min-height: 38px; padding: 0 12px; border: 1px solid transparent; border-radius: 3px; background: transparent; color: var(--muted); cursor: pointer; text-align: left; font: 11px var(--sans); }
+.help-navigation button:hover, .help-navigation button.is-active { border-color: var(--line); background: var(--surface); color: var(--ink); }
+.help-navigation button.is-active { border-left: 2px solid var(--accent); }
+.help-content { min-width: 0; }
+.help-eyebrow { color: var(--muted); font: 9px var(--mono); letter-spacing: .14em; }
+.help-content > h1 { margin: 10px 0 12px; color: var(--ink); font: 750 30px/1.2 var(--display); letter-spacing: -.045em; }
+.help-intro { max-width: 720px; margin: 0 0 28px; color: var(--muted); font: 13px/1.8 var(--sans); white-space: pre-line; }
+.help-sections { display: grid; gap: 0; }
+.help-section { padding: 18px 0; border-top: 1px solid var(--line); }
+.help-section h2 { margin: 0 0 7px; color: var(--ink); font: 600 13px var(--sans); }
+.help-section p { margin: 0; color: var(--muted); font: 12px/1.8 var(--sans); white-space: pre-line; }
+@media (max-width: 700px) {
+  .help-layout { grid-template-columns: 1fr; gap: 22px; }
+  .help-navigation { position: static; flex-direction: row; flex-wrap: wrap; }
+}

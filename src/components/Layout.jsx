@@ -10,6 +10,7 @@ import SettingsPanel from "./SettingsPanel";
 import ContextMenu from "./ContextMenu";
 import TextPrompt from "./TextPrompt";
 import StudyStatus from "./StudyStatus";
+import HelpPanel from "./HelpPanel";
 import { createMemz, importMemz } from "../services/projectArchive";
 import { loadFsrsSettings, saveFsrsSettings } from "../services/fsrsSettings";
 import { normalizeCardDocument } from "../services/cardDocument";
@@ -33,6 +34,8 @@ const normalizeLibrary = (items) => items.map((notebook) => ({
 export default function Layout() {
   const [notebooks, setNotebooks] = useState([]);
   const [view, setView] = useState("library");
+  const [helpPage, setHelpPage] = useState("guide");
+  const [helpReturnView, setHelpReturnView] = useState("library");
   const [activeId, setActiveId] = useState(null);
   const [query, setQuery] = useState("");
   const [menu, setMenu] = useState(null);
@@ -208,6 +211,23 @@ export default function Layout() {
   }
 
   useEffect(() => {
+    const handleEscape = (event) => {
+      if (event.key !== "Escape" || event.repeat) return;
+      if (prompt) { event.preventDefault(); setPrompt(null); return; }
+      if (deleteNotebook) { event.preventDefault(); setDeleteNotebook(null); return; }
+      if (confirmNewProject) { event.preventDefault(); setConfirmNewProject(false); return; }
+      if (menu) { event.preventDefault(); setMenu(null); return; }
+      if (["help", "settings", "status"].includes(view)) {
+        event.preventDefault();
+        setView("library");
+        setActiveId(null);
+      }
+    };
+    window.addEventListener("keydown", handleEscape, true);
+    return () => window.removeEventListener("keydown", handleEscape, true);
+  }, [view, prompt, deleteNotebook, confirmNewProject, menu]);
+
+  useEffect(() => {
     const shortcuts = (event) => {
       if (!(event.ctrlKey || event.metaKey)) return;
       const key = event.key.toLowerCase();
@@ -215,6 +235,7 @@ export default function Layout() {
       else if (key === "n") { event.preventDefault(); createNotebook(); }
       else if (key === "o" && !event.shiftKey) { event.preventDefault(); openProjectFile(); }
       else if (key === "s") { event.preventDefault(); saveProject(); }
+      else if (key === ",") { event.preventDefault(); setView("settings"); setActiveId(null); }
     };
     window.addEventListener("keydown", shortcuts);
     return () => window.removeEventListener("keydown", shortcuts);
@@ -228,6 +249,7 @@ export default function Layout() {
           onOpenProject={openProjectFile}
           onSaveProject={saveProject}
           onPreferences={() => { setView("settings"); setActiveId(null); }}
+          onHelp={(page) => { setHelpReturnView(view === "notebook" ? "notebook" : "library"); setHelpPage(page); setView("help"); }}
         />
         {view === "library" && (
           <Topbar title="Your library" query={query} onQueryChange={setQuery} onCreate={createNotebook} onStudyStatus={() => { setView("status"); setActiveId(null); }} />
@@ -235,6 +257,8 @@ export default function Layout() {
         <main class="app-main">
           {view === "settings" ? (
             <SettingsPanel theme={theme} onThemeChange={setTheme} fsrsSettings={fsrsSettings} onFsrsSettingsChange={setFsrsSettings} onBack={() => setView("library")} />
+          ) : view === "help" ? (
+            <HelpPanel page={helpPage} onPageChange={setHelpPage} backLabel={helpReturnView === "notebook" ? "BACK TO NOTEBOOK" : "BACK TO LIBRARY"} onBack={() => setView(helpReturnView)} />
           ) : view === "status" ? (
             <StudyStatus notebooks={notebooks} settings={fsrsSettings} onBack={() => setView("library")} />
           ) : view === "notebook" && activeNotebook ? (
