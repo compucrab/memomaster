@@ -48,6 +48,7 @@ export function renderCardDocument(value = "", media = []) {
 export function cardDocumentText(value) {
   if (typeof value === "string") return value;
   if (!value || typeof value !== "object") return "";
-  if (Array.isArray(value)) return value.map(cardDocumentText).join(" ");
-  return [value.text || "", ...(value.content || []).map(cardDocumentText)].join(" ");
+  if (Array.isArray(value)) return value.map(cardDocumentText).filter(Boolean).join(" ");
+  if (typeof value.text === "string") return value.text;
+  return (value.content || []).map(cardDocumentText).filter(Boolean).join(" ");
 }
