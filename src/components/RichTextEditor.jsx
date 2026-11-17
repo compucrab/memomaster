@@ -76,7 +76,11 @@ export default function RichTextEditor({ label, value = "", placeholder, onChang
     if (selection.empty || selection.node) { setSelectionPosition(null); return; }
     try {
       const start = instance.view.coordsAtPos(selection.from), end = instance.view.coordsAtPos(selection.to);
-      setSelectionPosition({ left: Math.max(8, Math.min(window.innerWidth - 330, (start.left + end.left) / 2)), top: Math.max(8, start.top - 48) });
+      const center = (start.left + end.left) / 2;
+      const left = Math.max(8, Math.min(Math.max(8, window.innerWidth - 8), center));
+      const preferredTop = start.top - 54;
+      const top = preferredTop >= 8 ? preferredTop : Math.min(window.innerHeight - 56, end.bottom + 8);
+      setSelectionPosition({ left, top: Math.max(8, top) });
     } catch { setSelectionPosition(null); }
   }
   function openInsert(type, nodePosition = null) {
