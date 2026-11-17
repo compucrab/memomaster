@@ -155,9 +155,10 @@ Run the frontend build and regression tests:
 ```powershell
 npm run build
 npm test
+cargo test --manifest-path src-tauri/Cargo.toml
 ```
 
-The Node test suite covers FSRS rating semantics, learning/relearning steps, preview-versus-saved intervals, retention and maximum-interval configuration, study-day rollover, persisted review snapshots, canonical Tiptap document handling, Markdown rendering, archive round trips, and archive corruption rejection. Browser-dependent Tiptap HTML serialization is skipped by the Node runner and is exercised by the running app. The tests do not establish exact Anki parity; shared golden fixtures must still be executed against Anki's own scheduler. Rust database recovery and the native backup file lifecycle require desktop integration testing in addition to Node tests.
+The Node test suite covers FSRS rating semantics, learning/relearning steps, preview-versus-saved intervals, retention and maximum-interval configuration, study-day rollover, persisted review snapshots, canonical Tiptap document handling, Markdown rendering, archive round trips, and archive corruption rejection. Browser-dependent Tiptap HTML serialization is skipped by the Node runner and is exercised by the running app. The tests do not establish exact Anki parity; shared golden fixtures must still be executed against Anki's own scheduler. Rust backup-retention logic has a unit test. SQLite corruption recovery, Tauri IPC, native file operations, and actual desktop restore flows still require manual desktop integration testing.
 
 ## Data flow
 
