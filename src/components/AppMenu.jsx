@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "preact/hooks";
 import {
-  ChevronDown, FolderPlus, FolderOpen, SaveAll, Settings2,
+  ChevronDown, FolderPlus, FolderOpen, SaveAll, Settings2, BookOpen, Keyboard, Info,
 } from "lucide-preact";
 
 const groups = [
@@ -12,9 +12,14 @@ const groups = [
     { separator: true },
     { label: "Preferences", Icon: Settings2, action: "preferences" },
   ] },
+  { name: "Help", items: [
+    { label: "User guide", Icon: BookOpen, action: "guide" },
+    { label: "Keyboard shortcuts", Icon: Keyboard, action: "shortcuts" },
+    { label: "About MemoMaster", Icon: Info, action: "about" },
+  ] },
 ];
 
-export default function AppMenu({ onNewProject, onOpenProject, onSaveProject, onPreferences }) {
+export default function AppMenu({ onNewProject, onOpenProject, onSaveProject, onPreferences, onHelp }) {
   const [active, setActive] = useState(null);
   const root = useRef(null);
   useEffect(() => {
@@ -36,6 +41,9 @@ export default function AppMenu({ onNewProject, onOpenProject, onSaveProject, on
       openProject: onOpenProject,
       saveProject: onSaveProject,
       preferences: onPreferences,
+      guide: () => onHelp?.("guide"),
+      shortcuts: () => onHelp?.("shortcuts"),
+      about: () => onHelp?.("about"),
     };
     actions[action]?.();
   }
