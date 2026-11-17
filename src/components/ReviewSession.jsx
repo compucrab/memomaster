@@ -1,4 +1,4 @@
-import { useState } from "preact/hooks";
+import { useRef, useState } from "preact/hooks";
 import { State } from "ts-fsrs";
 import { Check, RotateCw } from "lucide-preact";
 import CardContent from "./CardContent";
@@ -37,6 +37,7 @@ export default function ReviewSession({ cards, mode = "scheduled", settings, onR
   });
   const [revealed, setRevealed] = useState(false);
   const [reviewed, setReviewed] = useState(0);
+  const reviewedCardIds = useRef(new Set());
   const [processing, setProcessing] = useState(false);
   const [reviewError, setReviewError] = useState("");
   const activeCard = sessionCards.find((card) => card.id === queue[0]);
@@ -58,6 +59,7 @@ export default function ReviewSession({ cards, mode = "scheduled", settings, onR
         const reviewedAt = new Date();
         const result = scheduleReview(activeCard, choice, reviewedAt, settings);
         onReview(activeCard.id, result.fsrs, result.log, mode);
+        reviewedCardIds.current.add(activeCard.id);
         setSessionCards((items) => items.map((card) => card.id === activeCard.id ? { ...card, fsrs: result.fsrs } : card));
         setReviewed((count) => count + 1);
         if (isShortTermPending({ fsrs: result.fsrs }, reviewedAt)) {
@@ -76,7 +78,7 @@ export default function ReviewSession({ cards, mode = "scheduled", settings, onR
       if (mode === "scheduled" && queue.length === 1) {
         onComplete?.({
           completedAt: new Date().toISOString(),
-          reviewedCards: reviewed + 1,
+          reviewedCards: reviewedCardIds.current.size,
           scopeType,
           chapterId: scopeType === "chapter" ? scopeChapterId : null,
         });
