@@ -31,10 +31,11 @@ export function getStudyActivity(notebooks = [], now = new Date(), rolloverHour 
   });
 
   const today = studyDayKey(now, rolloverHour);
-  const start = shiftKey(today, -370);
+  const todayDate = dateFromKey(today);
+  const daysToShow = 52 * 7 + todayDate.getDay() + 1;
+  const start = shiftKey(today, -(daysToShow - 1));
   const firstDate = dateFromKey(start);
-  firstDate.setDate(firstDate.getDate() - firstDate.getDay());
-  const days = Array.from({ length: 371 + (dateFromKey(start).getDay()) }, (_, index) => {
+  const days = Array.from({ length: daysToShow }, (_, index) => {
     const date = new Date(firstDate);
     date.setDate(firstDate.getDate() + index);
     const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
@@ -54,14 +55,10 @@ export function getStudyActivity(notebooks = [], now = new Date(), rolloverHour 
   let longestStreak = 0;
   let runningStreak = 0;
   let previous = null;
-  for (const day of days) {
-    if (day.cards > 0) {
-      runningStreak = previous && shiftKey(previous, 1) === day.key ? runningStreak + 1 : 1;
-      longestStreak = Math.max(longestStreak, runningStreak);
-    } else {
-      runningStreak = 0;
-    }
-    previous = day.key;
+  for (const key of [...activeDays].sort()) {
+    runningStreak = previous && shiftKey(previous, 1) === key ? runningStreak + 1 : 1;
+    longestStreak = Math.max(longestStreak, runningStreak);
+    previous = key;
   }
 
   return {
