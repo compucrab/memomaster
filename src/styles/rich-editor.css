@@ -85,3 +85,10 @@
 .rich-editor-content .tiptap-mathematics-render[data-type="block-math"] { font-size: 1.35em; }
 
 .rich-editor-content > * { text-align: left !important; }
+
+/* Keep inline math at the surrounding text size, including KaTeX's inner wrapper. */
+.rich-editor-content .tiptap-mathematics-render[data-type="inline-math"],
+.rich-editor-content .tiptap-mathematics-render[data-type="inline-math"] .katex {
+  font-size: 1em !important;
+}
+.rich-editor-content a { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
