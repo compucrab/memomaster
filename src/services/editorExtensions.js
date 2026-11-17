@@ -2,6 +2,7 @@ import { Node } from "@tiptap/core";
 import Image from "@tiptap/extension-image";
 import Paragraph from "@tiptap/extension-paragraph";
 import Heading from "@tiptap/extension-heading";
+import { TextStyle } from "@tiptap/extension-text-style";
 import { Mathematics } from "@tiptap/extension-mathematics";
 const safeMediaUrl = (value = "") => /^(https?:|data:image\/(png|jpe?g|gif|webp);base64,)/i.test(value) ? value : "";
 export const CardImage = Image.extend({
@@ -42,3 +43,19 @@ export const CardVideo = Node.create({
   renderMarkdown: (node) => { const url = safeMediaUrl(node?.attrs?.url); return url ? `@[video](${url})` : ""; },
 });
 export const CardMath = Mathematics.configure({ katexOptions: { throwOnError: false, strict: "ignore" } });
+
+export const CardTextStyle = TextStyle.extend({
+  addAttributes() {
+    return {
+      ...this.parent?.(),
+      fontSize: {
+        default: null,
+        parseHTML: element => element.style.fontSize || null,
+        renderHTML: attributes => {
+          const size = String(attributes.fontSize || "");
+          return /^\\d{1,2}(?:px|pt|rem|em)$/.test(size) ? { style: `font-size:${size}` } : {};
+        },
+      },
+    };
+  },
+});
