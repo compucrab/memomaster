@@ -61,7 +61,7 @@ export const CardTextStyle = TextStyle.extend({
     const styles = [];
     const color = String(attrs.color || "");
     const size = String(attrs.fontSize || "");
-    if (/^(#[0-9a-f]{3,8}|rgba?\\([\\d.% ,]+\\)|hsla?\\([\\d.% ,]+\\)|[a-z]{3,20})$/i.test(color)) styles.push("color:" + color);
+    if (/^(#[0-9a-f]{3,8}|rgba?\([\d.% ,]+\)|hsla?\([\d.% ,]+\)|[a-z]{3,20})$/i.test(color)) styles.push("color:" + color);
     if (/^\d{1,2}(?:px|pt|rem|em)$/.test(size)) styles.push("font-size:" + size);
     const content = helpers.renderChildren(mark);
     return styles.length ? '<span style="' + styles.join(";") + '">' + content + "</span>" : content;
