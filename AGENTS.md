@@ -21,7 +21,7 @@ The hierarchy is Notebook → Chapter → Flashcard. Topics have been removed; l
 - Notebook view has Browse and Study tabs. Browse supports search, chapter filtering, next-due-date display, preview, editing, multi-selection, bulk deletion, chapter reassignment, and schedule reset.
 - Do not add a card right-click menu. Notebook cards in the library still use a right-click context menu for open, rename, delete, and cover colour.
 - Exact duplicate questions are blocked; similar questions warn and allow an explicit Save anyway choice.
-- Study sessions can cover a whole notebook or one chapter.
+- Scheduled review and unscheduled practice can cover a whole notebook or one chapter.
 - Scheduled study includes due cards and updates FSRS-6 state and reviewHistory.
 - Scheduled ratings are Again, Hard, Good, and Easy, mapped directly to FSRS ratings. Queue behaviour is based on the resulting scheduled interval, not on the rating label: cards with a next interval of 10 minutes or less immediately return at the end of the active queue; longer intervals leave the queue until due.
 - Unscheduled practice can use any card, supports Repeat and Done, records practiceHistory, and must not alter FSRS state or due dates.
