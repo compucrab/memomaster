@@ -211,6 +211,23 @@ export default function Layout() {
   }
 
   useEffect(() => {
+    const handleEscape = (event) => {
+      if (event.key !== "Escape" || event.repeat) return;
+      if (prompt) { event.preventDefault(); setPrompt(null); return; }
+      if (deleteNotebook) { event.preventDefault(); setDeleteNotebook(null); return; }
+      if (confirmNewProject) { event.preventDefault(); setConfirmNewProject(false); return; }
+      if (menu) { event.preventDefault(); setMenu(null); return; }
+      if (["help", "settings", "status"].includes(view)) {
+        event.preventDefault();
+        setView("library");
+        setActiveId(null);
+      }
+    };
+    window.addEventListener("keydown", handleEscape, true);
+    return () => window.removeEventListener("keydown", handleEscape, true);
+  }, [view, prompt, deleteNotebook, confirmNewProject, menu]);
+
+  useEffect(() => {
     const shortcuts = (event) => {
       if (!(event.ctrlKey || event.metaKey)) return;
       const key = event.key.toLowerCase();
