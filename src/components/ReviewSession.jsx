@@ -92,25 +92,6 @@ export default function ReviewSession({ cards, mode = "scheduled", settings, onR
     setRevealed(false);
   }
 
-  if (!queue.length && pending.length) {
-    const nextCard = pending.map((id) => sessionCards.find((card) => card.id === id)).filter(Boolean)
-      .sort((a, b) => new Date(a.fsrs.due) - new Date(b.fsrs.due))[0];
-    const remaining = Math.max(0, new Date(nextCard?.fsrs?.due || clockNow).getTime() - clockNow.getTime());
-    return (
-      <section class="review-session">
-        <header class="review-session-header"><button class="back-link" onClick={onExit}>← EXIT REVIEW</button><span>LEARNING STEP · {pending.length} WAITING</span></header>
-        <div class="review-complete review-waiting">
-          <Clock3 size={30} />
-          <h1>Learning step in progress</h1>
-          <p>The next card will return when its scheduled learning step is due.</p>
-          <strong>{formatInterval(new Date(clockNow.getTime() + remaining), clockNow)}</strong>
-          <small>Next due: {nextCard?.fsrs?.due ? new Date(nextCard.fsrs.due).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—"}</small>
-          <button class="study-primary" onClick={onExit}>Finish session for now</button>
-        </div>
-      </section>
-    );
-  }
-
   if (!queue.length) {
     return (
       <section class="review-session">
