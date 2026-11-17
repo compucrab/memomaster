@@ -14,7 +14,7 @@ export const CardImage = Image.extend({
   inline: false,
   addAttributes() { return { ...this.parent?.(), src: { default: null }, alt: { default: null }, title: { default: null }, width: { default: 420 } }; },
   addNodeView() {
-    return ({ node, getPos, editor, HTMLAttributes, updateAttributes }) => {
+    return ({ node, getPos, editor }) => {
       const dom = document.createElement("span");
       dom.className = "study-image-frame";
       dom.contentEditable = "false";
@@ -32,16 +32,19 @@ export const CardImage = Image.extend({
       };
       sync(node);
       let startX = 0, startWidth = 0;
-      const move = event => updateAttributes({ width: Math.max(40, Math.min(1600, startWidth + event.clientX - startX)) });
+      const move = event => { const pos = getPos(); if (typeof pos !== "number") return; const width = Math.max(40, Math.min(1600, startWidth + event.clientX - startX)); const current = editor.state.doc.nodeAt(pos); if (!current || current.type.name !== "image") return; editor.view.dispatch(editor.state.tr.setNodeMarkup(pos, undefined, { ...current.attrs, width })); };
       const up = () => {
         window.removeEventListener("pointermove", move);
         window.removeEventListener("pointerup", up);
+        window.removeEventListener("pointercancel", up);
       };
       handle.addEventListener("pointerdown", event => {
         event.preventDefault(); event.stopPropagation();
+        handle.setPointerCapture?.(event.pointerId);
         startX = event.clientX; startWidth = img.getBoundingClientRect().width;
         window.addEventListener("pointermove", move);
         window.addEventListener("pointerup", up, { once: true });
+        window.addEventListener("pointercancel", up, { once: true });
       });
       return { dom, update(updated) { if (updated.type !== node.type) return false; node = updated; sync(updated); return true; }, destroy: up };
     };
