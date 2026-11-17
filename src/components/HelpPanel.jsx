@@ -8,9 +8,9 @@ const pages = {
       ["Notebooks keep subjects separate", "Create a notebook for a subject or goal, then open it to manage its cards. For example, you might have separate notebooks for history, programming, or a language."],
       ["Cards are questions and answers", "Write a clear question on the Question side and its answer on the Answer side. Keep one idea per card where possible. Use headings, lists, images, equations, tables, and video links when they help explain the idea."],
       ["Chapters organise cards", "Assign a card to a chapter when you want to group related material. Leave it as Unassigned if you do not need chapters. You can search for a chapter while editing a card."],
-      ["Browse to find and edit", "The Browse tab lists your cards. Select a card to preview it, switch between Question and Answer, or choose Edit card to make changes. The search field is focused when Browse opens, so you can start typing immediately."],
-      ["Edit questions and answers quickly", "While editing a card, press Alt + Q to switch to the Question side or Alt + W to switch to the Answer side. The text editor is focused when the card editor opens. Search fields and text boxes in dialogs are focused automatically when they appear."],
-      ["Study to practise remembering", "Open the Study tab and choose Scheduled to review cards that are due, or Unscheduled to practise without changing their schedule. Reveal the answer before rating how well you remembered it."],
+      ["Browse to find and edit", "The Browse tab lists your cards. Select a card to preview it, switch between Question and Answer, or choose Edit card to make changes. Press Alt + B to open Browse from Study. Press Escape to return to the library. The search field is focused when Browse opens, so you can start typing immediately."],
+      ["Edit questions and answers quickly", "While editing a card, press Alt + Q to switch to the Question side or Alt + W to switch to the Answer side. Press Escape and confirm to discard a new card or unsaved edits. The text editor is focused when the card editor opens. Search fields and text boxes in dialogs are focused automatically when they appear."],
+      ["Study to practise remembering", "Open the Study tab or press Alt + S to choose Scheduled reviews or Unscheduled practice. Reveal the answer before rating how well you remembered it. Press Alt + B to return to Browse, or Escape to return to the library."],
       ["Understand the four ratings", "Again means you forgot or could not recall the answer. Hard means you remembered it with difficulty. Good means you recalled it correctly. Easy means it was effortless. MemoMaster uses these ratings to plan future scheduled reviews."],
       ["Your work is saved automatically", "Changes are saved in the app's local library. Use File → Save project to create a portable .memz backup at a location you choose. MemoMaster also creates an automatic backup when you close the app."]
     ]
@@ -21,8 +21,9 @@ const pages = {
     sections: [
       ["Notebook", `A — Add a new card
 E — Edit the selected card in Browse
-S — Open Study
-B — Open Browse
+Alt + S — Open Study
+Alt + B — Open Browse
+Escape — Return to the library from Browse or Study
 Ctrl + Enter — Save the current card and continue with a new card while editing
 Ctrl + D — Open the chapter picker while editing a card`],
       ["Scheduled review", `E — Edit the active card and return to Browse
@@ -34,10 +35,12 @@ Space — Reveal the answer; when it is visible, rate Good`],
       ["Unscheduled practice", "Space — Reveal the answer; when it is visible, mark the card Done."],
       ["Editor", `Alt + Q — Switch to the Question side while editing a card
 Alt + W — Switch to the Answer side while editing a card
+Escape — Ask before discarding a new card or unsaved edits
 Ctrl + Space — Open the editor command palette
 ↑ / ↓ — Move through the command palette or chapter picker; the highlighted command stays in view
 Enter — Choose the highlighted option`],
       ["Application", `Ctrl + , — Open Preferences
+Escape — Return from Preferences, the guide, shortcuts, About, or study status to the library
 Ctrl + S — Save project (.memz) and choose a destination`]
     ]
   },
