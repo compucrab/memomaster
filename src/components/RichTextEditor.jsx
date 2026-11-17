@@ -58,6 +58,17 @@ export default function RichTextEditor({ label, value = "", placeholder, onChang
     if (asset?.id) mediaRef.current = [...mediaRef.current.filter(item => item.id !== asset.id), asset];
     return asset;
   };
+  function syncMathSizes(instance) {
+    if (!instance) return;
+    instance.state.doc.descendants((node, pos) => {
+      if (node.type.name !== "inlineMath" && node.type.name !== "blockMath") return;
+      const dom = instance.view.nodeDOM(pos);
+      if (!dom || dom.nodeType !== 1) return;
+      const size = Math.max(10, Math.min(48, Number(node.attrs.fontSize) || 16));
+      dom.style.fontSize = size + "px";
+      dom.setAttribute("data-font-size", String(size));
+    });
+  }
 
   function positionAt(pos) {
     const instance = editorRef.current;
@@ -206,6 +217,8 @@ export default function RichTextEditor({ label, value = "", placeholder, onChang
     window.addEventListener("keydown", closeOnEscape, true);
     return () => window.removeEventListener("keydown", closeOnEscape, true);
   }, [tableZoomHtml]);
+
+    useEffect(() => { if (editor) syncMathSizes(editor); }, [editor, revision]);
 
     useEffect(() => { if (paletteOpen) paletteInputRef.current?.focus(); }, [paletteOpen]);
 
