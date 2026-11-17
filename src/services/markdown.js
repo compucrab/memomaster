@@ -85,7 +85,8 @@ function renderInline(source) {
   );
 }
 
-export function renderMarkdown(source = "", media = []) {\n  const mediaMap = new Map((Array.isArray(media) ? media : []).map(asset => [asset.id, asset]));
+export function renderMarkdown(source = "", media = []) {
+  const mediaMap = new Map((Array.isArray(media) ? media : []).map(asset => [asset.id, asset]));
   const output = [];
   let paragraph = [];
   let list = null;
