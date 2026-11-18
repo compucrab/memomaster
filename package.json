@@ -8,7 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "tauri": "tauri",
-    "tauri:store": "tauri build --no-bundle && tauri bundle --config src-tauri/tauri.microsoftstore.conf.json",
+    "tauri:msix": "node scripts/package-msix.mjs",
     "test": "node --test"
   },
   "dependencies": {
