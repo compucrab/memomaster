@@ -75,24 +75,18 @@ async function createZip(files) {
 }
 
 function cleanNotebook(notebook) {
-  const { description, markdown, ...metadata } = notebook;
-  const cards = notebook.flashcards ?? (markdown ? [{ id: "legacy-card", front: "What is this note about?", back: markdown }] : []);
+  const cards = Array.isArray(notebook.flashcards) ? notebook.flashcards : [];
   return {
-    ...metadata,
-    chapters: Array.isArray(notebook.chapters)
-      ? notebook.chapters.map(({ topics, ...chapter }) => chapter)
-      : [],
+    ...notebook,
+    chapters: Array.isArray(notebook.chapters) ? notebook.chapters : [],
     media: Array.isArray(notebook.media) ? notebook.media : [],
-    flashcards: cards.map((card, index) => {
-      const { topicId, ...cleanCard } = card;
-      return {
-        ...cleanCard,
-        id: card.id || `card-${index + 1}`,
-        front: card.front ?? "",
-        back: card.back ?? "",
-        chapterId: card.chapterId ?? "",
-      };
-    }),
+    flashcards: cards.map((card, index) => ({
+      ...card,
+      id: card.id || `card-${index + 1}`,
+      front: card.front ?? "",
+      back: card.back ?? "",
+      chapterId: card.chapterId ?? "",
+    })),
     cards: cards.length,
   };
 }
@@ -178,7 +172,7 @@ export async function importMemz(input) {
   const manifestText = files.get("manifest.json");
   if (!manifestText) throw new Error("Missing MemoMaster manifest");
   const manifest = JSON.parse(manifestText);
-  if (manifest.format !== "memomaster" || ![1, 2, 3].includes(manifest.version) || !Array.isArray(manifest.notebooks)) {
+  if (manifest.format !== "memomaster" || manifest.version !== 3 || !Array.isArray(manifest.notebooks)) {
     throw new Error("Unsupported MemoMaster project format");
   }
   return manifest.notebooks.map((id) => {
@@ -187,17 +181,11 @@ export async function importMemz(input) {
     if (!metadata) throw new Error(`Notebook data is missing: ${id}`);
     const notebook = JSON.parse(metadata);
     if (notebook.id !== id || typeof notebook.title !== "string") throw new Error("Invalid notebook metadata");
-    let flashcards;
-    if (manifest.version === 1) {
-      const oldMarkdown = files.get(`notebooks/${id}/cards/first-card.md`) ?? "";
-      flashcards = oldMarkdown ? [{ id: "legacy-card", front: "What is this note about?", back: oldMarkdown }] : [];
-    } else {
-      flashcards = [...files.entries()]
-        .filter(([path]) => path.startsWith(`notebooks/${id}/cards/`) && path.endsWith(".json"))
-        .map(([, value]) => JSON.parse(value));
-    }
-    const media = manifest.version === 1 ? [] : [...files.entries()]
-      .filter(([path]) => path.startsWith(`notebooks/${id}/media/`) && path.endsWith(".json"))
+    const flashcards = [...files.entries()]
+      .filter(([path]) => path.startsWith("notebooks/" + id + "/cards/") && path.endsWith(".json"))
+      .map(([, value]) => JSON.parse(value));
+    const media = [...files.entries()]
+      .filter(([path]) => path.startsWith("notebooks/" + id + "/media/") && path.endsWith(".json"))
       .map(([, value]) => JSON.parse(value));
     return cleanNotebook({ ...notebook, flashcards, media });
   });

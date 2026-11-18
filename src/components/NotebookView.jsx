@@ -30,13 +30,12 @@ function getDueLabel(card) {
 }
 
 export default function NotebookView({ notebook, fsrsSettings, onUpdate, onBack, onRequestText }) {
-  const cards = notebook.flashcards ?? (notebook.markdown ? [{ id: "legacy-card", front: "What is this note about?", back: notebook.markdown }] : []);
+  const cards = Array.isArray(notebook.flashcards) ? notebook.flashcards : [];
   const chapters = Array.isArray(notebook.chapters) ? notebook.chapters : [];
   const [tab, setTab] = useState("browse");
   const [previewSide, setPreviewSide] = useState("question");
   const [selectedCardId, setSelectedCardId] = useState(cards[0]?.id || null);
   const [search, setSearch] = useState("");
-  const searchInputRef = useRef(null);
   const selectionAnchorRef = useRef(null);
   const [chapterFilter, setChapterFilter] = useState("all");
   const [editingCardId, setEditingCardId] = useState(null);
@@ -51,10 +50,6 @@ export default function NotebookView({ notebook, fsrsSettings, onUpdate, onBack,
   const [targetChapterId, setTargetChapterId] = useState("");
 
   const editingCard = cards.find(card => card.id === editingCardId) || (newCard?.id === editingCardId ? newCard : null);
-
-  useEffect(() => {
-    if (tab === "browse" && !editingCardId && !reviewing) searchInputRef.current?.focus();
-  }, [tab, editingCardId, reviewing]);
 
   useEffect(() => {
     if (!cardAddedNotice) return;
@@ -306,7 +301,7 @@ export default function NotebookView({ notebook, fsrsSettings, onUpdate, onBack,
         <div class="browse-workspace">
           <aside class="browse-list-panel">
             <div class="browse-tools">
-              <label class="browse-search"><Search size={14} /><input ref={searchInputRef} value={search} onInput={event => setSearch(event.currentTarget.value)} placeholder="Search question or answer..." /></label>
+              <label class="browse-search"><Search size={14} /><input value={search} onInput={event => setSearch(event.currentTarget.value)} placeholder="Search question or answer..." /></label>
               <div class="browse-filters">
                 <select value={chapterFilter} onChange={event => setChapterFilter(event.currentTarget.value)}>
                   <option value="all">All chapters</option>
@@ -402,11 +397,13 @@ export default function NotebookView({ notebook, fsrsSettings, onUpdate, onBack,
                 </select>
               </label>}
             </div>
-            <div class="study-queue-counts flex items-center gap-6" aria-label="Card counts">
-              <span class="flex items-center gap-2 text-sky-500"><strong>{queueCounts.new}</strong><small>New</small></span>
-              <span class="flex items-center gap-2 text-red-500"><strong>{queueCounts.learning}</strong><small>Learning</small></span>
-              <span class="flex items-center gap-2 text-green-500"><strong>{queueCounts.review}</strong><small>Review</small></span>
-            </div>
+{studyType === "scheduled" && (
+              <div class="study-queue-counts" aria-label="Card counts">
+                <div class="study-queue-count new"><strong>{queueCounts.new}</strong><span>New</span></div>
+                <div class="study-queue-count learning"><strong>{queueCounts.learning}</strong><span>Learning</span></div>
+                <div class="study-queue-count review"><strong>{queueCounts.review}</strong><span>Review</span></div>
+              </div>
+            )}
             <div class="study-scope-summary"><span>{studyCards.length} cards in this session</span><span>{studyType === "scheduled" ? "Due cards only" : "All cards · timeline unchanged"}</span></div>
             <button class="study-primary study-start-button" disabled={!studyCards.length} onClick={() => setReviewing(true)}>
               <GraduationCap size={15} /> {studyCards.length ? "Start studying" : "No cards to study"}

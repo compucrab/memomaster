@@ -27,8 +27,11 @@ const projectFilter = [{ name: "MemoMaster project", extensions: ["memz"] }];
 const normalizeName = (value) => String(value || "").trim().toLocaleLowerCase();
 const normalizeLibrary = (items) => items.map((notebook) => ({
   ...notebook,
-  chapters: (notebook.chapters || []).map(({ topics, ...chapter }) => chapter),
-  ...(Array.isArray(notebook.flashcards) ? { flashcards: notebook.flashcards.map((card) => { const cleanCard = { ...card }; delete cleanCard.topicId; cleanCard.front = normalizeCardDocument(cleanCard.front); cleanCard.back = normalizeCardDocument(cleanCard.back); return cleanCard; }) } : {}),
+  ...(Array.isArray(notebook.flashcards) ? { flashcards: notebook.flashcards.map((card) => ({
+    ...card,
+    front: normalizeCardDocument(card.front),
+    back: normalizeCardDocument(card.back),
+  })) } : {}),
 }));
 
 export default function Layout() {
@@ -47,6 +50,10 @@ export default function Layout() {
   const [notice, setNotice] = useState("");
   const [ready, setReady] = useState(false);
   const [projectPath, setProjectPath] = useState(savedProjectPath);
+  const [backupItems, setBackupItems] = useState([]);
+  const [backupDialog, setBackupDialog] = useState(false);
+  const [backupToRestore, setBackupToRestore] = useState(null);
+  const [recoveryRequired, setRecoveryRequired] = useState(false);
   const notebooksRef = useRef(notebooks);
   notebooksRef.current = notebooks;
   const saveQueueRef = useRef(Promise.resolve());
@@ -86,20 +93,35 @@ export default function Layout() {
         if (!mounted) return;
         console.error("Unable to load local library:", error);
         setNotebooks([]);
-        setNotice("Could not load the saved library. Changes may not persist.");
+        setRecoveryRequired(true);
+        setNotice("Could not load the saved library: " + (error.message || error));
+        invoke("list_automatic_backups").then((items) => { setBackupItems(items); setBackupDialog(true); }).catch((backupError) => console.error("Could not list recovery backups:", backupError));
         setReady(true);
       });
     return () => { mounted = false; };
   }, []);
 
   useEffect(() => {
-    if (!ready) return;
+    if (!ready || recoveryRequired) return;
     const timeout = window.setTimeout(() => {
       persistLibrary(notebooks)
         .catch((error) => setNotice(`Could not save local changes: ${error}`));
-    }, 250);
+    }, 100);
     return () => window.clearTimeout(timeout);
-  }, [notebooks, ready]);
+  }, [notebooks, ready, recoveryRequired]);
+
+  useEffect(() => {
+    const flushPendingSave = () => {
+      if (ready && !recoveryRequired) persistLibrary(notebooksRef.current).catch((error) => console.error("Unable to flush library during app suspension:", error));
+    };
+    const handleVisibilityChange = () => { if (document.visibilityState === "hidden") flushPendingSave(); };
+    window.addEventListener("pagehide", flushPendingSave);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      window.removeEventListener("pagehide", flushPendingSave);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [ready, recoveryRequired]);
 
   useEffect(() => {
     if (!notice) return;
@@ -116,8 +138,15 @@ export default function Layout() {
           setNotice("The library is still loading. Try closing again in a moment.");
           return;
         }
+        if (recoveryRequired) {
+          setNotice("Restore a backup or explicitly start with an empty library before closing.");
+          return;
+        }
         await persistLibrary(notebooksRef.current);
         const archive = await createMemz(notebooksRef.current);
+        const verified = await importMemz(archive);
+        const expected = notebooksRef.current;
+        if (verified.length !== expected.length || verified.some((notebook, index) => notebook.id !== expected[index].id || notebook.flashcards.length !== (expected[index].flashcards || []).length)) throw new Error("Automatic backup verification failed. The backup was not saved.");
         const backupPath = await invoke("create_automatic_backup", { bytes: Array.from(archive) });
         console.info("Automatic project backup created:", backupPath);
         await getCurrentWindow().destroy();
@@ -127,7 +156,7 @@ export default function Layout() {
     }).then((dispose) => { unlisten = dispose; })
       .catch((error) => console.error("Could not register close handler:", error));
     return () => unlisten?.();
-  }, [ready]);
+  }, [ready, recoveryRequired]);
 
   function requestText({ title, value = "", placeholder, submitLabel, onSubmit }) {
     setPrompt({ title, value, placeholder, submitLabel, onSubmit });
@@ -157,6 +186,7 @@ export default function Layout() {
     });
   }
   function startNewProject() {
+    setRecoveryRequired(false);
     setNotebooks([]);
     setActiveId(null);
     setView("library");
@@ -183,6 +213,7 @@ export default function Layout() {
       if (!path) return;
       const imported = await importMemz(await readBytes(path));
       setNotebooks(normalizeLibrary(imported));
+      setRecoveryRequired(false);
       setActiveId(null);
       setView("library");
       setProjectPath(path);
@@ -190,6 +221,34 @@ export default function Layout() {
     } catch (error) {
       setNotice(`Could not open project: ${error.message || error}`);
     }
+  }
+
+  async function loadAutomaticBackups() {
+    try {
+      setBackupItems(await invoke("list_automatic_backups"));
+      setBackupToRestore(null);
+      setBackupDialog(true);
+    } catch (error) { setNotice("Could not list backups: " + (error.message || error)); }
+  }
+
+  async function restoreAutomaticBackup(backup) {
+    try {
+      if (!recoveryRequired) {
+        const safetyArchive = await createMemz(notebooksRef.current);
+        await importMemz(safetyArchive);
+        await invoke("create_automatic_backup", { bytes: Array.from(safetyArchive) });
+      }
+      const imported = normalizeLibrary(await importMemz(await readBytes(backup.path)));
+      await persistLibrary(imported);
+      setNotebooks(imported);
+      setActiveId(null);
+      setView("library");
+      setProjectPath(null);
+      setBackupToRestore(null);
+      setBackupDialog(false);
+      setRecoveryRequired(false);
+      setNotice("Restored " + backup.name + ". Review the recovered library before continuing.");
+    } catch (error) { setNotice("Could not restore " + backup.name + ": " + (error.message || error)); }
   }
 
   async function saveProject() {
@@ -256,7 +315,7 @@ export default function Layout() {
         )}
         <main class="app-main">
           {view === "settings" ? (
-            <SettingsPanel theme={theme} onThemeChange={setTheme} fsrsSettings={fsrsSettings} onFsrsSettingsChange={setFsrsSettings} onBack={() => setView("library")} />
+            <SettingsPanel theme={theme} onThemeChange={setTheme} fsrsSettings={fsrsSettings} onFsrsSettingsChange={setFsrsSettings} onManageBackups={loadAutomaticBackups} onBack={() => setView("library")} />
           ) : view === "help" ? (
             <HelpPanel page={helpPage} onPageChange={setHelpPage} backLabel={helpReturnView === "notebook" ? "BACK TO NOTEBOOK" : "BACK TO LIBRARY"} onBack={() => setView(helpReturnView)} />
           ) : view === "status" ? (
@@ -348,6 +407,23 @@ export default function Layout() {
             setPrompt(null);
           }}
         />
+      )}
+      {backupDialog && (
+        <div class="prompt-backdrop" onMouseDown={(event) => event.target === event.currentTarget && !backupToRestore && setBackupDialog(false)}>
+          <section class="prompt-panel backup-panel" role="dialog" aria-modal="true" aria-labelledby="backup-title">
+            <div class="prompt-heading"><h2 id="backup-title">{backupToRestore ? "Restore this backup?" : "Backups & recovery"}</h2><button type="button" aria-label="Close" onClick={() => { setBackupToRestore(null); setBackupDialog(false); }}>×</button></div>
+            {backupToRestore ? (
+              <><p>This replaces the current library with <strong>{backupToRestore.name}</strong>. Continue only if this is the snapshot you want to recover.</p><div class="prompt-actions"><button class="prompt-cancel" onClick={() => setBackupToRestore(null)}>Cancel</button><button class="prompt-confirm" onClick={() => restoreAutomaticBackup(backupToRestore)}>Restore backup</button></div></>
+            ) : (
+              <><p>Automatic backups are verified before saving. The newest 10 backups are retained. Restoring a backup replaces the current library.</p>
+                {backupItems.length ? <div class="backup-list">{backupItems.map((backup) => <div class="backup-item"><div><strong>{backup.name}</strong><small>{new Date(backup.modified * 1000).toLocaleString()}</small></div><button class="prompt-confirm" onClick={() => setBackupToRestore(backup)}>Restore</button></div>)}</div> : <p class="backup-empty">No automatic backups are available yet.</p>}
+                <div class="prompt-actions">
+                  {recoveryRequired && <button class="prompt-cancel" onClick={() => { setRecoveryRequired(false); setBackupDialog(false); setNotebooks([]); setNotice("Started with an empty library. Existing backup files and the damaged database were preserved."); }}>Start with empty library</button>}
+                  <button class="prompt-cancel" onClick={() => setBackupDialog(false)}>Close</button>
+                </div></>
+            )}
+          </section>
+        </div>
       )}
       {notice && <div class="app-notice" role="status">{notice}</div>}
     </div>

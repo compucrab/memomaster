@@ -273,3 +273,52 @@
 /* Browse card-list controls use selection styling instead of a browser focus ring. */
 .browse-card-select:focus-visible,
 .browse-card-checkbox:focus-visible { outline: none; }
+
+
+/* Study queue summary: clear, balanced status tiles. */
+.study-queue-counts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 20px;
+}
+.study-queue-count {
+  display: flex;
+  min-width: 0;
+  min-height: 68px;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  padding: 10px 13px;
+  border: 1px solid var(--line);
+  background: var(--paper);
+}
+.study-queue-count strong {
+  font: 700 21px/1 var(--display);
+  letter-spacing: -.04em;
+}
+.study-queue-count span {
+  font: 9px var(--mono);
+  letter-spacing: .04em;
+}
+.study-queue-count.new {
+  border-color: color-mix(in srgb, #38a8e8 30%, var(--line));
+  background: color-mix(in srgb, #38a8e8 7%, var(--surface));
+  color: #38a8e8;
+}
+.study-queue-count.learning {
+  border-color: color-mix(in srgb, #e16b6b 30%, var(--line));
+  background: color-mix(in srgb, #e16b6b 7%, var(--surface));
+  color: #e16b6b;
+}
+.study-queue-count.review {
+  border-color: color-mix(in srgb, #39a879 30%, var(--line));
+  background: color-mix(in srgb, #39a879 7%, var(--surface));
+  color: #39a879;
+}
+.study-scope-summary { margin-top: 18px; }
+@media (max-width: 560px) {
+  .study-queue-counts { gap: 6px; }
+  .study-queue-count { min-height: 62px; padding: 9px; }
+  .study-queue-count strong { font-size: 18px; }
+}

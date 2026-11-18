@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "preact/hooks";
 import { ArrowLeft, Palette, Moon, Sun, Brain, RotateCcw } from "lucide-preact";
 import { DEFAULT_FSRS_SETTINGS, normalizeFsrsSettings } from "../services/fsrsSettings";
 
-export default function SettingsPanel({ theme, onThemeChange, fsrsSettings, onFsrsSettingsChange, onBack }) {
+export default function SettingsPanel({ theme, onThemeChange, fsrsSettings, onFsrsSettingsChange, onManageBackups, onBack }) {
   const [draft, setDraft] = useState(() => normalizeFsrsSettings(fsrsSettings || DEFAULT_FSRS_SETTINGS));
   const [learningText, setLearningText] = useState(draft.learningSteps.join(", "));
   const [relearningText, setRelearningText] = useState(draft.relearningSteps.join(", "));
@@ -34,6 +34,11 @@ export default function SettingsPanel({ theme, onThemeChange, fsrsSettings, onFs
           </div>
         </section>
       </div>
+      <section class="settings-row backup-settings-row">
+        <i><RotateCcw size={18} /></i>
+        <div><h2>Backups & recovery</h2><p>Browse automatic snapshots and restore a previous library.</p></div>
+        <button type="button" onClick={onManageBackups}>Manage backups</button>
+      </section>
       <section class="fsrs-settings-panel">
         <div class="fsrs-settings-heading"><i><Brain size={18}/></i><div><h2>FSRS scheduling</h2><p>Shared scheduling preferences for all notebooks. Existing review history and due dates are preserved.</p></div></div>
         <div class="fsrs-settings-grid">

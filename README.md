@@ -9,7 +9,7 @@ MemoMaster is a local-first desktop learning and revision app built with Tauri 2
 - Browse cards with question/answer search, chapter filtering, preview, editing, Ctrl/Shift multi-selection, bulk deletion, chapter reassignment, and schedule reset.
 - Duplicate-question detection: exact duplicates are blocked and close matches are flagged before saving.
 - Rich card editor with separate Question and Answer tabs, powered by Tiptap.
-- Canonical Tiptap JSON for card content, with Markdown conversion retained for legacy content and archive imports.
+- Canonical Tiptap JSON for card content, with Markdown conversion available for explicit Markdown text input.
 - Notion-style contextual text formatting, five heading levels, lists, quotes, inline code, links, and a native text-colour picker.
 - Editable tables with row and column controls; tables remain within the available editor and card width and scroll horizontally when needed.
 - Image insertion from files or clipboard, notebook-scoped reusable media, and per-image drag resizing. Images are stored once in the notebook media collection (up to 12 MB per inserted image).
@@ -21,7 +21,7 @@ MemoMaster is a local-first desktop learning and revision app built with Tauri 2
 - Configurable desired retention, learning/relearning steps, maximum interval, and study-day rollover.
 - Retention dashboard with actual versus desired retention, monthly trend, rating distribution, daily workload forecast, card maturity, and frequently forgotten cards. Dashboard review metrics count only reviews that schedule the card beyond one day; short learning/relearning repetitions are excluded.
 - Light and dark themes.
-- Automatic SQLite persistence and automatic .memz backup on application close.
+- Transactional SQLite persistence, verified automatic .memz snapshots, ten-backup retention, and an in-app backup recovery manager.
 - Portable .memz project open/save support and a custom desktop titlebar.
 
 ## Keyboard shortcuts
@@ -86,7 +86,10 @@ The File menu provides New project, Open project, Save project, and Preferences.
 - **New project** replaces the active library with an empty one and clears the remembered project path. It does not delete existing backups.
 - **Open project** imports a .memz archive, replaces the active library, and makes that file the remembered Save project destination.
 - **Save project** always opens a native save dialog so you can choose the destination and filename. The selected .memz path becomes the remembered project path for the next save dialog.
-- **Automatic backup** creates a timestamped .memz snapshot in that same backups folder when the application closes successfully.
+- **Automatic backup** creates a timestamped .memz snapshot on successful close. The archive is reopened and checked before it is written; the write uses a temporary file and atomic rename.
+- **Retention** keeps the newest 10 automatic backups and removes older snapshots only after a new backup is safely written.
+- **Recovery** is available in Preferences → Backups & recovery. If SQLite fails its integrity check or cannot be opened, MemoMaster preserves the damaged database, offers available backups, and allows restoration from a verified snapshot.
+- SQLite uses WAL journaling, full synchronous commits, a transaction for each library save, and a short 100 ms autosave debounce. The app also requests a final save when it is suspended or closed. A forced power loss can still interrupt the small interval before a pending autosave completes.
 
 A .memz archive is a snapshot, not a live link to SQLite. Changes made after a snapshot do not update it. Keep independent backups; the SQLite working copy is not a substitute for an external backup.
 
@@ -122,6 +125,7 @@ Build and regression checks:
 
     npm run build
     npm test
+    cargo test --manifest-path src-tauri/Cargo.toml
     npm run tauri build
 
 Vite uses port 1420; the Tauri configuration expects that fixed development port.
@@ -131,9 +135,13 @@ Vite uses port 1420; the Tauri configuration expects that fixed development port
 - [ARCHITECTURE.md](ARCHITECTURE.md) — runtime, modules, state ownership, persistence, and data model.
 - [AGENTS.md](AGENTS.md) — coding conventions, safety rules, and implementation workflow.
 
+## Project archive format
+
+The current `.memz` format uses manifest version 3 only. The importer rejects older and unknown versions instead of silently migrating formats. Each archive is validated for ZIP structure, safe paths, decompressed size limits, supported compression, and CRC integrity. Automatic backups are additionally round-tripped through the importer before being committed to disk.
+
 ## Boundaries
 
 - Frontend code is JavaScript/JSX; do not introduce TypeScript without an explicit project decision.
 - MemoMaster is desktop-first and local-first. No cloud account, analytics, or sync backend is implemented.
 - Anki import/export and multi-device synchronization are not implemented.
-- Card front/back content is stored as Tiptap JSON. Keep Markdown conversion for legacy content and preserve supported .memz archive imports.
+- Card front/back content is stored as Tiptap JSON. Markdown conversion remains available for explicit text/Markdown input.
