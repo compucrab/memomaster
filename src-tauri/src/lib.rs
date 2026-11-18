@@ -8,11 +8,72 @@ use tauri::{AppHandle, Manager};
 
 const BACKUP_LIMIT: usize = 10;
 
-fn database_path(app: &AppHandle) -> Result<PathBuf, String> {
-    let mut directory = app.path().app_data_dir().map_err(|error| error.to_string())?;
+// Keep user data in a stable, brand-named location rather than a directory
+// derived from the MSIX package identity. On Windows this resolves to:
+// %LOCALAPPDATA%\\CompuCrab\\MemoMaster
+fn storage_directory(app: &AppHandle) -> Result<PathBuf, String> {
+    #[cfg(target_os = "windows")]
+    let directory = {
+        let local_app_data = std::env::var_os("LOCALAPPDATA")
+            .ok_or_else(|| "Windows did not provide the LOCALAPPDATA directory".to_string())?;
+        PathBuf::from(local_app_data).join("CompuCrab").join("MemoMaster")
+    };
+
+    #[cfg(not(target_os = "windows"))]
+    let directory = app.path().app_data_dir().map_err(|error| error.to_string())?;
+
     fs::create_dir_all(&directory).map_err(|error| error.to_string())?;
-    directory.push("memomaster.sqlite3");
+    migrate_legacy_storage(app, &directory)?;
     Ok(directory)
+}
+
+// Copy old data forward without deleting the original. This is intentionally
+// idempotent: existing files in the new location are never overwritten.
+fn migrate_legacy_storage(app: &AppHandle, destination: &Path) -> Result<(), String> {
+    let legacy = app.path().app_data_dir().map_err(|error| error.to_string())?;
+    if legacy == destination || !legacy.exists() {
+        return Ok(());
+    }
+
+    let old_database = legacy.join("memomaster.sqlite3");
+    let new_database = destination.join("memomaster.sqlite3");
+    if old_database.exists() && !new_database.exists() {
+        fs::copy(&old_database, &new_database)
+            .map_err(|error| format!("Could not migrate the existing library database: {error}"))?;
+        // SQLite may have committed data to its WAL immediately before the
+        // previous app version closed. Preserve both sidecars alongside it.
+        for suffix in ["-wal", "-shm"] {
+            let old_sidecar = PathBuf::from(format!("{}{}", old_database.display(), suffix));
+            if old_sidecar.exists() {
+                let new_sidecar = PathBuf::from(format!("{}{}", new_database.display(), suffix));
+                fs::copy(old_sidecar, new_sidecar)
+                    .map_err(|error| format!("Could not migrate the SQLite {suffix} file: {error}"))?;
+            }
+        }
+    }
+
+    let old_backups = legacy.join("backups");
+    if old_backups.is_dir() {
+        let new_backups = destination.join("backups");
+        fs::create_dir_all(&new_backups).map_err(|error| error.to_string())?;
+        for entry in fs::read_dir(&old_backups).map_err(|error| error.to_string())? {
+            let entry = entry.map_err(|error| error.to_string())?;
+            if !entry.file_type().map_err(|error| error.to_string())?.is_file() {
+                continue;
+            }
+            let target = new_backups.join(entry.file_name());
+            if !target.exists() {
+                fs::copy(entry.path(), target)
+                    .map_err(|error| format!("Could not migrate an automatic backup: {error}"))?;
+            }
+        }
+    }
+
+    Ok(())
+}
+
+fn database_path(app: &AppHandle) -> Result<PathBuf, String> {
+    Ok(storage_directory(app)?.join("memomaster.sqlite3"))
 }
 
 fn database_connection(app: &AppHandle) -> Result<Connection, String> {
@@ -109,8 +170,7 @@ fn save_library(app: AppHandle, data: String) -> Result<(), String> {
 }
 
 fn backup_directory(app: &AppHandle) -> Result<PathBuf, String> {
-    let mut directory = app.path().app_data_dir().map_err(|error| error.to_string())?;
-    directory.push("backups");
+    let directory = storage_directory(app)?.join("backups");
     fs::create_dir_all(&directory).map_err(|error| error.to_string())?;
     Ok(directory)
 }
