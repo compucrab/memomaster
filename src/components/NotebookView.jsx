@@ -36,7 +36,6 @@ export default function NotebookView({ notebook, fsrsSettings, onUpdate, onBack,
   const [previewSide, setPreviewSide] = useState("question");
   const [selectedCardId, setSelectedCardId] = useState(cards[0]?.id || null);
   const [search, setSearch] = useState("");
-  const searchInputRef = useRef(null);
   const selectionAnchorRef = useRef(null);
   const [chapterFilter, setChapterFilter] = useState("all");
   const [editingCardId, setEditingCardId] = useState(null);
@@ -51,10 +50,6 @@ export default function NotebookView({ notebook, fsrsSettings, onUpdate, onBack,
   const [targetChapterId, setTargetChapterId] = useState("");
 
   const editingCard = cards.find(card => card.id === editingCardId) || (newCard?.id === editingCardId ? newCard : null);
-
-  useEffect(() => {
-    if (tab === "browse" && !editingCardId && !reviewing) searchInputRef.current?.focus();
-  }, [tab, editingCardId, reviewing]);
 
   useEffect(() => {
     if (!cardAddedNotice) return;
@@ -306,7 +301,7 @@ export default function NotebookView({ notebook, fsrsSettings, onUpdate, onBack,
         <div class="browse-workspace">
           <aside class="browse-list-panel">
             <div class="browse-tools">
-              <label class="browse-search"><Search size={14} /><input ref={searchInputRef} value={search} onInput={event => setSearch(event.currentTarget.value)} placeholder="Search question or answer..." /></label>
+              <label class="browse-search"><Search size={14} /><input value={search} onInput={event => setSearch(event.currentTarget.value)} placeholder="Search question or answer..." /></label>
               <div class="browse-filters">
                 <select value={chapterFilter} onChange={event => setChapterFilter(event.currentTarget.value)}>
                   <option value="all">All chapters</option>
