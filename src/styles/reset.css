@@ -23,14 +23,6 @@ input,
 textarea { font: inherit; }
 button { color: inherit; }
 
-/* Quiet, application-styled focus indication for keyboard navigation. */
-:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--accent) 78%, transparent) !important;
-  outline-offset: 2px !important;
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 14%, transparent) !important;
-  border-radius: 3px;
-}
-:focus:not(:focus-visible) { outline: none; box-shadow: none; }
 
 ::selection { background: color-mix(in srgb, var(--accent) 30%, transparent); color: var(--ink); }
 
