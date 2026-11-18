@@ -85,6 +85,8 @@ export default function HelpPanel({ page = "guide", onPageChange, onBack, backLa
         <p class="help-intro">{current.intro}</p>
         <div class="help-sections">
           {current.sections.map(([heading, body]) => <section class="help-section"><h2>{heading}</h2><p>{body}</p></section>)}
+
+          <section class="help-section"><h2>Website 👇</h2><p><u><a href="https://compucrab.web.app" target="_blank">visit compucrab website</a></u></p></section>
         </div>
       </article>
     </div>
