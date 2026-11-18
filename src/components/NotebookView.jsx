@@ -397,11 +397,13 @@ export default function NotebookView({ notebook, fsrsSettings, onUpdate, onBack,
                 </select>
               </label>}
             </div>
-            <div class="study-queue-counts" aria-label="Card counts">
-              <div class="study-queue-count new"><strong>{queueCounts.new}</strong><span>New</span></div>
-              <div class="study-queue-count learning"><strong>{queueCounts.learning}</strong><span>Learning</span></div>
-              <div class="study-queue-count review"><strong>{queueCounts.review}</strong><span>Review</span></div>
-            </div>
+{studyType === "scheduled" && (
+              <div class="study-queue-counts" aria-label="Card counts">
+                <div class="study-queue-count new"><strong>{queueCounts.new}</strong><span>New</span></div>
+                <div class="study-queue-count learning"><strong>{queueCounts.learning}</strong><span>Learning</span></div>
+                <div class="study-queue-count review"><strong>{queueCounts.review}</strong><span>Review</span></div>
+              </div>
+            )}
             <div class="study-scope-summary"><span>{studyCards.length} cards in this session</span><span>{studyType === "scheduled" ? "Due cards only" : "All cards · timeline unchanged"}</span></div>
             <button class="study-primary study-start-button" disabled={!studyCards.length} onClick={() => setReviewing(true)}>
               <GraduationCap size={15} /> {studyCards.length ? "Start studying" : "No cards to study"}
