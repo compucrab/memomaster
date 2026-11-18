@@ -145,3 +145,14 @@ The current `.memz` format uses manifest version 3 only. The importer rejects ol
 - MemoMaster is desktop-first and local-first. No cloud account, analytics, or sync backend is implemented.
 - Anki import/export and multi-device synchronization are not implemented.
 - Card front/back content is stored as Tiptap JSON. Markdown conversion remains available for explicit text/Markdown input.
+
+## Microsoft Store (unsigned MSIX)
+
+MemoMaster includes an unsigned MSIX packaging workflow for Microsoft Store distribution. You do not need to buy or provide a signing certificate for an MSIX submitted through the Store; Microsoft signs it after certification.
+
+1. On Windows 11, install the [Microsoft WinApp CLI](https://learn.microsoft.com/en-us/windows/apps/dev-tools/winapp-cli/usage): `winget install Microsoft.WinAppCLI --source winget`.
+2. Reserve the app in Partner Center and copy its exact Package/Identity/Name and Publisher values into `src-tauri/msix/Package.appxmanifest`.
+3. Run `npm run tauri:msix`.
+4. Upload the unsigned `.msix` from `src-tauri/target/msix` to Partner Center.
+
+See [docs/MSIX.md](docs/MSIX.md) for the full workflow and platform notes. The current package targets x64 and Windows 11.
