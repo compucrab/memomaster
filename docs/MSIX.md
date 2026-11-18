@@ -54,5 +54,5 @@ An unsigned Store-submission package is not intended for normal double-click ins
 
 - This build currently targets **x64**.
 - The manifest currently sets Windows 11 (build 22000) as the minimum version. Tauri relies on the system WebView2 Runtime; Windows 11 includes it. Keeping this minimum avoids shipping a separate, very large fixed WebView2 runtime inside the MSIX.
-- The package uses the existing MemoMaster executable and does not include an MSI/NSIS installer.
+- The package uses the existing MemoMaster executable and does not include an MSI/NSIS installer. On Windows, MemoMaster stores its SQLite database and automatic backups under `%LOCALAPPDATA%\\CompuCrab\\MemoMaster`, independently of the MSIX package identity. On first launch after upgrading to this storage layout, existing database and backup files are copied from the previous Tauri application-data directory; old files are retained as a safety copy.
 - If you change the package identity in Partner Center, update the manifest before building the submission package.

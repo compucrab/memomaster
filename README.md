@@ -78,7 +78,7 @@ Changing FSRS preferences affects future scheduling. Existing due dates are not 
 
 MemoMaster uses two forms of local storage:
 
-- **SQLite working copy:** The active library is saved automatically in the operating system's application-data directory and restored on launch. Ordinary editing does not require a manual save.
+- **SQLite working copy:** The active library is saved automatically under `%LOCALAPPDATA%\\CompuCrab\\MemoMaster` on Windows and restored on launch. Automatic backups are stored in its `backups` subfolder. On first launch after this storage change, existing SQLite data and backups are copied from the previous Tauri application-data directory; the originals are left untouched. Ordinary editing does not require a manual save.
 - **.memz project archive:** A portable ZIP snapshot containing notebooks, chapters, cards, FSRS state, and study history.
 
 The File menu provides New project, Open project, Save project, and Preferences.

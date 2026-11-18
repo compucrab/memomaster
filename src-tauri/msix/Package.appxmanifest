@@ -5,13 +5,13 @@
   xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
   IgnorableNamespaces="uap rescap">
   <Identity
-    Name="CompuCrab.MemoMaster"
-    Publisher="CN=REPLACE_WITH_PARTNER_CENTER_PUBLISHER"
+    Name="HimanshuSinghChauhan.MemoMaster"
+    Publisher="CN=47DB2B24-1AD4-4843-AC50-0721DECBC9DD"
     Version="0.1.0.0"
     ProcessorArchitecture="x64" />
   <Properties>
     <DisplayName>MemoMaster</DisplayName>
-    <PublisherDisplayName>CompuCrab</PublisherDisplayName>
+    <PublisherDisplayName>Compucrab</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
   </Properties>
   <Dependencies>
