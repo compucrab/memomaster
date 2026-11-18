@@ -19,7 +19,7 @@ function run(command, args) {
 function toMsixVersion(version) {
   const parts = version.split("-")[0].split(".");
   while (parts.length < 4) parts.push("0");
-  if (parts.length !== 4 || parts.some(part => !/^\\d+$/.test(part) || Number(part) > 65535)) {
+  if (parts.length !== 4 || parts.some(part => !/^\d+$/.test(part) || Number(part) > 65535)) {
     throw new Error(`Invalid MSIX version derived from package.json: ${version}`);
   }
   return parts.join(".");
@@ -58,5 +58,5 @@ run("winapp", [
   "--output", output,
 ]);
 
-console.log(`\\nMSIX created: ${path.relative(root, output)}`);
+console.log(`\nMSIX created: ${path.relative(root, output)}`);
 console.log("This package is intentionally unsigned. Submit it through Partner Center; Microsoft signs Store packages after certification.");
