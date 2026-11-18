@@ -34,6 +34,9 @@ const assets = path.join(staging, "Assets");
 const outputDir = path.join(root, "src-tauri", "target", "msix");
 const output = path.join(outputDir, `MemoMaster_${version}_x64.msix`);
 
+console.log("Checking Microsoft WinApp CLI...");
+run("winapp", ["--version"]);
+
 console.log("Building MemoMaster without an MSI/NSIS installer...");
 run("npm", ["run", "tauri", "--", "build", "--no-bundle"]);
 
@@ -49,6 +52,8 @@ for (const assetName of ["StoreLogo.png", "Square44x44Logo.png", "Square150x150L
 const manifest = readFileSync(manifestTemplate, "utf8")
   .replace('Version="0.1.0.0"', `Version="${version}"`);
 writeFileSync(path.join(staging, "Package.appxmanifest"), manifest, "utf8");
+
+rmSync(output, { force: true });
 
 console.log("Creating an unsigned MSIX for Microsoft Store submission...");
 run("winapp", [
