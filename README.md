@@ -2,6 +2,12 @@
 
 MemoMaster is a local-first desktop learning and revision app built with Tauri 2, Preact, Vite, and Rust. It organizes material into notebooks, chapters, and flashcards.
 
+<p align="center">
+  <a href="https://apps.microsoft.com/detail/9NKQMHL1LRC3">
+    <img src="https://get.microsoft.com/images/en-us%20dark.svg" alt="Get it from Microsoft" height="64">
+  </a>
+</p>
+
 ## Features
 
 - Notebook library with notebook creation, rename, deletion, and cover-strip colour selection. Each notebook shows New, Learning/Relearning, and Review cards remaining before the next study-day rollover.
@@ -46,7 +52,10 @@ Shortcuts apply in the relevant notebook, editor, or review screen. Alt-based na
 | Editor | Alt + B / Alt + S | Leave the editor for Browse / Study; asks before discarding changes |
 | Review | E | Edit the active card and return to Browse |
 | Scheduled review | 1 / 2 / 3 / 4 | Again / Hard / Good / Easy |
-| Scheduled review | Space | Reveal the answer; when visible, rate Good |\n| Unscheduled practice | 1 | Repeat the revealed card (move it to the end of the queue) |\n| Unscheduled practice | 2 | Reveal the answer; when visible, mark the card Done |\n| Unscheduled practice | Space | Reveal the answer; when visible, mark the card Done |
+| Scheduled review | Space | Reveal the answer; when visible, rate Good |
+| Unscheduled practice | 1 | Repeat the revealed card (move it to the end of the queue) |
+| Unscheduled practice | 2 | Reveal the answer; when visible, mark the card Done |
+| Unscheduled practice | Space | Reveal the answer; when visible, mark the card Done |
 | Application | Ctrl + , | Open Preferences |
 | Application | Ctrl + S | Save project and choose a destination |
 | Application | Escape | Return from Help, Preferences, About, or study status to the library |
