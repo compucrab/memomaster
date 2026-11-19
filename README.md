@@ -2,7 +2,7 @@
 
 MemoMaster is a local-first desktop learning and revision app built with Tauri 2, Preact, Vite, and Rust. It organizes material into notebooks, chapters, and flashcards.
 
-<p align="center">
+<p>
   <a href="https://apps.microsoft.com/detail/9NKQMHL1LRC3">
     <img src="https://get.microsoft.com/images/en-us%20dark.svg" alt="Get it from Microsoft" height="64">
   </a>
