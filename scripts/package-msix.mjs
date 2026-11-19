@@ -32,6 +32,74 @@ const manifestTemplate = path.join(root, "src-tauri", "msix", "Package.appxmanif
 const staging = path.join(root, "src-tauri", "target", "msix-staging");
 const assets = path.join(staging, "Assets");
 const outputDir = path.join(root, "src-tauri", "target", "msix");
+
+function createMsixAssets() {
+  const script = String.raw`
+    $ErrorActionPreference = "Stop"
+    Add-Type -AssemblyName System.Drawing
+
+    $sourcePath = $env:MEMOMASTER_SOURCE_ICON
+    $assetsPath = $env:MEMOMASTER_ASSETS
+    if (-not (Test-Path -LiteralPath $sourcePath)) {
+      throw "Source application icon was not found: $sourcePath"
+    }
+
+    $source = [System.Drawing.Image]::FromFile($sourcePath)
+    try {
+      $targets = @(
+        @{ Name = "StoreLogo.png"; Size = 50 },
+        @{ Name = "Square44x44Logo.png"; Size = 44 },
+        @{ Name = "Square150x150Logo.png"; Size = 150 }
+      )
+
+      foreach ($target in $targets) {
+        $bitmap = [System.Drawing.Bitmap]::new($target.Size, $target.Size)
+        try {
+          $graphics = [System.Drawing.Graphics]::FromImage($bitmap)
+          try {
+            $graphics.Clear([System.Drawing.Color]::Transparent)
+            $graphics.CompositingQuality = [System.Drawing.Drawing2D.CompositingQuality]::HighQuality
+            $graphics.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
+            $graphics.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::HighQuality
+            $graphics.PixelOffsetMode = [System.Drawing.Drawing2D.PixelOffsetMode]::HighQuality
+            $graphics.DrawImage($source, 0, 0, $target.Size, $target.Size)
+          }
+          finally {
+            $graphics.Dispose()
+          }
+
+          $destination = Join-Path $assetsPath $target.Name
+          $bitmap.Save($destination, [System.Drawing.Imaging.ImageFormat]::Png)
+          Write-Host ("Created {0} ({1}x{1})" -f $target.Name, $target.Size)
+        }
+        finally {
+          $bitmap.Dispose()
+        }
+      }
+    }
+    finally {
+      $source.Dispose()
+    }
+  `;
+
+  const result = spawnSync("powershell.exe", [
+    "-NoProfile",
+    "-ExecutionPolicy", "Bypass",
+    "-Command", script,
+  ], {
+    cwd: root,
+    stdio: "inherit",
+    shell: false,
+    env: {
+      ...process.env,
+      MEMOMASTER_SOURCE_ICON: icon,
+      MEMOMASTER_ASSETS: assets,
+    },
+  });
+
+  if (result.error) throw new Error(`Could not generate MSIX logo assets: ${result.error.message}`);
+  if (result.status !== 0) process.exit(result.status ?? 1);
+}
 const output = path.join(outputDir, `MemoMaster_${version}_x64.msix`);
 
 console.log("Checking Microsoft WinApp CLI...");
@@ -45,9 +113,7 @@ mkdirSync(assets, { recursive: true });
 mkdirSync(outputDir, { recursive: true });
 copyFileSync(tauriExe, path.join(staging, "MemoMaster.exe"));
 
-for (const assetName of ["StoreLogo.png", "Square44x44Logo.png", "Square150x150Logo.png"]) {
-  copyFileSync(icon, path.join(assets, assetName));
-}
+createMsixAssets();
 
 const manifest = readFileSync(manifestTemplate, "utf8")
   .replace('Version="0.1.0.0"', `Version="${version}"`);
