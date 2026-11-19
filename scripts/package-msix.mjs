@@ -53,7 +53,7 @@ function createMsixAssets() {
       )
 
       foreach ($target in $targets) {
-        $bitmap = New-Object System.Drawing.Bitmap($target.Size, $target.Size)
+        $bitmap = [System.Drawing.Bitmap]::new($target.Size, $target.Size)
         try {
           $graphics = [System.Drawing.Graphics]::FromImage($bitmap)
           try {
