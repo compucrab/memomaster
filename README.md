@@ -4,7 +4,7 @@ MemoMaster is a local-first desktop learning and revision app built with Tauri 2
 
 <p>
   <a href="https://apps.microsoft.com/detail/9NKQMHL1LRC3">
-    <img src="https://get.microsoft.com/images/en-us%20dark.svg" alt="Get it from Microsoft" height="64">
+    <img src="https://get.microsoft.com/images/en-us%20dark.svg" alt="Get it from Microsoft" width="256">
   </a>
 </p>
 
